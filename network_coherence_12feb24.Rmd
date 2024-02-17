@@ -1,0 +1,68 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+## Network Coherence - current state of concept
+
+The objective of our study is to develop a metric that quantifies the degree of association between a community response to a specific environment and its species interactions. The primary goal we envision for this metric is to serve as an indicator of the predictability and stability of communities in the face of environmental changes. Additionally, the metric could also allow for exploring numerous relevant questions on species' responses to the biotic and abiotic environments.
+
+We define Network Coherence (NC) as "the degree to which the sensitivity and rate in response of a given community to specific environmental variables at a given location (defined as the instantaneous rate of change in"fitness" or abundance of each species in response to fluctuations in abiotic conditions) is associated with its species interactions."
+
+The response is quantified incorporating both the sensitivity (i.e. how much the change in response is affected by the environment) and rate (i.e. how much time it takes to the species to develop a response). NC can be computed from either intrinsic or net responses. Intrinsic responses refer to the inherent qualities and behaviors that a species exhibits in response to specific environmental variables (i.e. fitness) independently of the effect of other species, whereas net responses correspond to the change in abundance, which result from the combined effect of multiple factors in addition to the environment. It can also be computed across different organizational (taxa, functional groups, trophic levels), spatial (local, regional) and temporal scales. The choice of scale will depend on the question under study.
+
+### Methods
+
+The NC metric is computed correlating the matrix of biotic interactions with a matrix of covariances with the environment. Their construction will depend on the question and the scales considered.
+
+#### Environmental covariance matrix
+
+The environmental covariance matrix ($C$) should accurately represent the pairwise co-response of species to the environment.
+
+
+*Intrinsic responses*
+
+
+Because we dont have data of the fitness of multiple species across the space, we could obtain species' intrinsic responses at a given spatial point $$x_k$$ by computing the first derivative $$P_i′$$ of the suitability curve (or occurrence probability curve) $dF(xi)/dxi$ that results from SDMs. Each value of the covariance matrix involving a pair of species would then show the covariance between the slopes of their suitability curves:
+
+$$ C = Cov(P_i′(x_k) , P_j′(x_k))
+ $$
+
+Note that we can consider one to multiple dimensions of the environment. We dont know how NC may change depending on the number of environmental variables considered - this would also depend on the community and type of question one wants to address (e.g. what is the NC that insect-plant pollination communities show to temperature?).
+
+At regional scales, the responses (slopes) can vary across space. We can then take into account an average of multiple covariances at multiple points in the environmental gradient:
+
+$\frac{\sum_{k = 1}^{n} Cov(P_i′(x_k) , P_j′(x_k)) Weight}{n}$
+
+
+where the "Weight" term is indicating some kind of measure of the variability that exists between the points.
+
+**response rate**
+
+The rate at which species respond to environmental change depends on their generation time: shorter generation times allow species to respond faster. Data on species' generation time is scarce, but we can approximate it with the organismal size because they are linked: smaller organisms show higher generation times due to having higher metabolic rates, higher investment in reproduction, higher resource adquisition and use, and shorter life-spans. And this has been measured for multiple vertebrate and invertebrate taxa.
+
+Therefore, smaller species should respond faster, i.e. be more sensible to environmental changes.
+
+An option to incorporate this is to weight the intrinsic responses using the body size ($l_i$) of the organism. The total sensitivity of species to the environment at a given spatial point would then be the joint sensitivity of the magnitude and direction of the response $\beta_i$ (slope) and the rate of response which is inversely proportional to body size ($l_i^{-1}$):
+
+$$ Sensitivity_i = \beta_i * l_i^{-1} $$
+
+We can therefore refere to the covariance of species responses or sensitivities to the environment as a "weighted covariance" with the environment ($C_{w_{ij}}$):
+
+
+$$ C_{w_{ij}} = Cov (\beta_i * l_i^{-1}, \beta_j * l_j^{-1}) $$
+
+
+*Intrinsic responses*
+
+The matrix of covariance of net responses can be computed locally and regionally from population time series. We can obtain pairwise covariances computing synchrony metrics: correlation and phase synchrony (Gouhier and Guichard 2014). However, we can take into account the effects between all the species in a hierarchical model where the abundance is modelled as a function of time, with species as random effects (Hebert unpubl.). We can then obtain species' coefficients correlations to build the covariance matrix.
+
+
+
+#### NC computation
+
+NC could be calculated by correlating the ordinations of the interaction and covariance matrices using a Procrustes analysis.
+
+
+
+
