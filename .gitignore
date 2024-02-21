@@ -3,4 +3,7 @@
 .RData
 .Ruserdata
 b_data/
+data/
 ._*
+*.csv
+*.dbf
