@@ -11,7 +11,7 @@
 
 The objective of our study is to develop a metric that quantifies the degree of association between a community response to a specific environment and its species interactions. The primary goal we envision for this metric is to serve as an indicator of the predictability and stability of communities in the face of environmental changes. Additionally, the metric could also allow for exploring numerous relevant questions on species' responses to the biotic and abiotic environments.
 
-You can read more about our theoretical approach [here](supporting_material/network_coherence_12feb24.Rmd)
+You can read more about our theoretical approach [here](https://github.com/Alex-Fuster/network_coherence/blob/main/e_supporting_material/network_coherence_12feb24.Rmd)
 
 ## Folder Structure
 
