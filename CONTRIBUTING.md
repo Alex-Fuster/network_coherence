@@ -1,6 +1,8 @@
-**Contributing Guidelines**
+# Contributing Guidelines
 
 *Welcome to the Contributing Guidelines for the Network Coherence Working Group!*
+
+![](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExaXV4YWZ6MmU5bHF0d3BlcmZ1NjdyYm9vNXRrMGg0Y2l5cDRycm84diZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/QKkV58ufpV4ksJ1Okh/giphy-downsized-large.gif)
 
 This document outlines the best practices and guidelines for contributing code, documentation, and other enhancements to our project.
 
@@ -88,4 +90,6 @@ Our research software project in R follows specific code style guidelines to ens
    - Follow the existing code style used within the project to maintain uniformity throughout the codebase.
    - Adhere to any project-specific conventions or patterns established for R code.
 
-By following these guidelines, we will avoid unnecessary merge conflicts and we will maintain a high level of quality and collaboration. Thank you for your contributions! :heart"\:
+By following these guidelines, we will avoid unnecessary merge conflicts and we will maintain a high level of quality and collaboration. Thank you for your contributions! 
+
+![](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbTRydGFkN2ZhN3R3dmJiZ3p6ZzRneG43YzUxeHVramE5M2QzYW9wZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/5xtDarmwsuR9sDRObyU/giphy.gif)
