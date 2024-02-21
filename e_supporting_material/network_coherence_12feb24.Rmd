@@ -1,10 +1,10 @@
 ---
 title: "Network Coherence - current state of concept"
 output:
-  pdf_document: default
-  html_notebook: default
   html_document:
     df_print: paged
+  html_notebook: default
+  pdf_document: default
 editor_options: 
   markdown: 
     wrap: 72
@@ -150,6 +150,7 @@ $$C_{{ij}} = \frac{\sum_{k = 1}^{n} Cov(P_i'(x_k) , P_j'(x_k))}{n}$$
 <br>
 
 
+
 *Net responses*
 
 The matrix of covariance of net responses can be computed locally and
@@ -159,6 +160,12 @@ as their biomass fluctuates through time (Hebert et al. unpubl). Species' correl
 to the environment.
 
 <br>
+
+
+
+<div style="text-align:center">
+    ![Image Alt Text](figues/fig1.PNG)
+</div>
 
 ------------------------------------------------------------------------
 
