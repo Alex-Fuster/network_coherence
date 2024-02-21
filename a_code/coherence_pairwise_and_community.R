@@ -113,9 +113,9 @@ plot(mvgam_prior, type = 'smooths')
 #               burnin = 5000,
 #               samples = 10000
 # )
-# saveRDS(mod1, paste0("outputs/gam_hierarchical_gp.rds")) 
+# saveRDS(mod1, paste0("c_outputs/gam_hierarchical_gp.rds")) 
 
-mod1 = readRDS(paste0("outputs/gam_hierarchical_gp.rds"))
+mod1 = readRDS(paste0("c_outputs/gam_hierarchical_gp.rds"))
 
 # to view the Stan model file:
 m <- mod1
@@ -131,7 +131,7 @@ summary(mod1)
 # get species correlations
 data_train = dat
 sp_correlations = lv_correlations(mod1)
-saveRDS(sp_correlations, "outputs/gam_hierarchical_species_correlations.rds")
+saveRDS(sp_correlations, "c_outputs/gam_hierarchical_species_correlations.rds")
 
 # edit the species names to be prettier
 colnames(sp_correlations$mean_correlations) = gsub("_", " ", colnames(sp_correlations$mean_correlations)) |> 
@@ -149,7 +149,7 @@ sp_correlations$mean_correlations[which(lower.tri(sp_correlations$mean_correlati
 corrs = sp_correlations$mean_correlations[which(lower.tri(sp_correlations$mean_correlations))]                  
 
 # Plot as a heatmap of pairwise correlations
-png(height=1800, width=1800, file="figures/heatmap_species_associations.png", type = "cairo")
+png(height=1800, width=1800, file="c_outputs/figures/heatmap_species_associations.png", type = "cairo")
 corrplot::corrplot(sp_correlations$mean_correlations, 
                    type = "lower",
                    method = "color", 
@@ -161,7 +161,7 @@ dev.off()
 # take the derivative of each population trend ----
 
 # load this mvgam function I customised to access the derivatives more easily
-source("scripts/plot_mvgam_trend_custom.R")
+source("a_code/plot_mvgam_trend_custom.R")
 
 trend_vals = list()
 derivs_ls = list()
@@ -231,7 +231,7 @@ derivs_without1981 = dplyr::filter(derivs_pops_df, year != 1981)
   mu = derivs_pops |> apply(1, mean, na.rm = TRUE)
 ))
 temporal_trend_yearly$year = as.character(temporal_trend_yearly$year)
-saveRDS(temporal_trend_yearly, "outputs/temporal_trend_yearly.rds")
+saveRDS(temporal_trend_yearly, "c_outputs/temporal_trend_yearly.rds")
 
 # coherence ----
 

@@ -36,7 +36,7 @@ diet <- do.call(cbind, diet)
 rownames(diet) = diet[,1]
 diet <- diet[,-1]
 
-write.csv(diet, "data/globi_diet_matrix.csv", row.names = TRUE)
+write.csv(diet, "b_data/clean/globi_diet_matrix.csv", row.names = TRUE)
 
 # prepare the adjacency matrix
 X <- diet
@@ -54,4 +54,4 @@ render_graph(g, layout = "nicely", width = 600, height = 600)
 #              width = 1000, height = 1000)
 
 # save the adjacency matrix
-write.csv(X, "data/globi_adjacencymatrix.csv", row.names = TRUE)
+write.csv(X, "b_data/clean/globi_adjacencymatrix.csv", row.names = TRUE)
