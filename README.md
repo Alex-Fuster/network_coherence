@@ -17,15 +17,16 @@ You can read more about our theoretical approach [here](https://github.com/Alex-
 
 The project follows the following folder structure:
 
-
-- `a_code/`: Contains the source code files for our analyses.
- - `functions/`: Contains the stand-alone functions we call in our scripts.
-- `b_data/`: Contains the data files for the project. This folder is not watched by git. Do not upload data into our repository. 
-    - `raw/`: Only raw data - do not manipulate! 
-    - `clean/`: Only cleaned data (outputs of raw data manipulations).
-- `c_outputs/`: Contains all the outputs of our analyses, including figures.
-- `d_manuscript/`: Contains the manuscript files (source and rendered), including *.bib file and templates.
-- `e_supporting_material/`: Contains any extra supporting material for reference.
+```
+- a_code/: Contains the source code files for our analyses.
+  /functions/: Contains the stand-alone functions we call in our scripts.
+- b_data/: Contains the data files for the project. This folder is not watched by git. Do not upload data into our repository. 
+  /raw/: Only raw data - do not manipulate! 
+  /clean/: Only cleaned data (outputs of raw data manipulations).
+- c_outputs/: Contains all the outputs of our analyses, including figures.
+- d_manuscript/: Contains the manuscript files (source and rendered), including *.bib file and templates.
+- e_supporting_material/: Contains any extra supporting material for reference.
+```
 
 Additional files can be found in our [Google Drive](https://drive.google.com/drive/folders/1pmDwl0QXEWIqchEwgF7LnLsoww7ru1QV?usp=sharing), such as raw data, reference papers, the program of our in-person meeting, and technical guides.
 
