@@ -2,7 +2,7 @@
 
 *Welcome to the Contributing Guidelines for the Network Coherence Working Group!*
 
-![](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExaXV4YWZ6MmU5bHF0d3BlcmZ1NjdyYm9vNXRrMGg0Y2l5cDRycm84diZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/QKkV58ufpV4ksJ1Okh/giphy-downsized-large.gif)
+![](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExanR3NTJoeDdndml2NjJ2c2lsYjUycmxmZmpxZTN2aXBlajk3aHIxMyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/5E13VXmBQGzvrJHNzW/giphy.gif)
 
 This document outlines the best practices and guidelines for contributing code, documentation, and other enhancements to our project.
 
