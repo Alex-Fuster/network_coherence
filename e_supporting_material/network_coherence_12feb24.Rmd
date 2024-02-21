@@ -17,29 +17,15 @@ editor_options:
 
 <br>
 
-
-Shifts in community composition are deemed more significant and globally distributed than changes in species richness. Thus, there's a call to move away from focusing solely on species richness and towards other measures such as network structure and information theory. **Current monitoring approaches often overlook ecological interactions and multi-trophic scenarios, limiting our ability to anticipate biodiversity changes beyond species richness and composition. How can we anticipate changes in those properties?**
-
-
-**We currently lack theory and methods to predict community-level
-responses to environmental change**, and the objective of our study is to
+We currently lack theory and methods to predict community-level
+responses to environmental change, and the objective of our study is to
 develop a conceptual and mathematical framework to address this problem.
-To do this, we investigate the concept of **Network coherence (CN)**, which
+To do this, we introduce a metric of Network Coherence (CN), which
 quantifies the degree of association between a community response to a
-specific environment and its biotic interactions. High coherence would indicate that interacting species respond similarly and therefore
-the community should maintain its internal dynamics and functions; alternatively, incoherence will
-induce community re-organization and could lead to disruption of its functioning. **We think NC can therefore become a new indicator to anticipate the consequences of biodiversity changes at the community level.**
-
-<br>
-
-
-### Objectives and outcome
-
-Our objectives are to **(1) define the Network Coherence concept, its components, and methods to compute it, (2) illustrate the method with data from a real community [ (Pedersen et al. 2017) ](https://royalsocietypublishing.org/doi/full/10.1098/rsos.170215), and (3) mathematically relate NC with ecosystem functioning.**
-
-The study will be expressed in a perspective paper (journal to be determined - e.g. *Ecol Lett, Trends Ecol. Evol.*)
-
-
+specific environment and its biotic interactions. NC can be a direct
+indicator of the predictability of communities in front of environmental
+changes, and we think it can be important in assessing how their
+structure and functioning will be impacted.
 
 <br>
 
@@ -54,8 +40,8 @@ change in"fitness" or abundance of each species in response to
 fluctuations in abiotic conditions) is associated with its species
 interactions."
 
-The response is quantified incorporating both the **sensitivity** (i.e. how
-much the change in response is affected by the environment) and **rate**
+The response is quantified incorporating both the sensitivity (i.e. how
+much the change in response is affected by the environment) and rate
 (i.e. how much time it takes to the species to develop a response), and
 can be either "intrinsic" or "net": intrinsic responses refer to the
 inherent qualities and behaviors that a species exhibits in response to
@@ -64,15 +50,15 @@ effect of other species, whereas net responses correspond to the change
 in abundance, which result from the combined effect of multiple factors
 such as biotic interactions, in addition to the environment.
 
-NC is also defined by the **grain, frequency, and extend** of the
+NC is also defined by the grain, frequency, and extend of the
 interactions and environmental variables. For the interactions, the
 grain size refers to how the information is aggregated in the network
 (pairwise interactions, genus, guilds, functional groups...), and for
 the environment, it corresponds to the resolution; the frequency to how
 often the environment change occurs, from rapid fluctuations to
-long-term trends. **The choice of these scales will depend on the question
+long-term trends. The choice of these scales will depend on the question
 under study, and because the concept arises from the concept of
-community, these are restricted to limits where interactions matter**
+community, these are restricted to limits where interactions matter
 (e.g. trees competition occurs at regional levels).
 
 The NC metric is computed correlating the matrix of biotic interactions
@@ -177,6 +163,10 @@ to the environment.
 
 
 
+<div style="text-align:center">
+    ![Image Alt Text](figues/fig1.PNG)
+</div>
+
 ------------------------------------------------------------------------
 
 ### General expectations
@@ -186,11 +176,20 @@ to the environment.
 -   Alteration in community structure and functioning with environmental change
     should be inversely proportional to coherence.
 
--   Interacting species may show higher coherence than non-interacting ones.
+-   The coherence between interacting species should be more important
+    for the system dynamics than the coherence of the whole community
+    (i.e. including non-interacting pairs).
     
 -   Species roles in driving community responses to environmental change will depend on their contribution to both network structure and coherence.
 
 ------------------------------------------------------------------------
+
+
+
+
+
+
+
 
 
 
@@ -468,12 +467,28 @@ We would then expect different beta diversity depending on the coherence in spec
 
 <br>
 
+**Network beta-diversity and network properties**
+
+The correlation between beta-diversity of networks and coherence would depend on modularity and nestedness.
+
+* $\beta_{s} (species turnover) would be highly and inversely correlated to coherence, as highly coherent communities would tend to have similar responses to the environment, and, therefore, species would tend to "move" together. Low coherence in modular and nested networks would mean high species turnover, and species would be replaced as environmental conditions change.
+
+* $\beta_{os} (links turnover) would be higher in less modular and more nested networks, where coherence is high. That's because this measure is related to the number of similar species in any two communities: given that species A, B and C occur in any two networks, if the links between them are different, we have a high $\beta_{os}.
+
+* $\beta_{wn} (network uniqueness) would be higher in highly modular networks where niche overlap is low. Coherence would he higher within each community than in the metaweb.
+
+
 **Expectations**
 
--   NC shoud decrease with modularity and increase with nestedness
+-   NC should decrease with modularity and increase with nestedness
+    [CONNECTANCE, DEGREE DISTRIBUTION]
+
+![](e_supporting_material/supporting_figures/coherence_mod_nest.jpg)
 
 -   Niche breath - low and high extremes would decrease coherence, but
     moderate values would increase it.
+
+![](e_supporting_material/supporting_figures/coherence_niche_breadth.jpg)
 
 -   contribution to bs and Bos
 
@@ -487,6 +502,10 @@ We would then expect different beta diversity depending on the coherence in spec
 
 -   Competition interactions would show higher incoherence than
     predator-prey.
+
+-   Predators would have more periods of incoherence with any pair of preys if they are generalists.
+
+-    Preys would have higher periods of incoherence between them, due to niche partitioning.
 :::
 
 <br> <br> <br>
@@ -529,9 +548,6 @@ on NC.
 :::
 
 
-<br>
-<br>
-
 
 Other expectations:
 
@@ -551,4 +567,4 @@ Other considerations:
 -   We should also take into account the fact that some environmental changes are more predictable (e.g. increase in temperature) than others (e.g. drought events).
 
 
-
+$$ C_{i,j} = corr(\alpha_i, \alpha_j)$$
