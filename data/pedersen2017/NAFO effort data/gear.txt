@@ -1,0 +1,44 @@
+Bottom otter trawl (charters),8,OTB*
+Midwater trawl,9,OTM*
+Bottom otter trawl (side or stern not specified),10,OTB
+Bottom otter trawl (side),11,OTB-1
+Bottom otter trawl,12,OTB-2
+Midwater trawl (side or stern not specified),13,OTM
+Midwater trawl (side),14,OTM-1
+Midwater trawl (stern),15,OTM-2
+Bottom pair trawl (2 boats),16,PTB
+Midwater pair trawl (2 boats),17,PTM
+Beam trawl,18,TBB
+Otter shrimp twin trawl,19,OTS
+Otter twin trawl,192,OTT
+Danish seine (charters),20,SDN*
+Danish seine,21,SDN
+Scottish seine,22,SSC
+Pair seine (2 boats),23,SPR
+Beach seine (shut off = bar seine),24,SB
+Purse seine (charters),30,PS*
+Purse seine,31,PS
+Gillnets (charters),39,GN*
+Gillnets (not specified),40,GN
+Set gillnets,41,GNS
+Drift gillnets,42,GND
+Longlines (charters),49,LL*
+Longlines (not specified),50,LL
+Set lines (bottom or,51,LLS
+Drift lines (drifting longlines),52,LLD
+Handlines (including pole & jig),53,LHP
+Troll lines,54,LTL
+Mechanized squid jigger,55,LHM
+Mechanized squid jigger,56,LHM*
+Dory vessel line gears,58,LDV
+Traps (not specified),60,FIX
+Uncovered pound nets (cod & herring traps etc.),61,FPN
+covered pots (lobster & crab etc.) and fyke nets,62,FPO
+Weirs,63,FWR
+Dredge (charters),70,DRB*
+Dredge (boat),71,DRB
+Dredge (hand),72,DRH
+Harpoons,81,HAR
+Other known gears not,90,MIS
+Gears not known (charter),98,NK*
+Gears not known or not specified,99,NK

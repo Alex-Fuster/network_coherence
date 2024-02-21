@@ -1,0 +1,183 @@
+Numeric	Species		Common English			Latin name			3-alpha	Species group	
+Code										code
+
+001    HOURS FISHED        HOURS FISHED                                                                
+002    DAYS FISHED         DAYS FISHED                                                                 
+003    DAYS ON GROUND      DAYS ON GROUND                                                              
+101  COD                 ATLANTIC COD             GADUS MORHUA                       COD  1          
+102  HADDOCK             HADDOCK                  MELANOGRAMMUS AEGLEFINUS           HAD  1          
+103  REDFISHES           ATLANTIC REDFISHES (NS)  SEBASTES SP.                       RED  1          
+104  SILVER HAKE         SILVER HAKE              MERLUCCIUS BILINEARIS              HKS  1          
+105  RED HAKE            RED HAKE                 UROPHYCIS CHUSS                    HKR  1          
+106  POLLOCK             POLLOCK (SAITHE)         POLLACHIUS VIRENS                  POK  1          
+108  G REDFISH           GOLDEN REDFISH           SEBASTES MARINUS                   REG  1          
+109  B REDFISH           BEAKED REDFISH           SEBASTES MENTELLA                  REB  1
+110  A REDFISH		 ACADIAN REDFISH          SEBASTES FASCIATUS                 REN  1
+112  A PLAICE            AMERICAN PLAICE          HIPPOGLOSSOIDES PLATESSOIDES       PLA  1          
+114  WITCH               WITCH FLOUNDER           GLYPTOCEPHALUS CYNOGLOSSUS         WIT  1          
+116  YELLOWTAIL          YELLOWTAIL FLOUNDER      LIMANDA FERRUGINEA                 YEL  1          
+118  G HALIBUT           GREENLAND HALIBUT        REINHARDTIUS HIPPOGLOSSOIDES       GHL  1          
+120  A HALIBUT           ATLANTIC HALIBUT         HIPPOGLOSSUS HIPPOGLOSSUS          HAL  1          
+122  WINTER FLO.         WINTER FLOUNDER          PSEUDOPLEURONECTES AMERICANUS      FLW  1          
+124  SUMMER FLO.         SUMMER FLOUNDER          PARALICHTHYS DENTATUS              FLS  1          
+125  WINDOWPANE          WINDOWPANE FLOUNDER      SCOPHTHALMUS AQUOSUS               FLD  1          
+129  FLATFISH (NS)       FLATFISHES (NS)          PLEURONECTIFORMES                  FLX  1          
+132  ANGLER              AMERICAN ANGLER          LOPHIUS AMERICANUS                 ANG  1          
+136  SEAROBINS           ATLANTIC SEAROBINS       PRIONOTUS SP.                      SRA  1          
+138  TOMCOD              ATLANTIC TOMCOD          MICROGADUS TOMCOD                  TOM  1          
+139  BLUE ANTIMORA       BLUE ANTIMORA            ANTIMORA ROSTRATA                  ANT  1          
+140  BLUE WHITING        BLUE WHITING (POUTASSOU) MICROMESISTIUS POUTASSOU           WHB  1          
+142  CUNNER              CUNNER                   TAUTOGOLABRUS ADSPERSUS            CUN  1          
+144  CUSK                CUSK (TUSK)              BROSME BROSME                      USK  1          
+148  G COD               GREENLAND COD            GADUS OGAC                         GRC  1          
+151  BLUE LING           BLUE LING                MOLVA DYPTERYGIA                   BLI  1          
+152  LING                LING                     MOLVA MOLVA                        LIN  1          
+154  LUMPFISH            LUMPFISH (LUMPSUCKER)    CYCLOPTERUS LUMPUS                 LUM  1          
+158  N KINGFISH          NORTHERN KINGFISH        MENTICIRRHUS SAXATILIS             KGF  1          
+160  N PUFFER            NORTHERN PUFFER          SPHOEROIDES MACULATUS              PUF  1          
+162  EELPOUTS            EELPOUTS (NS)            LYCODES SP.                        ELZ  1          
+164  OCEAN POUT          OCEAN POUT               MACROZOARCES AMERICANUS            OPT  1          
+166  POLAR COD           POLAR COD                BOREOGADUS SAIDA                   POC  1          
+168  R GRENADIER         ROUNDNOSE GRENADIER      CORYPHAENOIDES RUPESTRIS           RNG  1          
+169  RH GRENADIER        ROUGHHEAD GRENADIER      MACROURUS BERGLAX                  RHG  1          
+172  SANDEELS            SANDEELS (SANDLANCES)    AMMODYTES SP.                      SAN  1          
+174  SCULPINS            SCULPINS (NS)            MYOXOCEPHALUS SP.                  SCU  1          
+176  SCUP                SCUP                     STENOTOMUS CHRYSOPS                SCP  1          
+180  TAUTOG              TAUTOG                   TAUTOGA ONITIS                     TAU  1          
+182  TILEFISH            TILEFISH                 LOPHOLATILUS CHAMAELEONTICEPS      TIL  1          
+186  WHITE HAKE          WHITE HAKE               UROPHYCIS TENUIS                   HKW  1          
+188  WOLFFISHES          WOLFFISHES (NS)          ANARHICHAS SP.                     CAT  1          
+189  A WOLFFISH          ATLANTIC WOLFFISH        ANARHICHAS LUPUS                   CAA  1          
+190  S WOLFFISH          SPOTTED WOLFFISH         ANARHICHAS MINOR                   CAS  1          
+191  N WOLFFISH          NORTHERN WOLFFISH        ANARHICHAS DENTICULATUS            CAB  1
+194  LONGFIN HAKE        LONGFIN HAKE             UROPHYCIS CHESTERI                 GPE  1
+196  THR ROCKLING        THREEBEARD ROCKLING      GAIDROPSAURUS ENSIS                GDE  1
+199  GROUNDFISH (NS)     GROUNDFISHES (NS)        ...                                GRO  1          
+202  HERRING             ATLANTIC HERRING         CLUPEA HARENGUS                    HER  2          
+204  MACKEREL            ATLANTIC MACKEREL        SCOMBER SCOMBRUS                   MAC  2          
+212  BUTTERFISH          ATLANTIC BUTTERFISH      PEPRILUS TRIACANTHUS               BUT  2          
+216  MENHADEN            ATLANTIC MENHADEN        BREVOORTIA TYRANNUS                MHA  2          
+220  SAURY               ATLANTIC SAURY           SCOMBERESOX SAURUS                 SAU  2          
+224  BAY ANCHOVY         BAY ANCHOVY              ANCHOA MITCHILLI                   ANB  2          
+228  BLUEFISH            BLUEFISH                 POMATOMUS SALTATRIX                BLU  2          
+232  CREVALLE            CREVALLE JACK            CARANX HIPPOS                      CVJ  2          
+236  FRIGATE TUNA        FRIGATE TUNA             AUXIS THAZARD                      FRI  2          
+240  K MACKEREL          KING MACKEREL            SCOMBEROMORUS CAVALLA              KGM  2          
+244  S MACKEREL          ATLANTIC SPANISH MACKERELSCOMBEROMORUS MACULATUS            SSM  2          
+252  SAILFISH            SAILFISH                 ISTIOPHORUS PLATYPTERUS            SAI  2          
+256  WHITE MARLIN        ATLANTIC WHITE MARLIN    TETRAPTURUS ALBIDUS                WHM  2          
+260  BLUE MARLIN         ATLANTIC BLUE MARLIN     MAKAIRA NIGRICANS                  BUM  2          
+264  SWORDFISH           SWORDFISH                XIPHIAS GLADIUS                    SWO  2          
+272  ALBACORE TUNA       ALBACORE TUNA            THUNNUS ALALUNGA                   ALB  2          
+274  BONITO              ATLANTIC BONITO          SARDA SARDA                        BON  2          
+276  LITTLE TUNNY        LITTLE TUNNY             EUTHYNNUS ALLETTERATUS             LTA  2          
+278  BIGEYE TUNA         BIGEYE TUNA              THUNNUS OBESUS                     BET  2          
+280  BLUEFIN TUNA        NORTHERN BLUEFIN TUNA    THUNNUS THYNNUS                    BFT  2          
+282  SKIPJACK            SKIPJACK TUNA            KATSUWONUS PELAMIS                 SKJ  2          
+284  YELLOWFIN           YELLOWFIN TUNA           THUNNUS ALBACARES                  YFT  2          
+289  TUNAS (NS)          TUNAS (NS)               SCOMBRIDAE                         TUN  2          
+299  PELAGICS (NS)       PELAGIC FISHES (NS)      ...                                PEL  2          
+302  ALEWIFE             ALEWIFE                  ALOSA PSEUDOHARENGUS               ALE  3          
+304  AMBERJACKS          AMBERJACKS (NS)          SERIOLA SP.                        AMX  3          
+306  CONGER              AMERICAN CONGER          CONGER OCEANICUS                   COA  3          
+308  A EEL               AMERICAN EEL             ANGUILLA ROSTRATA                  ELA  3          
+309  HAGEFISH            ATLANTIC HAGEFISH        MYXINE GLUTINOSA                   MYG  3          
+310  A SHAD              AMERICAN SHAD            ALOSA SAPIDISSIMA                  SHA  3          
+312  ARGENTINES          ARGENTINES (NS)          ARGENTINA SP.                      ARG  3          
+314  A CROAKER           ATLANTIC CROAKER         MICROPOGONIAS UNDULATUS            CKA  3          
+316  A NEEDLEFISH        ATLANTIC NEEDLEFISH      STRONGYLURA MARINA                 NFA  3          
+318  A SALMON            ATLANTIC SALMON          SALMO SALAR                        SAL  3          
+320  A SILVERSIDE        ATLANTIC SILVERSIDE      MENIDIA MENIDIA                    SSA  3          
+322  THR HERRING         ATLANTIC THREAD HERRING  OPISTHONEMA OGLINUM                THA  3          
+326  SLICKHEAD           BAIRD'S SLICKHEAD        ALEPOCEPHALUS BAIRDII              ALC  3          
+330  BLACK DRUM          BLACK DRUM               POGONIAS CROMIS                    BDM  3          
+332  B SEABASS           BLACK SEABASS            CENTROPRISTIS STRIATA              BSB  3          
+334  BLUEBACK            BLUEBACK SHAD            ALOSA AESTIVALIS                   BBH  3          
+340  CAPELIN             CAPELIN                  MALLOTUS VILLOSUS                  CAP  3          
+342  CHARS               CHARS (NS)               SALVELINUS SP.                     CHR  3          
+344  COBIA               COBIA                    RACHYCENTRON CANADUM               CBA  3          
+346  C POMPANO           COMMON (FLORIDA) POMPANO TRACHINOTUS CAROLINUS              POM  3          
+354  G SHAD              AMERICAN GIZZARD SHAD    DOROSOMA CEPEDIANUM                SHG  3          
+356  GRUNTS              GRUNTS (NS)              POMADASYIDAE                       GRX  3          
+360  H SHAD              HICKORY SHAD             ALOSA MEDIOCRIS                    SHH  3          
+365  LAMPFISHES          LAMPFISHES (NS)          NOTOSCOPELUS SP.                   LAX  3          
+370  MULLETS             MULLETS (NS)             MUGILIDAE                          MUL  3          
+380  HARVESTFISH         N ATLANTIC HARVESTFISH   PEPRILUS ALEPIDOTUS (=PARU)        HVF  3          
+390  PIGFISH             PIGFISH                  ORTHOPRISTIS CHRYSOPTERA           PIG  3          
+400  SMELT               RAINBOW SMELT            OSMERUS MORDAX                     SMR  3          
+402  RED DRUM            RED DRUM                 SCIAENOPS OCELLATUS                RDM  3          
+404  RED PORGY           RED PORGY                PAGRUS PAGRUS                      RPG  3          
+406  ROUGH SCAD          ROUGH SCAD               TRACHURUS LATHAMI                  RSC  3          
+410  SAND PERCH          SAND PERCH               DIPLECTRUM FORMOSUM                PES  3          
+412  SHEEPSHEAD          SHEEPSHEAD               ARCHOSARGUS PROBATOCEPHALUS        SPH  3          
+414  SPOT CROAKER        SPOT CROAKER             LEIOSTOMUS XANTHURUS               SPT  3          
+416  S WEAKFISH          SPOTTED WEAKFISH         CYNOSCION NEBULOSUS                SWF  3          
+418  SQUETEAGUE          SQUETEAGUE (GRAY WEAKFISHCYNOSCION REGALIS                  STG  3          
+420  STRIPED BASS        STRIPED BASS             MORONE SAXATILIS                   STB  3          
+422  STURGEONS           STURGEONS (NS)           ACIPENSERIDAE                      STU  3          
+430  TARPON              TARPON                   TARPON (=MEGALOPS) ATLANTICUS      TAR  3          
+432  TROUTS              TROUTS (NS)              SALMO SP.                          TRO  3          
+440  WHITE PERCH         WHITE PERCH              MORONE AMERICANA                   PEW  3          
+442  ALFONSINOS          ALFONSINOS (NS)          BERYX SP.                          ALF  3          
+452  S DOGFISH           SPINY (=PICKED) DOGFISH  SQUALUS ACANTHIAS                  DGS  3          
+459  DOGFISHES           DOGFISHES (NS)           SQUALIDAE                          DGX  3
+460  SAND TIGER          SAND TIGER SHARKk	  ODONTASPIS TAURU                   CCT  3
+462  PORBEAGLE           PORBEAGLE                LAMNA NASUS                        POR  3 
+464  SHORTFIN MAKO	 SHORTFIN MAKO SHARK      ISURUS OXYRINCHUS                  SMA  3
+470  SHARPNOSE SHARK	 ATLANTIC SHARPNOSE SHARK RHIZOPRIONODON TERRANOVAE          RHT  3
+467  DUSKY SHARK         DUSKY SHARK              CARCHARHINUS OBSCURUS              DUS  3 
+468  BLUE SHARK          GREAT BLUE SHARK         PRIONACE GLAUCA                    BSH  3
+469  LARGE SHARKS        LARGE SHARKS (NS)        SQUALIFORMES                       SHX  3  
+473  BOREAL SHARK        BOREAL (GREENLAND) SHARK SOMNIOSUS MICROCEPHALUS            GSK  3
+472  BLACK DOGFISH       BLACK DOGFISH            CENTROSCYLLIUM FABRICII            CFB  3
+474  BASKING SHARK       BASKING SHARK            CETORHINUS MAXIMUS                 BSK  3
+479  SKATES              SKATES (NS)              RAJA SP.                           SKA  3     
+480  LITTLE SKATE        LITTLE SKATE             LEUCORAJA ERINACEA                 RJD  3
+482  ARCTIC SKATE        ARCTIC SKATE             AMBLYRAJA HYPERBOREA               RJG  3
+484  BARNDOOR SKATE      BARNDOOR SKATE           DIPTURUS LAEVIS                    RJL  3
+487  WINTER SKATE        WINTER SKATE             LEUCORAJA OCELLATA                 RJT  3
+490  SPINYTAIL SKATE     SPINYTAIL(SPINETAIL)RAY  BATHYRAJA SPINACAUDA               RJQ  3
+488  THORNY SKATE        THORNY (STARRY) SKATE    AMBLYRAJA RADIATA                  RJR  3
+489  SMOOTH SKATE        SMOOTH SKATE             MALACORAJA SENTA                   RJS  3
+499  FINFISH (NS)        FINFISHES (NS)           ...                                FIN  3          
+502  LONGFIN SQUID       LONGFIN SQUID            LOLIGO PEALEI                      SQL  5          
+504  SHORTFIN SQUID      SHORTFIN SQUID           ILLEX ILLECEBROSUS                 SQI  5          
+509  SQUIDS (NS)         SQUIDS (NS)              LOLIGINIDAE, OMMASTREPHIDAE        SQU  5          
+512  RAZOR CLAM          ATLANTIC RAZOR CLAM      ENSIS DIRECTUS                     CLR  5          
+514  HARD CLAM           HARD CLAM                MERCENARIA MERCENARIA              CLH  5          
+516  OCEAN QUAHOG        OCEAN QUAHOG             ARCTICA ISLANDICA                  CLQ  5          
+518  SOFT CLAM           SOFT CLAM                MYA ARENARIA                       CLS  5          
+520  SURF CLAM           SURF CLAM                SPISULA SOLIDISSIMA                CLB  5          
+525  STIMPSON CLAM       STIMPSON SURF CLAM       SPISULA POLYNYMA                   CLT  5          
+529  CLAMS (NS)          CLAMS (NS)               BIVALVIA                           CLX  5          
+532  BAY SCALLOP         BAY SCALLOP              ARGOPECTEN IRRADIANS               SCB  5          
+534  CALICO SCALLOP      CALICO SCALLOP           ARGOPECTEN GIBBUS                  SCC  5          
+535  ICELAND SCALLOP     ICELANDIC SCALLOP        CHLAMYS ISLANDICA                  ISC  5          
+536  SEA SCALLOP         SEA SCALLOP              PLACOPECTEN MAGELLANICUS           SCA  5          
+539  SCALLOPS (NS)       SCALLOPS (NS)            PECTINIDAE                         SCX  5          
+542  OYSTER              AMERICAN CUPPED OYSTER   CRASSOSTREA VIRGINICA              OYA  5          
+552  BLUE MUSSEL         BLUE MUSSEL              MYTILUS EDULIS                     MUS  5          
+562  WHELKS              WHELKS (NS)              BUSYCON SP.                        WHX  5          
+564  PERIWINKLES         PERIWINKLES (NS)         LITTORINA SP.                      PER  5          
+589  MOLLUSCS (NS)       MARINE MOLLUSCS (NS)     MOLLUSCA                           MOL  5          
+602  ROCK CRAB           ATLANTIC ROCK CRAB       CANCER IRRORATUS                   CRK  5          
+604  BLUE CRAB           BLUE CRAB                CALLINECTES SAPIDUS                CRB  5          
+606  GREEN CRAB          GREEN CRAB               CARCINUS MAENAS                    CRG  5          
+608  JONAH CRAB          JONAH CRAB               CANCER BOREALIS                    CRJ  5          
+610  QUEEN CRAB          QUEEN CRAB               CHIONOECETES OPILIO                CRQ  5          
+612  RED CRAB            RED CRAB                 GERYON QUINQUEDENS                 CRR  5          
+614  STONE CRAB          STONE KING CRAB          LITHODES MAIA                      KCT  5          
+619  CRABS (NS)          MARINE CRABS (NS)        REPTANTIA                          CRA  5          
+622  LOBSTER             AMERICAN LOBSTER         HOMARUS AMERICANUS                 LBA  5          
+632  N PRAWN             NORTHERN PRAWN           PANDALUS BOREALIS                  PRA  5          
+633  AESOP SHRIMP        AESOP SHRIMP             PANDALUS MONTAGUI                  AES  5          
+638  PENAEUS SHRIMPS     PENAEUS SHRIMPS (NS)     PENAEUS SP.                        PEN  5          
+639  SHRIMPS (NS)        PINK (=PANDALID) SHRIMPS PANDALUS SP.                       PAN  5          
+649  CRUSTACEANS (NS)    MARINE CRUSTACEANS (NS)  CRUSTACEA                          CRU  5          
+652  SEA URCHIN          SEA URCHIN               STRONGYLOCENTROTUS SP.             URC  5          
+669  WORMS (NS)          MARINE WORMS (NS)        POLYCHAETA                         WOR  5          
+672  HORSESHOE CRAB      HORSESHOE CRAB           LIMULUS POLYPHEMUS                 HSC  5          
+699  INVERT. (NS)        MARINE INVERTEBRATES (NS)INVERTEBRATA                       INV  5          
+702  BROWN SEAWEEDS      BROWN SEAWEEDS           PHAEOPHYCEAE                       SWB  6          
+704  RED SEAWEEDS        RED SEAWEEDS             RHODOPHYCEAE                       SWR  6          
+709  SEAWEEDS (NS)       SEAWEEDS (NS)            ALGAE                              SWX  6          
