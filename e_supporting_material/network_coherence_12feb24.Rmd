@@ -1,15 +1,14 @@
 ---
 title: "Network Coherence - current state of concept"
 output:
+  pdf_document: default
+  html_notebook: default
   html_document:
     df_print: paged
-  html_notebook: default
-  pdf_document: default
 editor_options: 
   markdown: 
     wrap: 72
 ---
-
 
 <br>
 
@@ -71,7 +70,6 @@ responses to environmental variables.
 
 $$ NC = Procrustes (A, C) $$
 
-
 <br>
 
 #### Environmental coherence matrix
@@ -103,9 +101,9 @@ $$ Cov(Iresponse_i, Iresponse_j) $$
 The rate at which species respond to environmental change depends on
 their generation time: shorter generation times allow species to respond
 faster. Data on species' generation time is scarce, but we can
-approximate it with the organismal size because they are linked: smaller
+approximate it with the organism size because they are linked: smaller
 organisms show higher generation times due to having higher metabolic
-rates, higher investment in reproduction, higher resource adquisition
+rates, higher investment in reproduction, higher resource aquisition
 and use, and shorter life-spans. Therefore, smaller species should
 respond faster and therefore show increased sensitivity to changes in
 the environment.
@@ -149,23 +147,23 @@ $$C_{{ij}} = \frac{\sum_{k = 1}^{n} Cov(P_i'(x_k) , P_j'(x_k))}{n}$$
 
 <br>
 
-
-
 *Net responses*
 
 The matrix of covariance of net responses can be computed locally and
 regionally from population time series. A community-level dynamic latent
-trend model, which models abundance as a function of time and species as random effects, can be used to capture the joint variation between species
-as their biomass fluctuates through time (Hebert et al. unpubl). Species' correlation coefficients correspond to the pairwise co-response
+trend model, which models abundance as a function of time and species as
+random effects, can be used to capture the joint variation between
+species as their biomass fluctuates through time (Hebert et al. unpubl).
+Species' correlation coefficients correspond to the pairwise co-response
 to the environment.
 
 <br>
 
-
-
-<div style="text-align:center">
-    ![Image Alt Text](figues/fig1.PNG)
-</div>
+::: {style="text-align:center"}
+```         
+![Image Alt Text](figues/fig1.PNG)
+```
+:::
 
 ------------------------------------------------------------------------
 
@@ -173,27 +171,18 @@ to the environment.
 
 <br>
 
--   Alteration in community structure and functioning with environmental change
-    should be inversely proportional to coherence.
+-   Alteration in community structure and functioning with environmental
+    change should be inversely proportional to coherence.
 
 -   The coherence between interacting species should be more important
     for the system dynamics than the coherence of the whole community
     (i.e. including non-interacting pairs).
-    
--   Species roles in driving community responses to environmental change will depend on their contribution to both network structure and coherence.
+
+-   Species roles in driving community responses to environmental change
+    will depend on their contribution to both network structure and
+    coherence.
 
 ------------------------------------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
 
 ::: {style="margin: 20px;"}
 ::: {style="background-color: #f2f2f2; padding: 10px;"}
@@ -201,15 +190,15 @@ to the environment.
 
 <br>
 
-**Objective:** Derive mathematical theory that would provide an expectation
-on the relationship between ecological coherence and changes in
-ecosystem functioning
+**Objective:** Derive mathematical theory that would provide an
+expectation on the relationship between ecological coherence and changes
+in ecosystem functioning
 
 **Intuition:** Lack of coherence will lead to disruptions in ecosystem
 functioning. Expected change in ecosystem functioning is proportional to
 the inverse of ecological coherence.
 
----------------------
+------------------------------------------------------------------------
 
 <br>
 
@@ -221,7 +210,7 @@ Consider the standard Lotka-Volterra model of ecological interactions:
 
 <br>
 
-$$\frac{dN_i}{dt} = N_i (b_i - \sum \alpha_{ij}N_j)$$ 
+$$\frac{dN_i}{dt} = N_i (b_i - \sum \alpha_{ij}N_j)$$
 
 <br>
 
@@ -237,8 +226,7 @@ where $A^{-1}$ is the inverse of the interaction matrix. By inversing
 the interaction matrix, we obtain the net effects (direct and indirect)
 of biotic interactions.
 
-<br>
-<br>
+<br> <br>
 
 ##### **Ecosystem functioning**
 
@@ -280,8 +268,7 @@ matrix.
 The problem is: what is the expected change in density for any given
 species, $E[\delta N_i]$ knowing that the $b$ coefficients are changing?
 
-<br>
-<br>
+<br> <br>
 
 ##### **Useful properties of random variables**
 
@@ -310,8 +297,7 @@ where $p$ is the correlation coefficient.
 
 $$ E[\delta N_{i}] = E[a_{ij}^{(-1)} + E[\delta b_j] + cov(a_{ij}^{(-1)}, \delta b_j) ] $$
 
-<br>
-<br>
+<br> <br>
 
 ##### **Anticipating consequences of environmental changes**
 
@@ -333,9 +319,6 @@ $$ E[\delta N_{ij}] = E[a_{ij}^{(-1)} + E[\delta b_j] + cov(a_{ij}^{(-1)}, \delt
 
 <br>
 
-
-
-
 ##### **Expectations**
 
 <br>
@@ -350,11 +333,8 @@ $$ E[\delta N_{ij}] = E[a_{ij}^{(-1)} + E[\delta b_j] + cov(a_{ij}^{(-1)}, \delt
 
 -   The variance in the pairwise effects will increase with the square
     of the correlation. Or at least, it should increase non-linearly.
-    
 
-<br>
-<br>
-
+<br> <br>
 
 ##### **Useful properties of random variables**
 
@@ -374,9 +354,7 @@ The variance is:
 
 $$var(r1 + r2) = var(r_1) + var(r_2) + 2cov(r_1, r_2)  $$
 
-<br>
-<br>
-
+<br> <br>
 
 ##### **Anticipating consequences of environmental changes**
 
@@ -398,8 +376,7 @@ $$ var(\delta \phi^1) = \sum  \delta \phi_i^1 + 2 \sum cov(\delta \phi_i^1, \del
 
 <br>
 
-----------------------
-
+------------------------------------------------------------------------
 
 ##### **Expectations**
 
@@ -410,16 +387,13 @@ $$ var(\delta \phi^1) = \sum  \delta \phi_i^1 + 2 \sum cov(\delta \phi_i^1, \del
 
 -   The variance in ecosystem functioning will be inversely proportional
     to coherence.
-    
-----------------------
+
+------------------------------------------------------------------------
 
 > <small>!This is counterintuitive to us and the formulas need to be
 > revisited.</small>
 :::
 :::
-
-
-
 
 <br> <br> <br>
 
@@ -433,7 +407,7 @@ of network turnover.
 
 **Objective:** mathematically link coherence to network beta diversity
 
-___________
+------------------------------------------------------------------------
 
 <br>
 
@@ -448,49 +422,60 @@ $$ P(L_{ij}, x_i, x_j | E) = P(L_{ij}|E) P(x_i,x_j | E) $$
 <br>
 
 The probability of species co-occurring $P(x_i,x_j | E)$ can be
-decomposed further down into a condition probability: 
+decomposed further down into a condition probability:
 
 <br>
 
-$$  P(x_i,x_j | E) = P(x_i | x_j, E) P (x_j | E) $$
+$$  P(x_i,x_j | E) = P(x_i | x_j, E) P (x_j | E) $$ <br>
+
+where the first term at the right side of the equation is the
+probability of observing one species given the presence of the other in
+a given environment and the second is the probability of observing the
+other species.
+
+The first term $P(x_i| x_j, E)$ is actually a measure of correlation
+between the two species, and therefore directly related to coherence.
+
+We would then expect different beta diversity depending on the coherence
+in species responses and the structure of the L matrix.
+
 <br>
 
-where the first term at the right side of the equation is the probability of
-observing one species given the presence of the other in a given
-environment and the second is the probability of observing the other species.
-
-The first term $P(x_i| x_j, E)$ is actually a measure of correlation between
-the two species, and therefore directly related to coherence.
-
-We would then expect different beta diversity depending on the coherence in species responses and the structure of the L matrix.
-
-
-<br>
-
+::: {style="background-color: #f2f2f2; padding: 10px;"}
 **Network beta-diversity and network properties**
 
-The correlation between beta-diversity of networks and coherence would depend on modularity and nestedness.
+The correlation between beta-diversity of networks and coherence would
+depend on modularity and nestedness.
 
-* $\beta_{s} (species turnover) would be highly and inversely correlated to coherence, as highly coherent communities would tend to have similar responses to the environment, and, therefore, species would tend to "move" together. Low coherence in modular and nested networks would mean high species turnover, and species would be replaced as environmental conditions change.
+-   $\beta_{s}$ (species turnover) would be highly and inversely
+    correlated to coherence, as highly coherent communities would tend
+    to have similar responses to the environment, and, therefore,
+    species would tend to "move" together. Low coherence in modular and
+    nested networks would mean high species turnover, and species would
+    be replaced as environmental conditions change.
 
-* $\beta_{os} (links turnover) would be higher in less modular and more nested networks, where coherence is high. That's because this measure is related to the number of similar species in any two communities: given that species A, B and C occur in any two networks, if the links between them are different, we have a high $\beta_{os}.
+-   $\beta_{os}$ (links turnover) would be higher in less modular and
+    more nested networks, where coherence is high. That's because this
+    measure is related to the number of similar species in any two
+    communities: given that species A, B and C occur in any two
+    networks, if the links between them are different, we have a high
+    $\beta_{os}$.
 
-* $\beta_{wn} (network uniqueness) would be higher in highly modular networks where niche overlap is low. Coherence would he higher within each community than in the metaweb.
-
+-   $\beta_{wn}$ (network uniqueness) would be higher in highly modular
+    networks where niche overlap is low. Coherence would he higher
+    within each community than in the metaweb.
 
 **Expectations**
 
 -   NC should decrease with modularity and increase with nestedness
     [CONNECTANCE, DEGREE DISTRIBUTION]
 
-![](e_supporting_material/supporting_figures/coherence_mod_nest.jpg)
+![](supporting_figures/coherence_mod_nest.jpg)
 
 -   Niche breath - low and high extremes would decrease coherence, but
     moderate values would increase it.
 
-![](e_supporting_material/supporting_figures/coherence_niche_breadth.jpg)
-
--   contribution to bs and Bos
+![](supporting_figures/coherence_niche_breadth.jpg)
 
 > <small>The relationship between coherence and beta diversity is
 > contingent on how we measure beta diversity on networks - at the
@@ -503,10 +488,13 @@ The correlation between beta-diversity of networks and coherence would depend on
 -   Competition interactions would show higher incoherence than
     predator-prey.
 
--   Predators would have more periods of incoherence with any pair of preys if they are generalists.
+-   Predators would have more periods of incoherence with any pair of
+    preys if they are generalists.
 
--    Preys would have higher periods of incoherence between them, due to niche partitioning.
-:::
+-   Preys would have higher periods of incoherence between them, due to
+    niche partitioning.
+
+::: 
 
 <br> <br> <br>
 
@@ -515,11 +503,11 @@ The correlation between beta-diversity of networks and coherence would depend on
 
 <br>
 
-**Objective:** Derive mathematical theory that would provide an expectation
-on species' roles in the stability of communities in the face of
-environmental changes.
+**Objective:** Derive mathematical theory that would provide an
+expectation on species' roles in the stability of communities in the
+face of environmental changes.
 
--------------
+------------------------------------------------------------------------
 
 To explore this question, we can analyze the impact of species' removal
 on NC.
@@ -547,10 +535,7 @@ on NC.
 [...]
 :::
 
-
-
 Other expectations:
-
 
 -   Communities in more seasonal environments may show higher Network
     Coherence because species may be more synchronized in responding to
@@ -558,13 +543,11 @@ Other expectations:
 
 -   NC may decrease with the aggregation of network-level information
     (taxonomic, guilds, functional groups)
-    
-    
 
 Other considerations:
-    
-    
--   We should also take into account the fact that some environmental changes are more predictable (e.g. increase in temperature) than others (e.g. drought events).
 
+-   We should also take into account the fact that some environmental
+    changes are more predictable (e.g. increase in temperature) than
+    others (e.g. drought events).
 
 $$ C_{i,j} = corr(\alpha_i, \alpha_j)$$
