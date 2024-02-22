@@ -604,6 +604,8 @@ We will work on three different fronts: writing down the concepts, illustrating 
 
 ### CONCEPT DEFINITION
 
+<br>
+
 > Write down the concepts.
 
 <br>
@@ -613,6 +615,8 @@ We will work on three different fronts: writing down the concepts, illustrating 
 * Formulas of NC and its components
 * Potential applications
 * General predictions
+
+<br>
 
 ### ILLUSTRATION
 
@@ -629,7 +633,11 @@ We will work on three different fronts: writing down the concepts, illustrating 
 * Procrustes vs other tests
 * NC ~ environmental dimensionality
 
+<br>
+
 ### APPLICATION
+
+<br>
 
 > Develop the maths and simulations to relate NC with models to assess ecosystem functioning and structure.
 
