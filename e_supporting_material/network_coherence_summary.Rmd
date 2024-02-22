@@ -592,3 +592,54 @@ Other considerations:
 <br>
 <br>
 
+
+
+## Activities for the main meeting
+
+<br>
+
+We will work on three different fronts: writing down the concepts, illustrating and describing the behavior of the metric with data from a fish foodweb, and applying it to models for ecosystem functioning and structure.
+
+<br>
+
+### CONCEPT DEFINITION
+
+> Write down the concepts.
+
+<br>
+
+* Definition of NC
+* Definition of its components (matrices C and A)
+* Formulas of NC and its components
+* Potential applications
+* General predictions
+
+### ILLUSTRATION
+
+<br>
+
+> Work with the fish data and compute NC from both net and intrinsic responses.
+
+* Coherence ~ interacting/non-interacting species
+* Coherence ~ trophic position
+* Coherence ~ generalism level
+* Correlation (spp roles in network,  spp roles in environmental coherence)
+* Discuss differences in coherence between net/intrinsic interactions
+* Weighted vs unweighted A
+* Procrustes vs other tests
+* NC ~ environmental dimensionality
+
+### APPLICATION
+
+> Develop the maths and simulations to relate NC with models to assess ecosystem functioning and structure.
+
+* Mathematically link NC to ecosystem functioning through LV models.
+* Check how NC behaves in LV model.
+* Mathematically link NC to beta network diversity.
+* Check with simulations whether NC provide information on species roles different than common metrics.
+
+
+
+
+
+
