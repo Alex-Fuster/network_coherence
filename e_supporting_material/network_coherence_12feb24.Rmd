@@ -474,7 +474,9 @@ depend on modularity and nestedness.
 -   Niche breath - low and high extremes would decrease coherence, but
     moderate values would increase it.
 
-![](supporting_figures/coherence_niche_breadth.jpg)
+
+<img src="supporting_figures/coherence_niche_breadth.jpg" alt="drawing" width="200"/>
+
 
 > <small>The relationship between coherence and beta diversity is
 > contingent on how we measure beta diversity on networks - at the
