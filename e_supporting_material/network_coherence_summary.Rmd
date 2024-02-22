@@ -41,6 +41,7 @@ The study will be expressed in a perspective paper (journal to be determined - e
 
 
 
+
 <br>
 
 ### Network Coherence concept
@@ -88,7 +89,7 @@ $$ NC = Procrustes (A, C) $$
 
 <br>
 
-#### Environmental coherence matrix
+### Environmental coherence matrix
 
 <br>
 
@@ -97,7 +98,9 @@ pairwise co-response of species to the environment.
 
 <br>
 
-*Intrinsic responses*
+#### *Intrinsic responses*
+
+<br>
 
 Because we dont have data of the fitness of multiple species across the
 space, we can approximate species' sensitivity to the environment
@@ -164,18 +167,36 @@ $$C_{{ij}} = \frac{\sum_{k = 1}^{n} Cov(P_i'(x_k) , P_j'(x_k))}{n}$$
 
 
 
-*Net responses*
-
-The matrix of covariance of net responses can be computed locally and
-regionally from population time series. A community-level dynamic latent
-trend model, which models abundance as a function of time and species as random effects, can be used to capture the joint variation between species
-as their biomass fluctuates through time (Hebert et al. unpubl). Species' correlation coefficients correspond to the pairwise co-response
-to the environment.
+#### *Net responses*
 
 <br>
 
+The matrix of covariance of net responses can be computed locally and
+regionally from population time series. From time series data, population size can be modeled through time using a hierarchical model that shares information across populations to estimate their joint temporal trends in population size while accounting for their covariation. The correlations between population trends are captured as species’ relationships with latent temporal predictors estimated at each time step, which allow information to be shared across populations at each time step to estimate the average trend. 
+
+<br>
+
+This model can be implemented as a Bayesian dynamic generalized additive model (DGAM), which jointly estimates trends in multiple time series with a dynamic latent component that captures temporal associations between species (Clark & Wells, 2022). It is conceptually analogous to approaches like hierarchical modelling of species communities (HMSC) and joint species distribution models that share information across species to estimate joint responses to unmeasured “latent” predictors (Warton et al., 2015; Thorson et al., 2016; Ovaskainen et al., 2017). 
+
+Species' coefficients $\alpha$ from the model output are their annual rate of change. The correlation of $\alpha$ coefficient between species pairs corresponds to the pairwise co-response to the environment and are used to build the coherence matrix (Hebert et al. unpubl.)
 
 
+<br>
+
+$$ C_{ij} = cor(\alpha_i, \alpha_j)$$
+<br>
+
+<div style="text-align:center">
+
+<img src="supporting_figures/conceptual_NC.png" alt="Figure Caption" width="700">
+
+<br>
+
+ <figcaption style="font-size: smaller;"> Netwok Coherence results from the correlation between the $C$ and $A$ matrices. $C$ matrix of net responses is obtained from species' pairwise correlations in population dynamics - computed with a DGAM model -, and of intrinsic responses from pairwise covariances or correlations of their modeled suitability (computed with SDMs, for a single point or a spatial range in the environment). Interaction data can be computed at local or regional scales depending on the community we consider. </figcaption>
+
+</div>
+
+<br>
 ------------------------------------------------------------------------
 
 ### General expectations
@@ -190,7 +211,6 @@ to the environment.
 -   Species roles in driving community responses to environmental change will depend on their contribution to both network structure and coherence.
 
 ------------------------------------------------------------------------
-
 
 
 
@@ -473,6 +493,24 @@ We would then expect different beta diversity depending on the coherence in spec
 
 -   Niche breath - low and high extremes would decrease coherence, but
     moderate values would increase it.
+    
+    
+
+<br>
+
+<div style="text-align:center">
+
+<img src="supporting_figures/coherence_mod_nest.jpg" alt="Figure Caption" width="450">
+
+</div>   
+
+
+<div style="text-align:center">
+
+<img src="supporting_figures/coherence_niche_breadth.jpg" alt="Figure Caption" width="450">
+
+</div>   
+    
 
 -   contribution to bs and Bos
 
@@ -550,4 +588,7 @@ Other considerations:
 -   We should also take into account the fact that some environmental changes are more predictable (e.g. increase in temperature) than others (e.g. drought events).
 
 
+<br>
+<br>
+<br>
 
