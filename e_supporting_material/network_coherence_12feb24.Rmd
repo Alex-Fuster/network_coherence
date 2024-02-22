@@ -76,14 +76,14 @@ community, these are restricted to limits where interactions matter**
 (e.g. trees competition occurs at regional levels).
 
 The NC metric is computed correlating the matrix of biotic interactions
-$A$ with a matrix of taxa covariances with the environment $C$. We can
-use a *Procrustes* analysis to assess the degree of correspondence
-between the observed species interactions and the coherence of species'
-responses to environmental variables.
+$A$ with an environmental coherence matrix $C$ which contains taxa covariances in response to the environment. There are several methods that we could use to express the concordance between the two matrices, and which one we can use is still a matter of debate. One option is the Procrustes analysis, a commonly employed statistical method in various fields, including ecology, to assess the similarity or correspondence between different datasets. It is used to compare two sets of multivariate data by finding an optimal transformation (rotation, translation, scaling, and reflection) that minimizes the differences between them. With this analysis, we are essentially evaluating how well the observed patterns of species interactions match the patterns of covariances in species' responses to environmental variables.
 
 <br>
 
 $$ NC = Procrustes (A, C) $$
+> <small>We haven't touched on the different structures that interaction matrices have and how these should be matched with the squared environmental coherence matix</small>
+
+
 
 
 <br>
@@ -110,7 +110,6 @@ the curve $F(x_i)$.
 
 $$\beta_i = \frac{dF(x_i)}{dx_i} \bigg|_{x=x_k}$$
 
-$$ Cov(Iresponse_i, Iresponse_j) $$
 
 <br>
 
