@@ -30,6 +30,27 @@ interactions <- rglobi::get_interaction_matrix(source.taxon.names = taxon_names_
                                                target.taxon.names = taxon_names_fishbase,
                                                interaction.type = "eats")
 
+
+
+
+######################################
+
+
+# Further search effort for those species missing interactions
+
+# Raja senta <- Enchelyopus cimbrius
+
+# Limanda ferruginea  <- Clupea harengus
+
+# Lycodes -> Gadus morhua, Anarhichas lupus
+
+# Raja spinicauda <- sebastes metella
+
+
+
+######################################
+
+
 # format into a matrix for saving
 diet <- lapply(interactions, unlist) 
 diet <- do.call(cbind, diet)
