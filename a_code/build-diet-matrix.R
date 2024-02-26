@@ -39,13 +39,16 @@ interactions <- rglobi::get_interaction_matrix(source.taxon.names = taxon_names_
 # Further search effort for those species missing interactions
 
 # Raja senta <- Enchelyopus cimbrius
+#(reference: https://repository.library.noaa.gov/view/noaa/3755)
 
 # Limanda ferruginea  <- Clupea harengus
+#(reference: https://repository.library.noaa.gov/view/noaa/3755)
 
 # Lycodes -> Gadus morhua, Anarhichas lupus
+#(reference: GLOBI)
 
 # Raja spinicauda <- sebastes metella
-
+#(reference: https://www.nafo.int/Portals/0/PDFs/sc/2002/scr02-093.pdf)
 
 
 ######################################
