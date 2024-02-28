@@ -1,0 +1,59 @@
+---
+title: "Procrustes test"
+output: html_notebook
+---
+
+
+### COMPUTE NC
+
+- input two matrices
+- convert them to distance matrix and compute a principal component ordination
+- Conduct a Procrustes test between the two ordinations and get the correlation
+
+```{r}
+# Install and load the vegan package if not already installed
+# install.packages("vegan")
+library(vegan)
+library(ade4)
+
+# Set seed for reproducibility
+set.seed(123)
+
+# Number of species
+n <- 20
+
+# Generate random adjacency matrix A
+A <- matrix(sample(c(0,1), n*n, replace = TRUE), nrow = n)
+diag(A) <- 0
+
+# Generate random adjacency matrix C
+C <- matrix(runif(n*n), nrow = n)
+diag(C) <- 0
+
+
+# ordination
+
+pc_A <- dudi.pco(as.dist(A), scannf = FALSE, full = TRUE)
+pc_C <- dudi.pco(as.dist(C), scannf = FALSE, full = TRUE)
+
+
+# Plotting PCoA for matrix A
+plot(pc_A$li[,1], pc_A$li[,2], main = "PCoA for Matrix A", xlab = "PC1", ylab = "PC2")
+
+# Plotting PCoA for matrix C
+plot(pc_C$li[,1], pc_C$li[,2], main = "PCoA for Matrix C", xlab = "PC1", ylab = "PC2")
+
+
+# Perform Procrustes analysis
+procrustes_result <- protest(pc_A, pc_C)
+
+procrustes_result$ss
+
+```
+
+Plot Procrustes
+
+```{r}
+plot(procrustes_result)
+```
+
