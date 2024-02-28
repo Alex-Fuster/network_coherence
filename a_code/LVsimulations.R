@@ -1,3 +1,5 @@
+set.seed(12345)
+
 library(deSolve)
 library(vegan)
 library(ade4)
@@ -56,7 +58,7 @@ post_perturb <- simulate_dynamics_c(parms, 100, fw.mode, init_biomass = equil)
 
 out <- rbind(pre_perturb, post_perturb)
 
-plot(y = out[,2], x = 1:200, type = "l", ylim = c(0, max(out[,c(2:6)])))
+plot(y = out[,2], x = 1:200, type = "l", ylim = c(0, max(out[,c(2:6)])), xlab = "time", ylab = "Biomass")
 lines(y = out[,3], x = 1:200, col = "red")
 lines(y = out[,4], x = 1:200, col = "blue")
 lines(y = out[,5], x = 1:200, col = "violet")
