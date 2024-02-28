@@ -10,11 +10,14 @@ output: html_notebook
 - convert them to distance matrix and compute a principal component ordination
 - Conduct a Procrustes test between the two ordinations and get the correlation
 
+
 ```{r}
-# Install and load the vegan package if not already installed
-# install.packages("vegan")
 library(vegan)
 library(ade4)
+```
+
+
+```{r}
 
 # Set seed for reproducibility
 set.seed(123)
@@ -35,6 +38,7 @@ diag(C) <- 0
 
 pc_A <- dudi.pco(as.dist(A), scannf = FALSE, full = TRUE)
 pc_C <- dudi.pco(as.dist(C), scannf = FALSE, full = TRUE)
+
 
 
 # Plotting PCoA for matrix A
