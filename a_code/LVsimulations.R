@@ -65,7 +65,7 @@ pre_perturb <- simulate_dynamics_c(parms, maxt, fw.model)
 
 # C matrix: correlation in how b changes
 # coherence: correlation between C and FW
-delta_r <- rnorm(nsp, 0, 0.1)
+delta_r <- rnorm(nsp, 0.2, 0.001)
 # C <- delta_r %*% t(delta_r)
 new_r <- r + delta_r
 parms$r <- new_r
@@ -89,7 +89,7 @@ compute_NC <- function(A, delta_r){
   A_inv <- ginv(A)
   NC <- c()
   for (i in c(1:length(delta_r))){
-    NC <- c(NC, cor(A_inv[-i,i], delta_r[-i]))
+    NC <- c(NC, cor(A_inv[i,-i], delta_r[-i]))
   }
   return(NC)
 }
