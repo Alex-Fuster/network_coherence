@@ -14,25 +14,34 @@ simulate_dynamic <- function(params){
       r <- runif(nsp, r_basal[1], r_basal[2])
       # negative growth rate for non basal
       r[nonbasal_sp] <- runif(length(nonbasal_sp), r_nonbasal[1], r_nonbasal[2])
-      
-      # add interactions strength to matrix
-      efficiency <- 0.5
-      Net <- metaweb * runif(nsp^2, -0.5, 0)
-      Net <- Net - t(Net) * efficiency
-      diag(Net) <- runif(nsp, -0.01, 0)
     } else {
       stop("Incorrect network type")
     }
+    # add interactions strength to matrix
+    Net <- add_weights(metaweb, Net_type, interaction[1], interaction[2], efficiency)
     dyn_params <- list(fw = Net, r = r)
     pre_perturb <- simulate_dynamics_c(dyn_params, maxt, fw.model)
-    delta_r <- rnorm(nsp, delta_r[1], delta_r[2])
+    delta_r <- get_delta_r(Net, NC, delta_r[1], delta_r[2])
     new_r <- r + delta_r
-    parms$r <- new_r
+    dyn_params$r <- new_r
     equil <- as.numeric(pre_perturb[nrow(pre_perturb),-1])
-    post_perturb <- simulate_dynamics_c(parms, maxt, fw.mode, init_biomass = equil)
+    post_perturb <- simulate_dynamics_c(dyn_params, maxt, fw.mode, init_biomass = equil)
     out <- rbind(pre_perturb, post_perturb)
   })
   return(out)
+}
+
+add_weights <- function(web, Net_type, min_weight, max_weight, efficiency = NULL) {
+  if (Net_type == "random"){
+    
+  } else if (Net_type == "predator-prey") {
+    Net <- metaweb * runif(nrow(metaweb)^2, min_weight, max_weight)
+    Net <- Net - t(Net) * efficiency
+    diag(Net) <- runif(nsp, -0.01, 0)
+  } else {
+    stop("Incorrect network type")
+  }
+  return(Net)
 }
 
 # function creating the binary matrix of interaction
@@ -52,4 +61,9 @@ fw.model <- function (t, B, params) {
     dBdt <- t(r + fw %*% B)*B
     list(dBdt)
   })
+}
+
+# get delta_r based on NC
+get_delta_r <- function(Net, NC, mean, sd) {
+  rnorm(nrow(nsp), mean, sd)
 }
