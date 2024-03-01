@@ -28,7 +28,7 @@ C <- 0.1
 maxt <- 1000
 
 # params: food web, b
-fw.model <- function (B, params) {
+fw.model <- function (t, B, params) {
   with(as.list(c(B, params)), {
     B[B < 10^-8] <- 0 # prevent numerical problems
     dBdt <- t(r + fw %*% B)*B

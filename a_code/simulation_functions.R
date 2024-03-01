@@ -1,8 +1,12 @@
+##TODO
+# Different type of network: random, mutualistic, competition, niche model
+# Clean a little: turn into function + documentation
+# Make sure the parametrization of LV model is adequate
+# Implement the control of NC using faux::rnorm_pre()
 
 # function simulating the dynamic
-
 simulate_dynamic <- function(params){
-  with(params {
+  with(params, {
     if (Net_type == "predator-prey") {
       metaweb <- make_metaweb(nsp, C) # create a binary matrix with only the predator->prey interaction
       nonbasal_sp <- which(colSums(metaweb) != 0) # get which species are basal (no prey)
@@ -30,24 +34,8 @@ simulate_dynamic <- function(params){
   })
   return(out)
 }
-  
-  if (params$Net_type == "predator-prey") {
-    metaweb <- make_metaweb(params$nsp, params$C) # create a binary matrix with only the predator->prey interaction
-    nonbasal_sp <- which(colSums(metaweb) != 0) # get which species are basal (no prey)
-    # growth rate positive for basal species
-    r <- runif(params$nsp, params$r_basal[1], params$r_basal[2])
-    # negative growth rate for non basal
-    r[nonbasal_sp] <- runif(length(nonbasal_sp), params$r_nonbasal[1], params$r_nonbasal[2])
-    
-    # add interactions strength to matrix
-    efficiency <- 0.5
-    FW <- metaweb * runif(nsp^2, -0.5, 0)
-    FW <- FW - t(FW) * efficiency
-    diag(FW) <- runif(nsp, -0.01, 0)
-    
-  }
-}
 
+# function creating the binary matrix of interaction
 make_metaweb <- function(S, C){
   A <- matrix(0, nrow = S, ncol = S)
   n_possible_ints <- (S*(S-1))/2
@@ -55,4 +43,13 @@ make_metaweb <- function(S, C){
   ints <- sample(c(1:n_possible_ints), n_ints)
   A[upper.tri(A)][ints] <- 1
   return(A)
+}
+
+# LV model
+fw.model <- function (t, B, params) {
+  with(as.list(c(B, params)), {
+    B[B < 10^-8] <- 0 # prevent numerical problems
+    dBdt <- t(r + fw %*% B)*B
+    list(dBdt)
+  })
 }
