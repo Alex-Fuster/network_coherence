@@ -67,3 +67,29 @@ fw.model <- function (t, B, params) {
 get_delta_r <- function(Net, NC, mean, sd) {
   rnorm(nrow(nsp), mean, sd)
 }
+
+# build interaction matrix
+build_A <- function(S, C, d, sigma, rho, Net_type = "random"){
+  # sample coefficients in pairs
+  interactions <- MASS::mvrnorm(n = S * (S-1) / 2,
+                                mu = c(0, 0),
+                                Sigma = sigma^2 * matrix(c(1, rho, rho, 1), 2, 2))
+  # build a completely filled matrix
+  A <- matrix(0, S, S)
+  A[upper.tri(A)] <- interactions[,1]
+  A <- t(A)
+  A[upper.tri(A)] <- interactions[,2]
+  if (Net_type == "mutualistic"){
+    A[A<0] <- -A[A<0]
+    } else if (Net_type == "competition"){
+      A[A>0] <- -A[A>0]
+      }
+  # determine which connections to retain
+  Connections <- (matrix(runif(S * S), S, S) <= C) * 1 
+  Connections[lower.tri(Connections)] <- 0
+  diag(Connections) <- 0
+  Connections <- Connections + t(Connections)
+  A <- A * Connections
+  diag(A) <- -d
+  return(A)
+}

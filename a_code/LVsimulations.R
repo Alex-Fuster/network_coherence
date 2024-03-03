@@ -14,7 +14,7 @@ params <- list(
   r_basal = c(0.25, 0.75), # Minimum and maximum growth rate of basal species
   r_nonbasal = c(-0.5, 0), # Minimum and maximum growth rate of non-basal species
   efficiency = 0.5, # Efficiency of predator to transform prey biomass
-  interaction = c(-0.5, 0), # Minimum and maximum interaction strength
+  interaction = c(0, 1), # Mean and sd interaction strength
   delta_r = c(0, 1), # Mean and standard deviation of the perturbation
   maxt = 1000 # Number of timestep before and after perturbation
 )
