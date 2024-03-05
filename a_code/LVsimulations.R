@@ -106,7 +106,7 @@ compute_NC <- function(A, delta_r){
   A_inv <- ginv(A)
   NC <- c()
   for (i in c(1:length(delta_r))){
-    NC <- c(NC, cor(A_inv[i,-i], delta_r[-i]))
+    NC <- c(NC, cov(A_inv[i,-i], delta_r[-i]))
   }
   return(NC)
 }
