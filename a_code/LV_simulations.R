@@ -21,18 +21,17 @@ params <- list(
   Net_type = "predator-prey", # type of network: predator-prey, mutualistic, competition
   C = 0.1, # connectance 
   aij_params = c(0, 1), # mean and standard deviation of interaction strength
-  aii_params = c(0, 0.01), # mean and standard deviation of intraspecific coefficients 
+  aii_params = c(-0.01), # mean and standard deviation of intraspecific coefficients 
   efficiency = 0.5, # efficiency of predators to transform prey biomass 
-
+  rho = 0, 
+  
   # simulating species responses to an environmental perturbation
   NC = 0, # network coherence 
   delta_r_params = c(1, 0.2), # mean and standard deviation of the changes in species growth rates after the perturbation (squared)
   prop_neg = 0.5, # proportion of delta r dans are negative
   
   # simulating species dynamics 
-  maxt = 1000, # number of time steps before and after the perturbation
-  r_basal = c(0.25, 0.75), # minimum and maximum growth rate of basal species
-  r_nonbasal = c(-0.5, 0) # minimum and maximum growth rate of non-basal species
+  maxt = 1000 # number of time steps before and after the perturbation
 )
 
 

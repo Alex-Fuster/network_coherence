@@ -38,47 +38,72 @@ sim_binary_network <- function(S, C) {
 ### Net_type: network type (predator-prey, competition, mutualistic) 
 ### S: number of species 
 ### C: connectance 
-### aii_params: mean and standard deviation of intraspecific coefficients (in log)
-### aij_params: mean and standard deviation of interspecific coefficients (in log)
+### aii_params: equal for all species
+### aij_params: mean and standard deviation of interspecific coefficients
+### rho correlation between aij and aji
+### parametrization inspired from Allessina & Tang 2012 (https://doi.org/10.1038/nature10832)
 ### efficiency: energy efficiency of predators (for predator-prey networks)
 
-sim_quantitative_network <- function(Net_type, S, C, aii_params, aij_params, efficiency) {
+sim_quantitative_network <- function(Net_type, S, C, aii_params, aij_params, efficiency = 1, rho = 0) {
   
   # simulate binary network
-  A <- sim_binary_network(S, C)
+  B <- sim_binary_network(S, C)
   
-  # simulate interspecific coefficients on the upper triangle (negative by default)
-  A[upper.tri(A)] <- A[upper.tri(A)] * -rlnorm((S^2 - S)/2, aij_params[1], aij_params[2])
-  
-  # calculate intraspecific coefficients on the diagonal (negative by default)
-  diag(A) <- -rlnorm(S, aii_params[1], aii_params[2])
-  
-  
-  if (Net_type == "predator-prey") { 
+  # simulate interspecific coefficients in pairs depending on the network type
+  if (Net_type == "random") {
     
-    # prey have negative coefficients whereas predators have positive coefficients
-    # intraspecific coefficients are negative (competition)
+    # for random network, interactions are drawn in pairs, but the sign does not matter
+    interactions <- MASS::mvrnorm(n = S * (S-1) / 2,
+                                  mu = c(aij_params[1], aij_params[1]),
+                                  Sigma = aij_params[2]^2 * matrix(c(1, rho, rho, 1), 2, 2))
     
-    # calculate interspecific coefficients on the lower triangle (positive for predators)
-    A <- A - t(A) * efficiency
+  } else if (Net_type == "predator-prey") { 
     
+    # for predator-prey network, the effect of prey on predator is positive and the effect of
+    # predator on prey is negative.
+    # there is a efficiency in transforming prey biomass into predator biomass
+    # if i eats j: aji = -efficiency * aij 
+    
+    # effects of predator on prey:
+    interactions <- -abs(rnorm(n = S * (S-1) / 2 , mean = aij_params[1], sd = aij_params[2]))
+    # effects of prey on predator:
+    interactions <- cbind(interactions, interactions * -efficiency)
     
   } else if (Net_type == "competition") {
     
-    # all coefficients are negative
+    # interactions are drawn in pairs and we put everything as negative
     
-    # calculate interspecific coefficients on the lower triangle (assume symmetric effects)
-    A <- A + t(A) 
+    # for random network, interactions are drawn in pairs, but the sign does not matter
+    interactions <- MASS::mvrnorm(n = S * (S-1) / 2,
+                                  mu = c(aij_params[1], aij_params[1]),
+                                  Sigma = aij_params[2]^2 * matrix(c(1, rho, rho, 1), 2, 2))
+    interactions <- -abs(interactions)
     
     
   } else if (Net_type == "mutualistic") {
     
-    # all coefficients are positive (change default sign)
-    A <- -A
+    # interactions are drawn in pairs and we put everything as positive
     
-    # calculate interspecific coefficients on the lower triangle (assume symmetric effects)
-    A <- A + t(A) 
-  }
+    # for random network, interactions are drawn in pairs, but the sign does not matter
+    interactions <- MASS::mvrnorm(n = S * (S-1) / 2,
+                                  mu = c(aij_params[1], aij_params[1]),
+                                  Sigma = aij_params[2]^2 * matrix(c(1, rho, rho, 1), 2, 2))
+    interactions <- abs(interactions)
+    
+  } else { stop("Incorrect network type") }
+  
+  # build a completely filled matrix
+  A <- matrix(0, S, S)
+  A[upper.tri(A)] <- interactions[,1]
+  A <- t(A)
+  A[upper.tri(A)] <- interactions[,2]
+  
+  # remove non-interactins
+  A <- A * (B + t(B))
+  
+  # calculate intraspecific coefficients on the diagonal (negative by default)
+  diag(A) <- aii_params
+  
   return(A)
 }
     
@@ -99,7 +124,7 @@ sim_delta_r <- function(A, NC, delta_r_params, prop_neg) {
   # the elements of the C matrix are the pairwise products of delta r
   # the diagonals elements are the squared delta r for each species
   # simulating the diagonal of the C matrix that correlates with the one of the A matrix allows us to respect the structure of the C matrix 
-  C_diag <- faux::rnorm_pre(x = diag(A_inv), mu = delta_r_params[1], sd = delta_r_params[2], r = 0.8)
+  C_diag <- faux::rnorm_pre(x = diag(A_inv), mu = delta_r_params[1], sd = delta_r_params[2], r = NC)
 
   # calculate species delta r and assign negative values randomly
   delta_r <- sqrt(C_diag)
@@ -128,7 +153,7 @@ fw.model <- function(t, B, params) {
 ### model: lotka-volterra model (defined at step 4)
 ### init_biomass: initial biomasses of each species
 
-simulate_dynamics_c <- function(parms, model, init_biomass = runif(length(parms$r))){
+simulate_dynamics_c <- function(parms, model, init_biomass = runif(length(parms$r), min = 1, max = 10)){
  
   # define matrix of initial biomasses
   out <- matrix(c(0, init_biomass), ncol = params$S + 1)
@@ -159,25 +184,15 @@ simulate_dynamics <- function(params, model = fw.model) {
     with(params, {
       
       # simulate quantitative adjacency matrix 
-      A <- sim_quantitative_network(Net_type, S, C, aii_params, aij_params, efficiency) 
-      
-      # find basal and non basal species
-      A_bin <- A
-      A_bin[upper.tri(A_bin)] <- 0 
-      diag(A_bin) <- 0
-      
-      basal_sp <- which(colSums(A_bin) == 0) # get basal species (no prey)
-      nonbasal_sp <- which(colSums(A_bin) != 0) # non basal species
+      A <- sim_quantitative_network(Net_type, S, C, aii_params, aij_params, efficiency, rho) 
       
       # define initial intrinsic growth rates of species
-      # negative growth rates for non basal species
-      # positive growth rates for basal species
-      r <- rep(0, S)
-      r[basal_sp] <- runif(length(basal_sp), r_basal[1], r_basal[2])
-      r[nonbasal_sp] <- runif(length(nonbasal_sp), r_nonbasal[1], r_nonbasal[2])
+      # to make sure all species have a positive biomass at equilibrium
+      Biomass_at_equilibrium <- runif(S, 1, 10)
+      r <- -A%*%Biomass_at_equilibrium
                  
       # simulate parameters before the perturbation 
-      dyn_params <- list(A = A, r = r, S = S, B = runif(S))
+      dyn_params <- list(A = A, r = r, S = S, B = Biomass_at_equilibrium)
       pre_perturb <- simulate_dynamics_c(dyn_params, fw.model)
       
       # get delta r
