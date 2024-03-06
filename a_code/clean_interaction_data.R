@@ -41,8 +41,9 @@ interaction_data_clean |>
         genero_abelha_catalogo:subespecie_abelha_catalogo,
         sep = " ",
         remove = TRUE) |> 
-  unite(col = "plat_species",
+  unite(col = "plant_species",
         genero_planta_catalogo:especie_planta_catalogo,
         sep = " ",
         remove = TRUE)
 
+rm(interaction_data_raw)
