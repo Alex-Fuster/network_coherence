@@ -76,10 +76,11 @@ plants_occ <- occ_download_get('0024326-240229165702484', path = "b_data/gbif") 
 # Select important columns ------------------------------------------------
 
 bees_occ_selected <- bees_occ |> 
-  select(gbifID, verbatimScientificName, decimalLatitude, decimalLongitude)
+  select(gbifID, scientificName, decimalLatitude, decimalLongitude) |> 
+  unique(species)
 
 plants_occ_selected <- plants_occ |> 
-  select(gbifID, verbatimScientificName, decimalLatitude, decimalLongitude)
+  select(gbifID, scientificName, decimalLatitude, decimalLongitude)
 
 # Save RData ---------------------------------------------------------------
 
