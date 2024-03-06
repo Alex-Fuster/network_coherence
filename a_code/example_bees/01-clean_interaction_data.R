@@ -5,7 +5,8 @@ source("a_code/functions/ipak.R")
 ipak(c("tidyverse", "googlesheets4"))
 
 
-# Load species data and splitting
+
+# Load species data and splitting -----------------------------------------
 
 interaction_data_raw <- read_sheet("1FdADRdStEK-mYwXDi1bshKAHUib1S6Ftvfx_NXDeIbs", trim_ws = TRUE)
 
@@ -28,6 +29,7 @@ interaction_data_clean$especie_planta_catalogo <- interaction_data_clean$especie
          "spp" = "spp.",
          "2" = "spp.")
 
+
 # Binding species names columns -------------------------------------------
 interaction_data_clean <- 
 interaction_data_clean |> 
@@ -39,5 +41,12 @@ interaction_data_clean |>
         genero_planta_catalogo:especie_planta_catalogo,
         sep = " ",
         remove = TRUE)
+
+
+# Remove extra spaces -----------------------------------------------------
+
+interaction_data_clean <- interaction_data_clean |> 
+  mutate(bee_species = str_squish(bee_species),
+         plant_species = str_squish(plant_species))
 
 rm(interaction_data_raw)
