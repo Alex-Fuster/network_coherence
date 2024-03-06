@@ -1,15 +1,9 @@
 # Packages loading --------------------------------------------------------
 
-ipak <- function(pkg){
-  new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
-  if (length(new.pkg)) 
-    install.packages(new.pkg, dependencies = TRUE)
-  sapply(pkg, require, character.only = TRUE)
-}
+source("a_code/functions/ipak.R")
 
-packages <- c("tidyverse", "googlesheets4")
+ipak(c("tidyverse", "googlesheets4"))
 
-ipak(packages); rm(packages,ipak)
 
 # Load species data and splitting
 
