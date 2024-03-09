@@ -24,7 +24,7 @@ interaction_matrix <- interaction_matrix |>
 
 complete_df <- interaction_matrix |> 
   pivot_longer(-1,
-               names_to = "spp_polinators",
+               names_to = "spp_pollinators",
                values_to = "weighted_interaction")
 
 

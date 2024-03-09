@@ -13,9 +13,9 @@ source("a_code/example_bees/01.1-get_biome_shapefile.R")
 # Get GBIF taxon keys -----------------------------------------------------
 
 plants_checklist <- unique(complete_df$spp_plants)
-polinators_checklist <- unique(complete_df$spp_polinators)
+pollinators_checklist <- unique(complete_df$spp_pollinators)
 
-gbif_taxon_keys_polinators <- polinators_checklist |> 
+gbif_taxon_keys_pollinators <- pollinators_checklist |> 
   name_backbone_checklist()  |>  # match to backbone 
   filter(!matchType == "NONE") |> # get matched names
   pull(usageKey) 
@@ -27,10 +27,10 @@ gbif_taxon_keys_plants <- plants_checklist |>
 
 
 # Start query -------------------------------------------------------------
-polinators_occ <- 
+pollinators_occ <- 
 occ_download(
   type="and",
-  pred_in("taxonKey", gbif_taxon_keys_polinators),
+  pred_in("taxonKey", gbif_taxon_keys_pollinators),
   pred_within(ma_shapefile_wkt),
   pred("hasGeospatialIssue", FALSE),
   pred("hasCoordinate", TRUE),
@@ -75,7 +75,7 @@ plants_occ <-
 # Retrieve data -----------------------------------------------------------
 dir.create("b_data/gbif")
 
-polinators_occ <- occ_download_get('0040176-240229165702484', path = "b_data/gbif") %>%
+pollinators_occ <- occ_download_get('0040176-240229165702484', path = "b_data/gbif") %>%
   occ_download_import()
 
 plants_occ <- occ_download_get('0040177-240229165702484', path = "b_data/gbif") %>%
@@ -84,11 +84,11 @@ plants_occ <- occ_download_get('0040177-240229165702484', path = "b_data/gbif") 
 
 # Select important columns ------------------------------------------------
 
-polinators_occ_selected <- polinators_occ |> 
-  select(gbifID, scientificName, decimalLatitude, decimalLongitude)
+pollinators_occ_selected <- pollinators_occ |> 
+  select(gbifID, taxonKey, scientificName, decimalLatitude, decimalLongitude)
 
 plants_occ_selected <- plants_occ |> 
-  select(gbifID, scientificName, decimalLatitude, decimalLongitude)
+  select(gbifID, taxonKey, scientificName, decimalLatitude, decimalLongitude)
 
 # Save RData ---------------------------------------------------------------
 
