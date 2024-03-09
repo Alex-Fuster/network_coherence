@@ -85,8 +85,7 @@ plants_occ <- occ_download_get('0040177-240229165702484', path = "b_data/gbif") 
 # Select important columns ------------------------------------------------
 
 polinators_occ_selected <- polinators_occ |> 
-  select(gbifID, scientificName, decimalLatitude, decimalLongitude) |> 
-  unique(species)
+  select(gbifID, scientificName, decimalLatitude, decimalLongitude)
 
 plants_occ_selected <- plants_occ |> 
   select(gbifID, scientificName, decimalLatitude, decimalLongitude)
