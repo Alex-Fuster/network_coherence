@@ -26,7 +26,7 @@ params <- list(
   
   # simulating species responses to an environmental perturbation
   NC = 0, # network coherence 
-  delta_r_params = c(1, 0.2), # mean and standard deviation of the changes in species growth rates after the perturbation (squared)
+  delta_r_params = c(0, 1), # mean and standard deviation of the changes in species growth rates after the perturbation (squared)
   prop_neg = 0.5, # proportion of delta r dans are negative
   
   # simulating species dynamics 
@@ -41,20 +41,29 @@ out <- simulate_dynamics(params)
 
 
 # plot species dynamics
-plot_dynamic <- function(out){
-  plot(y = out[,2], x = 1:nrow(out), type = "l", ylim = c(0, max(out[,c(2:ncol(out))])), xlab = "time", ylab = "Biomass")
-  cols <- sample(1:ncol(out))
-  for (i in 3:ncol(out)){
-    lines(y = out[,i], x = 1:nrow(out), col = cols[i])
+plot_dynamic <- function(dyn){
+  plot(y = dyn[,2], x = 1:nrow(dyn), type = "l", ylim = c(0, max(dyn[,c(2:ncol(dyn))])), xlab = "time", ylab = "Biomass")
+  cols <- sample(1:ncol(dyn))
+  for (i in 3:ncol(dyn)){
+    lines(y = dyn[,i], x = 1:nrow(dyn), col = cols[i])
   }
 }
-plot_dynamic(out)
-
+plot_dynamic(out$dyn)
+NC(out$delta_r, out$A)
 
 # calculate differences in biomass before and after perturbation 
 delta_biomass <- sum(out[params$maxt,-1]) - sum(out[nrow(out),-1]) 
 delta_biomass
 
-
+# repeat simulation 100 times
+df <- c()
+for (i in 1:1000) {
+  out <- simulate_dynamics(params)
+  NC <- net_coherence(out$delta_r, out$A)
+  delta_biomass <- out$dyn[params$maxt,-1] - out$dyn[nrow(out$dyn),-1]
+  extinctions <- sum(out$dyn[nrow(out$dyn),-1] < 0.01)
+  df <- rbind(df,
+              c(NC = NC, delta_biom_sum = sum(delta_biomass), delta_biom_sd = sd(delta_biomass), extinctions = extinctions))
+}
 
 

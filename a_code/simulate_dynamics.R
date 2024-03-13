@@ -113,23 +113,23 @@ sim_quantitative_network <- function(Net_type, S, C, aij_params, efficiency = 1,
 ### delta_r_params: mean and standard deviation of the differences in intrinsic growth rate (squared)
 ### prop_neg: proportion of delta r dans are negative
 
-sim_delta_r <- function(A, NC, delta_r_params, prop_neg) {
-  
-  # inverse the matrix of quantitative interactions
-  A_inv <- solve(A)
-
-  # simulate the vector of squared co-responses to the environment (diagonal of the C matrix) 
-  # the elements of the C matrix are the pairwise products of delta r
-  # the diagonals elements are the squared delta r for each species
-  # simulating the diagonal of the C matrix that correlates with the one of the A matrix allows us to respect the structure of the C matrix 
-  C_diag <- faux::rnorm_pre(x = diag(A_inv), mu = delta_r_params[1], sd = delta_r_params[2], r = NC)
-
-  # calculate species delta r and assign negative values randomly
-  delta_r <- sqrt(C_diag)
-  delta_r <- delta_r * ifelse(rbinom(length(delta_r), size = 1, p = prop_neg) == 1, -1, 1)
-  
-  return(delta_r)
-}
+# sim_delta_r <- function(A, NC, delta_r_params, prop_neg) {
+#   
+#   # inverse the matrix of quantitative interactions
+#   A_inv <- solve(A)
+# 
+#   # simulate the vector of squared co-responses to the environment (diagonal of the C matrix) 
+#   # the elements of the C matrix are the pairwise products of delta r
+#   # the diagonals elements are the squared delta r for each species
+#   # simulating the diagonal of the C matrix that correlates with the one of the A matrix allows us to respect the structure of the C matrix 
+#   C_diag <- faux::rnorm_pre(x = diag(A_inv), mu = delta_r_params[1], sd = delta_r_params[2], r = NC)
+# 
+#   # calculate species delta r and assign negative values randomly
+#   delta_r <- sqrt(C_diag)
+#   delta_r <- delta_r * ifelse(rbinom(length(delta_r), size = 1, p = prop_neg) == 1, -1, 1)
+#   
+#   return(delta_r)
+# }
 
 
 ### step 4: define lotka-volterra model using the following arguments:
@@ -194,8 +194,9 @@ simulate_dynamics <- function(params, model = fw.model) {
       pre_perturb <- simulate_dynamics_c(dyn_params, fw.model)
       
       # get delta r
-      delta_r <- sim_delta_r(A, NC, delta_r_params, prop_neg) 
-        
+      #delta_r <- sim_delta_r(A, NC, delta_r_params, prop_neg) 
+      delta_r <- rnorm(S, delta_r_params[1], delta_r_params[2]) 
+       
       # calculate new r
       new_r <- r + delta_r
       dyn_params$r <- new_r
@@ -206,11 +207,34 @@ simulate_dynamics <- function(params, model = fw.model) {
       # simulate dynamics after the perturbation 
       post_perturb <- simulate_dynamics_c(dyn_params, fw.model, init_biomass = equil)
       
-      out <- rbind(pre_perturb, post_perturb)
-      out[out < 0] <- 0
+      dyn <- rbind(pre_perturb, post_perturb)
+      dyn[dyn < 0] <- 0
+      
+      out <- list(dyn = dyn,
+                  A = A,
+                  r = r,
+                  delta_r = delta_r)
       
     return(out)
     
     })
 }
 
+### step x: calculate corresponce
+# defined as the difference of delta_r between i and j (difference in slopes)
+coresponse <- function(delta_r) {
+  # combination of all delta_r
+  x <- combn(delta_r, 2)
+  # corresponce is the absolute difference between delta_r
+  c <- abs(x[1,] - x[2,])
+  return(c)
+}
+
+### step X: calculate network coherence
+# defined as the correlation between env.coresponse and the association between species
+# association between species is defines as the absolute value of aij*aji. Higher values is associated with species that interact strongly together. 
+net_coherence <- function(delta_r, A) {
+  env_coresp <- coresponse(delta_r)
+  int_association <- abs(A[upper.tri(A)] * t(A)[upper.tri(A)])
+  return(cor(env_coresp, int_association))
+}
