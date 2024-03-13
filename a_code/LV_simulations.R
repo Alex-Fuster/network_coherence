@@ -21,7 +21,6 @@ params <- list(
   Net_type = "predator-prey", # type of network: predator-prey, mutualistic, competition
   C = 0.1, # connectance 
   aij_params = c(0, 1), # mean and standard deviation of interaction strength
-  aii_params = c(-0.01), # mean and standard deviation of intraspecific coefficients 
   efficiency = 0.5, # efficiency of predators to transform prey biomass 
   rho = 0, 
   
@@ -31,7 +30,7 @@ params <- list(
   prop_neg = 0.5, # proportion of delta r dans are negative
   
   # simulating species dynamics 
-  maxt = 1000 # number of time steps before and after the perturbation
+  maxt = 100 # number of time steps before and after the perturbation
 )
 
 

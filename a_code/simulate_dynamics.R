@@ -38,13 +38,11 @@ sim_binary_network <- function(S, C) {
 ### Net_type: network type (predator-prey, competition, mutualistic) 
 ### S: number of species 
 ### C: connectance 
-### aii_params: equal for all species
-### aij_params: mean and standard deviation of interspecific coefficients
 ### rho correlation between aij and aji
 ### parametrization inspired from Allessina & Tang 2012 (https://doi.org/10.1038/nature10832)
 ### efficiency: energy efficiency of predators (for predator-prey networks)
 
-sim_quantitative_network <- function(Net_type, S, C, aii_params, aij_params, efficiency = 1, rho = 0) {
+sim_quantitative_network <- function(Net_type, S, C, aij_params, efficiency = 1, rho = 0) {
   
   # simulate binary network
   B <- sim_binary_network(S, C)
@@ -101,8 +99,8 @@ sim_quantitative_network <- function(Net_type, S, C, aii_params, aij_params, eff
   # remove non-interactins
   A <- A * (B + t(B))
   
-  # calculate intraspecific coefficients on the diagonal (negative by default)
-  diag(A) <- aii_params
+  # make sure that the equilibrium is stable
+  diag(A) <- sqrt(C*S*sd(A)) * (1 + rho) - 1
   
   return(A)
 }
@@ -184,7 +182,7 @@ simulate_dynamics <- function(params, model = fw.model) {
     with(params, {
       
       # simulate quantitative adjacency matrix 
-      A <- sim_quantitative_network(Net_type, S, C, aii_params, aij_params, efficiency, rho) 
+      A <- sim_quantitative_network(Net_type, S, C, aij_params, efficiency, rho) 
       
       # define initial intrinsic growth rates of species
       # to make sure all species have a positive biomass at equilibrium
@@ -192,7 +190,7 @@ simulate_dynamics <- function(params, model = fw.model) {
       r <- -A%*%Biomass_at_equilibrium
                  
       # simulate parameters before the perturbation 
-      dyn_params <- list(A = A, r = r, S = S, B = Biomass_at_equilibrium)
+      dyn_params <- list(A = A, r = r, S = S)
       pre_perturb <- simulate_dynamics_c(dyn_params, fw.model)
       
       # get delta r
