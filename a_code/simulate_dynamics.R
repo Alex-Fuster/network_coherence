@@ -21,7 +21,8 @@ sim_binary_network <- function(S, C) {
   A <- matrix(0, nrow = S, ncol = S)
 
   # number of interactions that are realized (C = L/S^2)
-  L <- round(C * S^2)
+  # we divide by two because we only fill the upper triangle
+  L <- round(C/2 * S^2)
 
   # sample interactions (all on the upper triangle to facilitate calculations)
   L_ij <- sample(c(1:floor((S^2-S)/2)), L)
@@ -35,72 +36,64 @@ sim_binary_network <- function(S, C) {
 
 
 ### step 2: simulate a quantitative interaction matrix using the following arguments:
-### Net_type: network type (predator-prey, competition, mutualistic) 
+### Net_type: network type (random, predator-prey, competition, mutualistic) 
 ### S: number of species 
 ### C: connectance 
 ### rho correlation between aij and aji
-### parametrization inspired from Allessina & Tang 2012 (https://doi.org/10.1038/nature10832)
+### parametrization inspired from Allesina & Tang 2012 (https://doi.org/10.1038/nature10832)
 ### efficiency: energy efficiency of predators (for predator-prey networks)
 
 sim_quantitative_network <- function(Net_type, S, C, aij_params, efficiency = 1, rho = 0) {
   
-  # simulate binary network
-  B <- sim_binary_network(S, C)
+  # initialize network
+  A <- matrix(0, S, S)
+  
+  # number of species pairs
+  n_pairs <- S*(S-1)/2
+  # which ones are interacting
+  B <- runif(n_pairs) <= C
   
   # simulate interspecific coefficients in pairs depending on the network type
   if (Net_type == "random") {
-    
-    # for random network, interactions are drawn in pairs, but the sign does not matter
-    interactions <- MASS::mvrnorm(n = S * (S-1) / 2,
-                                  mu = c(aij_params[1], aij_params[1]),
-                                  Sigma = aij_params[2]^2 * matrix(c(1, rho, rho, 1), 2, 2))
+
+    # add independent interaction strengths
+    A[upper.tri(A)] <- B * rnorm(n_pairs, aij_params[1], aij_params[2])
+    A <- t(A)
+    A[upper.tri(A)] <- B * rnorm(n_pairs, aij_params[1], aij_params[2])
     
   } else if (Net_type == "predator-prey") { 
     
     # for predator-prey network, the effect of prey on predator is positive and the effect of
     # predator on prey is negative.
-    # there is a efficiency in transforming prey biomass into predator biomass
-    # if i eats j: aji = -efficiency * aij 
     
     # effects of predator on prey:
-    interactions <- -abs(rnorm(n = S * (S-1) / 2 , mean = aij_params[1], sd = aij_params[2]))
+    aij <- -abs(rnorm(n_pairs, aij_params[1], aij_params[2]))
+    A[upper.tri(A)] <- B * aij
+    A <- t(A)
     # effects of prey on predator:
-    interactions <- cbind(interactions, interactions * -efficiency)
+    aij <- abs(rnorm(n_pairs, aij_params[1], aij_params[2]))
+    A[upper.tri(A)] <- B * aij
     
   } else if (Net_type == "competition") {
     
-    # interactions are drawn in pairs and we put everything as negative
-    
-    # for random network, interactions are drawn in pairs, but the sign does not matter
-    interactions <- MASS::mvrnorm(n = S * (S-1) / 2,
-                                  mu = c(aij_params[1], aij_params[1]),
-                                  Sigma = aij_params[2]^2 * matrix(c(1, rho, rho, 1), 2, 2))
-    interactions <- -abs(interactions)
-    
+    # interactions are drawn in a negative half normal distribution
+    aij <- -abs(rnorm(n_pairs*2, aij_params[1], aij_params[2]))
+    A[upper.tri(A)] <- B * aij[1:n_pairs]
+    A <- t(A)
+    A[upper.tri(A)] <- B * aij[(n_pairs+1):length(aij)]
     
   } else if (Net_type == "mutualistic") {
     
-    # interactions are drawn in pairs and we put everything as positive
-    
-    # for random network, interactions are drawn in pairs, but the sign does not matter
-    interactions <- MASS::mvrnorm(n = S * (S-1) / 2,
-                                  mu = c(aij_params[1], aij_params[1]),
-                                  Sigma = aij_params[2]^2 * matrix(c(1, rho, rho, 1), 2, 2))
-    interactions <- abs(interactions)
+    # interactions are drawn in a negative half normal distribution
+    aij <- abs(rnorm(n_pairs*2, aij_params[1], aij_params[2]))
+    A[upper.tri(A)] <- B * aij[1:n_pairs]
+    A <- t(A)
+    A[upper.tri(A)] <- B * aij[(n_pairs+1):length(aij)]
     
   } else { stop("Incorrect network type") }
   
-  # build a completely filled matrix
-  A <- matrix(0, S, S)
-  A[upper.tri(A)] <- interactions[,1]
-  A <- t(A)
-  A[upper.tri(A)] <- interactions[,2]
-  
-  # remove non-interactins
-  A <- A * (B + t(B))
-  
   # make sure that the equilibrium is stable
-  diag(A) <- sqrt(C*S*sd(A)) * (1 + rho) - 1
+  diag(A) <- -(max(Re(eigen(A)$values)) + runif(S))
   
   return(A)
 }
@@ -196,7 +189,9 @@ simulate_dynamics <- function(params, model = fw.model) {
       # get delta r
       #delta_r <- sim_delta_r(A, NC, delta_r_params, prop_neg) 
       delta_r <- rnorm(S, delta_r_params[1], delta_r_params[2]) 
-       
+      # make sure that all r > 0
+      delta_r <- pmax(delta_r, -r)
+      
       # calculate new r
       new_r <- r + delta_r
       dyn_params$r <- new_r
@@ -237,4 +232,13 @@ net_coherence <- function(delta_r, A) {
   env_coresp <- coresponse(delta_r)
   int_association <- abs(A[upper.tri(A)] * t(A)[upper.tri(A)])
   return(cor(env_coresp, int_association))
+}
+
+net_coherence2 <- function(delta_r, A) {
+  Ainv <- solve(A)
+  nc <- c()
+  for (i in 1:nrow(A)){
+    nc <- c(nc, cor(Ainv[i,-i], delta_r[-i]))
+  }
+  return(nc)
 }

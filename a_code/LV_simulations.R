@@ -19,7 +19,7 @@ params <- list(
   
   # simulating interaction networks 
   Net_type = "predator-prey", # type of network: predator-prey, mutualistic, competition
-  C = 0.1, # connectance 
+  C = 0.2, # connectance 
   aij_params = c(0, 1), # mean and standard deviation of interaction strength
   efficiency = 0.5, # efficiency of predators to transform prey biomass 
   rho = 0, 
@@ -37,6 +37,33 @@ params <- list(
 # simulate species dynamics using the above parameters and a home-made function 
 source("a_code/simulate_dynamics.R")
 
+df <- data.frame()
+for (Net_type in c("random", "predator-prey", "mutualistic", "competition")) {
+  params$Net_type <- Net_type
+  for (i in 1:100) {
+    out <- simulate_dynamics(params)
+    NC <- net_coherence2(out$delta_r, out$A)
+    biomass_pre <- colMeans(out$dyn[c(10:params$maxt),-1])
+    biomass_post <- colMeans(out$dyn[c((params$maxt+11):nrow(out$dyn)),-1])
+    delta_biomass <- biomass_post - biomass_pre
+    extinctions <- sum(out$dyn[nrow(out$dyn),-1] < 0.01)
+    df <- rbind(df,
+                data.frame(Net_type = Net_type, NC_mean = mean(NC, na.rm = T), NC_sd = sd(NC, na.rm = T), delta_biom_sum = sum(delta_biomass), delta_biom_sd = sd(delta_biomass), extinctions = extinctions))
+  }
+}
+
+ggplot(df) +
+  geom_smooth(aes(NC_mean, NC_sd, colour = Net_type))
+
+ggplot(df) +
+  geom_smooth(aes(NC_mean, delta_biom_sum, colour = Net_type))
+
+ggplot(df) +
+  geom_smooth(aes(NC_mean, delta_biom_sd, colour = Net_type))
+
+ggplot(df) +
+  geom_smooth(aes(NC_mean, extinctions, colour = Net_type))
+
 out <- simulate_dynamics(params)
 
 
@@ -49,21 +76,5 @@ plot_dynamic <- function(dyn){
   }
 }
 plot_dynamic(out$dyn)
-NC(out$delta_r, out$A)
-
-# calculate differences in biomass before and after perturbation 
-delta_biomass <- sum(out[params$maxt,-1]) - sum(out[nrow(out),-1]) 
-delta_biomass
-
-# repeat simulation 100 times
-df <- c()
-for (i in 1:1000) {
-  out <- simulate_dynamics(params)
-  NC <- net_coherence(out$delta_r, out$A)
-  delta_biomass <- out$dyn[params$maxt,-1] - out$dyn[nrow(out$dyn),-1]
-  extinctions <- sum(out$dyn[nrow(out$dyn),-1] < 0.01)
-  df <- rbind(df,
-              c(NC = NC, delta_biom_sum = sum(delta_biomass), delta_biom_sd = sd(delta_biomass), extinctions = extinctions))
-}
 
 
