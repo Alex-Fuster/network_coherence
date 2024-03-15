@@ -126,6 +126,24 @@ sim_quantitative_network <- function(Net_type, S, C, aij_params, efficiency = 1,
 #   
 #   return(delta_r)
 # }
+sim_delta_r <- function(A, NC_parms, delta_r_params) {
+
+  # inverse the matrix of quantitative interactions
+  A_inv <- solve(A)
+  n <- nrow(A)
+  # simulate NCs
+  NC <- rnorm(n, NC_parms[1], NC_parms[2])
+  delta_r <- rep(0,n)
+  for (i in 1:n){
+    delta_r[i] <- sum(NC[-i] * A_inv[-i,i])
+  }
+  
+  # center and scale
+  delta_r <- delta_r - mean(delta_r) + delta_r_params[1]
+  delta_r <- delta_r/sd(delta_r) * delta_r_params[2]
+  
+  return(delta_r)
+}
 
 
 ### step 4: define lotka-volterra model using the following arguments:
@@ -190,8 +208,8 @@ simulate_dynamics <- function(params, model = fw.model) {
       pre_perturb <- simulate_dynamics_c(dyn_params, fw.model)
       
       # get delta r
-      #delta_r <- sim_delta_r(A, NC, delta_r_params, prop_neg) 
-      delta_r <- rnorm(S, delta_r_params[1], delta_r_params[2]) 
+      delta_r <- sim_delta_r(A, NC_parms, delta_r_params) 
+      #delta_r <- rnorm(S, delta_r_params[1], delta_r_params[2]) 
 
       # calculate new r
       new_r <- r + delta_r

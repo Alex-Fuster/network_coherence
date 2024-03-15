@@ -15,7 +15,7 @@ library(MASS)
 params <- list(
   
   # number of species
-  S = 10, 
+  S = 25, 
   
   # simulating interaction networks 
   Net_type = "predator-prey", # type of network: predator-prey, mutualistic, competition
@@ -25,7 +25,7 @@ params <- list(
   rho = 0, 
   
   # simulating species responses to an environmental perturbation
-  NC = 0, # network coherence 
+  NC_parms = 0, # network coherence 
   delta_r_params = c(0, 1), # mean and standard deviation of the changes in species growth rates after the perturbation (squared)
   prop_neg = 0.5, # proportion of delta r dans are negative
   
@@ -40,7 +40,8 @@ source("a_code/simulate_dynamics.R")
 df <- data.frame()
 for (Net_type in c("random", "predator-prey", "mutualistic", "competition")) {
   params$Net_type <- Net_type
-  for (i in 1:300) {
+  params$NC_parms <- c(runif(1,-1,1),runif(1,0,1))
+  for (i in 1:200) {
     out <- simulate_dynamics(params)
     NC <- net_coherence2(out$delta_r, out$A)
     delta_biomass <- out$dyn[nrow(out$dyn),] - out$dyn[params$maxt,]
@@ -52,7 +53,6 @@ for (Net_type in c("random", "predator-prey", "mutualistic", "competition")) {
 
 ggplot(df) +
   geom_point(aes(NC_mean, NC_sd, colour = Net_type), alpha = 0.25) + 
-  geom_smooth(aes(NC_mean, NC_sd, colour = Net_type), se = F) +
   theme_classic()
 
 p1 <- ggplot(df) +
