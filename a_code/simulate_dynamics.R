@@ -91,9 +91,12 @@ sim_quantitative_network <- function(Net_type, S, C, aij_params, efficiency = 1,
     A[upper.tri(A)] <- B * aij[(n_pairs+1):length(aij)]
     
   } else { stop("Incorrect network type") }
+  diag(A) <- -(max(Re(eigen(A)$values)) + runif(S, 0.1))
   
   # make sure that the equilibrium is stable
-  diag(A) <- -(max(Re(eigen(A)$values)) + runif(S))
+  while(max(Re(eigen(A)$values)) > 0){
+    diag(A) <- -(max(Re(eigen(A)$values)) + runif(S, 0.1))
+  }
   
   return(A)
 }
@@ -189,9 +192,7 @@ simulate_dynamics <- function(params, model = fw.model) {
       # get delta r
       #delta_r <- sim_delta_r(A, NC, delta_r_params, prop_neg) 
       delta_r <- rnorm(S, delta_r_params[1], delta_r_params[2]) 
-      # make sure that all r > 0
-      delta_r <- pmax(delta_r, -r)
-      
+
       # calculate new r
       new_r <- r + delta_r
       dyn_params$r <- new_r
