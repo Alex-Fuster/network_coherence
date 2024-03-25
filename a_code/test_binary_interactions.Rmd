@@ -1,0 +1,210 @@
+---
+title: "Compare ENC between binary and weighted interactions"
+output: html_notebook
+author: AFC
+---
+
+
+**Can we approximate net effects of interactions from binary matrices?**
+
+
+```{r}
+source("simulate_dynamics.R")
+```
+
+
+
+## A simple case example
+
+A weighted matrix and its net effects:
+
+```{r}
+M <- matrix(c(0,-2,4,1,
+              3,0,0,2,
+              -5,0,0,0,
+              -0.5,-1,0,0),
+            nrow = 4, byrow = TRUE)
+Minv <- solve(M) # net effects from weighted matrix
+
+
+M
+Minv
+```
+
+The net effects of its binary matrix seem to approximate well its net effects:
+
+```{r}
+Msign <- sign(M) # binary matrix, retaining the sign
+MsignInv <- solve(Msign) # net effects from binary matrix retaining the sign
+
+MsignInv
+```
+Which is not the case if we dont keep the sign:
+
+```{r}
+Mpos <- abs(Msign) # positive binary matrix
+MposInv <- solve(Mpos) # net effects from positive binary matrix
+
+MposInv
+```
+
+## Inspect how well the net effects from weighted matrix are approximated by its binary versions
+
+
+
+### Create scenarios of varying species richness (from 10 to 100, by 5):
+
+
+```{r}
+
+nsp = seq(from = 10, to = 100, by = 5)
+scenario = seq(1:length(nsp))
+replicates = c(1:5)
+
+df = data.frame(scenario, nsp)
+
+# Create the dataframe
+df <- data.frame(scenario, nsp)
+
+# Replicate each scenario and nsp values
+df <- df[rep(1:nrow(df), each = length(replicates)), ]
+
+rownames(df) <- NULL
+
+df
+
+```
+
+
+### Loop to compute net effects for both weighted and binary matrices for each scenario (takes 1-2min):
+
+
+```{r}
+
+
+# Storing objects
+
+w_mat <- vector("list", nrow(df))
+w_net_mat <- vector("list", nrow(df))
+b_mat <- vector("list", nrow(df))
+b_net_mat <- vector("list", nrow(df))
+plot <- vector("list", nrow(df))
+correlation <- numeric(nrow(df))
+signif <- character(nrow(df))
+
+
+for (i in 1:nrow(df)) {
+  
+  print(paste(sprintf("iteration %s", i), "of", nrow(df)))
+  
+  nsp = df[i, "nsp"]
+  
+  
+  weighted_mat <- sim_quantitative_network("predator-prey", nsp, 0.2, aij_params = c(0, 0.1), efficiency = 0.5, rho = 0)
+  
+  w_mat[[i]] = weighted_to_binary_neteffects(weighted_mat)$weighted
+  w_net_mat[[i]] = weighted_to_binary_neteffects(weighted_mat)$net_effects_weighted
+  b_mat[[i]] = weighted_to_binary_neteffects(weighted_mat)$binary
+  b_net_mat[[i]] = weighted_to_binary_neteffects(weighted_mat)$net_efects_binary
+  
+  
+  
+  
+  
+  # Create plots
+  
+  # Convert matrix to dataframe
+  w_net_df <- as.data.frame(w_net_mat[[i]])
+  w_net_df$row <- rownames(w_net_df)
+  
+  b_net_df <- as.data.frame(b_net_mat[[i]])
+  b_net_df$row <- rownames(b_net_df)
+  
+  # Reshape dataframe for ggplot
+  w_net_df_long <- tidyr::pivot_longer(w_net_df, cols = -row, names_to = "column", values_to = "value")
+  b_net_df_long <- tidyr::pivot_longer(b_net_df, cols = -row, names_to = "column", values_to = "value")
+  
+  
+  plot_w <- ggplot(w_net_df_long, aes(x = column, y = row, fill = value)) +
+    geom_tile() +
+    scale_fill_gradient(low = "white", high = "blue") +
+    labs(title = paste(nsp, "spp")) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  
+  plot_b <- ggplot(b_net_df_long, aes(x = column, y = row, fill = value)) +
+    geom_tile() +
+    scale_fill_gradient(low = "white", high = "blue") +
+    labs(title = paste(nsp, "spp")) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  
+  
+  
+  
+  if(df[i, "nsp"] <= 30){  # save plots only until sizes = 40
+    
+    plot[[i]] = ggarrange(
+      
+      plot_w,
+      plot_b,
+      
+      labels = LETTERS[1:2]
+      
+    )
+    
+    
+  }
+  
+  
+  
+  
+  # compute correlation
+  
+  correlation[i] <- compute_procrustes_corr(w_net_mat[[i]], b_net_mat[[i]])$correlation
+  
+  pvalue <- compute_procrustes_corr(w_net_mat[[i]], b_net_mat[[i]])$correlation
+  
+  if (pvalue <= 0.05) {
+    signif[i] <- "sign"
+  } else {
+    signif[i] <- "non sign"
+  }
+  
+}
+
+```
+
+
+> Note: I get the warning "Non euclidean distance" when computing the Procrustes
+
+
+
+### Show plots comparing net effects' matrices computed from either weighted (A) or binary (B)
+
+Number of species goes from 10 to 100, by 5. For each size, there are 3 different network comparisons.
+Run the line below to plot any comparison. Positions in the list are: 1-10 (10spp), 11-20 (15spp), etc.
+
+```{r}
+plot[[2]]
+```
+
+
+### check correlations
+
+```{r}
+
+df_plot <- data.frame("nsp" = df$nsp, correlation, signif)
+
+ggplot(df_plot, aes(x = nsp, y = correlation, color = signif)) +
+  geom_point() +
+  scale_color_manual(values = c("Significant" = "red", "Non-significant" = "black")) +
+  labs(x = "Species richness", y = "Procrustes corr net eff (weighted vs binary)") +
+  theme_classic()+
+  ylim(0,1)
+
+
+
+
+```
+

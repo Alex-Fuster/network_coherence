@@ -261,3 +261,65 @@ net_coherence2 <- function(delta_r, A) {
   }
   return(nc)
 }
+
+
+
+# Function to input a weighted matrix and get its net effects, its binary matrix, and the net effect of the binary matrix
+
+
+
+weighted_to_binary_neteffects <- function(A_weighted) {
+  
+  Ainv_w <- solve(A_weighted) # compute net effects from weighted matrix
+  
+  A = sign(A_weighted)
+  
+  Ainv <- solve(A)  # compute net effects from binary matrix
+  
+  list <- list("weighted" = A_weighted, 
+               "net_effects_weighted" = Ainv_w, 
+              "binary" =  A, 
+              "net_efects_binary" = Ainv)
+  
+  return(list)
+  
+  
+}
+
+
+
+net_coherence2_binary <- function(delta_r, A) {
+  # Convert A to binary matrix
+  A[which(A > 0)] = 1
+  A[which(A < 0)] = -1
+  
+  # Then proceed with the rest of the function
+  Ainv <- solve(A)
+  nc <- c()
+  for (i in 1:nrow(A)){
+    nc <- c(nc, cor(Ainv[i,-i], delta_r[-i]))
+  }
+  return(nc)
+}
+
+
+
+
+compute_procrustes_corr <- function(mat1, mat2) {
+  
+  # ordination
+  
+  pc_1 <- dudi.pco(as.dist(mat1), scannf = FALSE, full = TRUE)
+  pc_2 <- dudi.pco(as.dist(mat2), scannf = FALSE, full = TRUE)
+  
+  
+  # Perform Procrustes analysis
+  procrustes_result <- protest(mat1, mat2)
+  
+  
+  list <- list("correlation" = procrustes_result$t0,
+               "significance" = procrustes_result$signif)
+  
+  return(list)
+  
+}
