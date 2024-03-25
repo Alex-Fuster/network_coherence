@@ -193,6 +193,11 @@ plot[[2]]
 ### check correlations
 
 ```{r}
+min(correlation)
+```
+
+
+```{r}
 
 df_plot <- data.frame("nsp" = df$nsp, correlation, signif)
 
