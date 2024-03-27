@@ -40,21 +40,29 @@ params <- list(
 source("a_code/simulate_dynamics.R")
 
 df <- data.frame()
-df_bin <- data.frame()
+df_bin2 <- data.frame()
+df_bin3 <- data.frame()
 
-for (Net_type in c("random", "predator-prey", "mutualistic", "competition")) {
+for (Net_type in c("random", 
+                   "predator-prey" 
+                   #"mutualistic", 
+                   #"competition"
+                   )) {
   params$Net_type <- Net_type
   params$NC_parms <- c(runif(1,-1,1),runif(1,0,1))
   for (i in 1:200) {
     out <- simulate_dynamics(params)
     NC <- net_coherence2(out$delta_r, out$A)
-    NC_bin <- net_coherence2_binary(out$delta_r, out$A)
+    NC_bin2 <- net_coherence2_binary(out$delta_r, out$A)
+    NC_bin3 <- net_coherence3_binary(out$delta_r, out$A)
     delta_biomass <- out$dyn[nrow(out$dyn),] - out$dyn[params$maxt,]
     extinctions <- sum(out$dyn[nrow(out$dyn),-1] < 0.01)
     df <- rbind(df,
                 data.frame(Net_type = Net_type, NC_mean = mean(NC, na.rm = T), NC_sd = sd(NC, na.rm = T), delta_biom_sum = sum(delta_biomass), delta_biom_sd = sd(delta_biomass), extinctions = extinctions))
-    df_bin <- rbind(df_bin,
-                    data.frame(Net_type = Net_type, NC_mean = mean(NC_bin, na.rm = T), NC_sd = sd(NC_bin, na.rm = T), delta_biom_sum = sum(delta_biomass), delta_biom_sd = sd(delta_biomass), extinctions = extinctions))
+    df_bin2 <- rbind(df_bin2,
+                    data.frame(Net_type = Net_type, NC_mean = mean(NC_bin2, na.rm = T), NC_sd = sd(NC_bin2, na.rm = T), delta_biom_sum = sum(delta_biomass), delta_biom_sd = sd(delta_biomass), extinctions = extinctions))
+    df_bin3 <- rbind(df_bin3,
+                     data.frame(Net_type = Net_type, NC_mean = mean(NC_bin3, na.rm = T), NC_sd = sd(NC_bin3, na.rm = T), delta_biom_sum = sum(delta_biomass), delta_biom_sd = sd(delta_biomass), extinctions = extinctions))
   }
 }
 
@@ -68,7 +76,7 @@ p1 <- ggplot(df) +
   labs(x = "Mean network coherence", y = "Change in total biomass", colour = "Network type") +
   theme_classic()
 
-p1_bin <- ggplot(df_bin) +
+p1_bin <- ggplot(df_bin2) +
   geom_point(aes(NC_mean, delta_biom_sum, colour = Net_type), alpha = 0.25) +
   geom_smooth(aes(NC_mean, delta_biom_sum, colour = Net_type), se = F) +
   labs(x = "Mean network coherence", y = "Change in total biomass", colour = "Network type") +
@@ -83,7 +91,7 @@ p2 <- ggplot(df) +
   theme_classic()
 
 
-p2_bin <- ggplot(df_bin) +
+p2_bin <- ggplot(df_bin2) +
   geom_point(aes(NC_mean, delta_biom_sd, colour = Net_type), alpha = 0.25) +
   geom_smooth(aes(NC_mean, delta_biom_sd, colour = Net_type), se = F) +
   scale_y_continuous(trans = "log", breaks = c(0.2, 1, 5), limits = c(0.2, 10)) +
@@ -97,7 +105,7 @@ p3 <- ggplot(df) +
   labs(x = "Mean network coherence", y = "Number of extinctions", colour = "Network type") +
   theme_classic()
 
-p3_bin <- ggplot(df_bin) +
+p3_bin <- ggplot(df_bin2) +
   geom_point(aes(NC_mean, extinctions, colour = Net_type), alpha = 0.25) +
   geom_smooth(aes(NC_mean, extinctions, colour = Net_type), se = F) +
   labs(x = "Mean network coherence", y = "Number of extinctions", colour = "Network type") +
@@ -110,7 +118,7 @@ p4 <- ggplot(df) +
   labs(x = "SD network coherence", y = "Change in total biomass", colour = "Network type") +
   theme_classic()
 
-p4_bin <- ggplot(df_bin) +
+p4_bin <- ggplot(df_bin2) +
   geom_point(aes(NC_sd, delta_biom_sum, colour = Net_type), alpha = 0.25) +
   geom_smooth(aes(NC_sd, delta_biom_sum, colour = Net_type), se = F) +
   labs(x = "SD network coherence", y = "Change in total biomass", colour = "Network type") +
@@ -124,7 +132,7 @@ p5 <- ggplot(df) +
   labs(x = "SD network coherence", y = "SD in biomass", colour = "Network type") +
   theme_classic()
 
-p5_bin <- ggplot(df_bin) +
+p5_bin <- ggplot(df_bin2) +
   geom_point(aes(NC_sd, delta_biom_sd, colour = Net_type), alpha = 0.25) +
   geom_smooth(aes(NC_sd, delta_biom_sd, colour = Net_type), se = F) +
   scale_y_continuous(trans = "log", breaks = c(0.2, 1, 5), limits = c(0.2, 10)) +
@@ -138,7 +146,7 @@ p6 <- ggplot(df) +
   labs(x = "SD network coherence", y = "Number of extinctions", colour = "Network type") +
   theme_classic()
 
-p6_bin <- ggplot(df_bin) +
+p6_bin <- ggplot(df_bin2) +
   geom_point(aes(NC_sd, extinctions, colour = Net_type), alpha = 0.25) +
   geom_smooth(aes(NC_sd, extinctions, colour = Net_type), se = F) +
   labs(x = "SD network coherence", y = "Number of extinctions", colour = "Network type") +

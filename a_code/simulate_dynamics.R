@@ -290,14 +290,27 @@ weighted_to_binary_neteffects <- function(A_weighted) {
 
 net_coherence2_binary <- function(delta_r, A) {
   # Convert A to binary matrix
-  A[which(A > 0)] = 1
-  A[which(A < 0)] = -1
+bin_A = sign(A)
   
   # Then proceed with the rest of the function
-  Ainv <- solve(A)
+  Ainv <- solve(bin_A)
   nc <- c()
   for (i in 1:nrow(A)){
     nc <- c(nc, cor(Ainv[i,-i], delta_r[-i]))
+  }
+  return(nc)
+}
+
+
+net_coherence3_binary <- function(delta_r, A) {
+  # Convert A to binary matrix
+  bin_A = sign(A)
+  
+  # Then proceed with the rest of the function
+  Ainv <- solve(bin_A)
+  nc <- c()
+  for (i in 1:nrow(A)){
+    nc <- c(nc, cov(Ainv[i,-i], delta_r[-i]))
   }
   return(nc)
 }
