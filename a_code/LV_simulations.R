@@ -10,12 +10,14 @@ library(deSolve)
 library(faux)
 library(tidyr)
 library(MASS)
+library(ggplot2)
+library(ggpubr)
 
 # list of parameters for Lotka-Volterra simulations
 params <- list(
   
   # number of species
-  S = 25, 
+  S = 100, 
   
   # simulating interaction networks 
   Net_type = "predator-prey", # type of network: predator-prey, mutualistic, competition
@@ -41,9 +43,9 @@ df <- data.frame()
 for (Net_type in c("random", "predator-prey", "mutualistic", "competition")) {
   params$Net_type <- Net_type
   params$NC_parms <- c(runif(1,-1,1),runif(1,0,1))
-  for (i in 1:200) {
+  for (i in 1:300) {
     out <- simulate_dynamics(params)
-    NC <- net_coherence2(out$delta_r, out$A)
+    NC <- net_coherence3(out$delta_r, out$A)
     delta_biomass <- out$dyn[nrow(out$dyn),] - out$dyn[params$maxt,]
     extinctions <- sum(out$dyn[nrow(out$dyn),-1] < 0.01)
     df <- rbind(df,
@@ -51,56 +53,94 @@ for (Net_type in c("random", "predator-prey", "mutualistic", "competition")) {
   }
 }
 
+
+
+# pars for plotting:
+
+my_theme = theme(axis.text=element_text(size=12),
+                axis.title = element_text(size = 14),
+                legend.text=element_text(size=14),
+                legend.title = element_text(size=14),
+                plot.title = element_text(face="bold",size=14,margin=margin(0,0,20,0),hjust = 0.5),
+                axis.title.y = element_text(hjust = 0.5),
+                axis.title.x = element_text(hjust = 0.5))
+
+
 ggplot(df) +
   geom_point(aes(NC_mean, NC_sd, colour = Net_type), alpha = 0.25) + 
-  theme_classic()
+  labs(x = "Mean ENC", y = "SD ENC", colour = "Network type")+
+  theme_classic()+
+  my_theme
+
+ggsave("c_outputs/figures/100_sd_mean.png", height = 5, width = 6)
 
 p1 <- ggplot(df) +
   geom_point(aes(NC_mean, delta_biom_sum, colour = Net_type), alpha = 0.25) +
   geom_smooth(aes(NC_mean, delta_biom_sum, colour = Net_type), se = F) +
-  labs(x = "Mean network coherence", y = "Change in total biomass", colour = "Network type") +
-  theme_classic()
+  labs(x = "Mean ENC", y = expression(paste(italic(Delta)," total biomass")),
+         colour = "Network type") +
+  theme_classic()+
+  my_theme
 
 
 p2 <- ggplot(df) +
   geom_point(aes(NC_mean, delta_biom_sd, colour = Net_type), alpha = 0.25) +
   geom_smooth(aes(NC_mean, delta_biom_sd, colour = Net_type), se = F) +
   scale_y_continuous(trans = "log", breaks = c(0.2, 1, 5), limits = c(0.2, 10)) +
-  labs(x = "Mean network coherence", y = "SD in biomass", colour = "Network type") +
-  theme_classic()
+  labs(x = "Mean ENC", y = "SD in biomass", colour = "Network type") +
+  theme_classic()+
+  my_theme
 
 
 p3 <- ggplot(df) +
   geom_point(aes(NC_mean, extinctions, colour = Net_type), alpha = 0.25) +
   geom_smooth(aes(NC_mean, extinctions, colour = Net_type), se = F) +
-  labs(x = "Mean network coherence", y = "Number of extinctions", colour = "Network type") +
-  theme_classic()
+  labs(x = "Mean ENC", y = "Number of extinctions", colour = "Network type") +
+  theme_classic()+
+  my_theme
 
 
 p4 <- ggplot(df) +
   geom_point(aes(NC_sd, delta_biom_sum, colour = Net_type), alpha = 0.25) +
   geom_smooth(aes(NC_sd, delta_biom_sum, colour = Net_type), se = F) +
-  labs(x = "SD network coherence", y = "Change in total biomass", colour = "Network type") +
-  theme_classic()
+  labs(x = "SD ENC", y = expression(paste(italic(Delta)," total biomass")), colour = "Network type") +
+  theme_classic()+
+  my_theme
 
 
 p5 <- ggplot(df) +
   geom_point(aes(NC_sd, delta_biom_sd, colour = Net_type), alpha = 0.25) +
   geom_smooth(aes(NC_sd, delta_biom_sd, colour = Net_type), se = F) +
   scale_y_continuous(trans = "log", breaks = c(0.2, 1, 5), limits = c(0.2, 10)) +
-  labs(x = "SD network coherence", y = "SD in biomass", colour = "Network type") +
-  theme_classic()
+  labs(x = "SD ENC", y = "SD in biomass", colour = "Network type") +
+  theme_classic()+
+  my_theme
 
 
 p6 <- ggplot(df) +
   geom_point(aes(NC_sd, extinctions, colour = Net_type), alpha = 0.25) +
   geom_smooth(aes(NC_sd, extinctions, colour = Net_type), se = F) +
-  labs(x = "SD network coherence", y = "Number of extinctions", colour = "Network type") +
-  theme_classic()
+  labs(x = "SD ENC", y = "Number of extinctions", colour = "Network type") +
+  theme_classic()+
+  my_theme
 
-(p1 + p2 + p3) / (p4 + p5 + p6) + plot_layout(guides = "collect")
+#(p1 + p2 + p3) / (p4 + p5 + p6) + plot_layout(guides = "collect")
 
-ggsave("c_outputs/figures/LVsimulations_10sp.png", width = 10, height = 8)
+
+ggarrange(
+  p1, p2, p3,
+  p4, p5, p6,
+  
+  nrow = 2,
+  ncol = 3,
+  
+  labels = LETTERS[1:6],
+  
+  common.legend = TRUE
+)
+
+
+ggsave("c_outputs/figures/LVsimulations_cov_100sp.png", height = 9, width = 10)
 params$Net_type <- "random"
 out <- simulate_dynamics(params)
   

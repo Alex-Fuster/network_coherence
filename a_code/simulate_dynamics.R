@@ -261,3 +261,13 @@ net_coherence2 <- function(delta_r, A) {
   }
   return(nc)
 }
+
+net_coherence3 <- function(delta_r, A) {
+  Ainv <- solve(A)
+  nc <- c()
+  for (i in 1:nrow(A)){
+    nc <- c(nc, cov(Ainv[i,-i], delta_r[-i]))
+  }
+  return(nc)
+}
+
