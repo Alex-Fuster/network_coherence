@@ -141,6 +141,9 @@ ggarrange(
 
 
 ggsave("c_outputs/figures/LVsimulations_cov_100sp.png", height = 9, width = 10)
+
+
+
 params$Net_type <- "random"
 out <- simulate_dynamics(params)
   
