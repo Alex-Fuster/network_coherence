@@ -105,6 +105,22 @@ rownames(covmatrix) <- gsub("Urophycis chesteri", "Phycis chesteri", rownames(co
 
 # order the interaction matrix by the names in covmatrix so both matrices match
 A = A[rownames(covmatrix), colnames(covmatrix)]
+A_long = A |> as.data.frame()
+A_long = A_long |> 
+  mutate(species1 = rownames(A)) |>
+           pivot_longer(cols = -species1,
+                        names_to = "species2")
+
+ggplot(data = A_long) +
+  geom_tile(aes(x = species1, y = species2, fill = as.character(value)), col = "lightgrey") +
+  theme(axis.text.x = element_text(angle = 90, 
+                                   vjust = 0.5, hjust = 1, 
+                                   face = "italic"),
+        axis.text.y = element_text(face = "italic"),
+        legend.position = "right") +
+  scale_fill_manual(values = c("white", "black")) +
+  labs(fill = "Interaction", x = "", y = "")
+ggsave("c_outputs/figures/interactionmatrix.png", width = 8.23, height = 6.82)
 
 ## mask the correlation matrix by the interaction matrix
 
