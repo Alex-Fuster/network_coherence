@@ -20,6 +20,4 @@ ma_shapefile <- terra::forceCCW(ma_shapefile)
 ma_shapefile_wkt <- terra::geom(ma_shapefile, wkt = TRUE)
 
 
-# Clean unused objects ----------------------------------------------------
 
-rm(ma_shapefile)

@@ -37,38 +37,3 @@ boundary <- terra::ext(ma_shapefile)
 
 environ_layers_cropped <- terra::crop(environ_layers$WC_tmean1, boundary@cpp$vector)
 
-
-
-# Get environmental values by cell ----------------------------------------
-
-environ_values_pollinators <- terra::extract(environ_layers_cropped, select(pollinators_occ_selected, decimalLongitude, decimalLatitude))
-
-environ_values_plants <- terra::extract(environ_layers_cropped, select(plants_occ_selected, decimalLongitude, decimalLatitude))
-
-
-combined_df <- bind_rows(
-  bind_cols(species = pollinators_occ_selected$scientificName, 
-            environ_values = environ_values_pollinators,
-            group = "pollinators"),
-  bind_cols(species = plants_occ_selected$scientificName, 
-            environ_values = environ_values_plants,
-            group = "plants")
-)
-
-  
-# Get environmental curve -------------------------------------------------
-
-# Just plottin'
-ggplot(combined_df, aes(x=environ_values, color=group)) +
-  geom_density()
-
-# Explorin'
-combined_df |> 
-  group_by(group) |> 
-  drop_na() |> 
-  summarise(
-    min = min(environ_values),
-    max = max(environ_values),
-    mean = mean(environ_values),
-    sd = sd(environ_values)
-    )

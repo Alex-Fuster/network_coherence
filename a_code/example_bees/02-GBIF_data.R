@@ -75,21 +75,21 @@ plants_occ <-
 # Retrieve data -----------------------------------------------------------
 dir.create("b_data/gbif")
 
-pollinators_occ <- occ_download_get('0040176-240229165702484', path = "b_data/gbif") %>%
+pollinators_occ <- occ_download_get('0040176-240229165702484', path = "b_data/gbif") |> 
   occ_download_import()
 
-plants_occ <- occ_download_get('0040177-240229165702484', path = "b_data/gbif") %>%
+plants_occ <- occ_download_get('0040177-240229165702484', path = "b_data/gbif") |> 
   occ_download_import()
 
 
 # Select important columns ------------------------------------------------
 
 pollinators_occ_selected <- pollinators_occ |> 
-  select(gbifID, taxonKey, scientificName, decimalLatitude, decimalLongitude)
+  dplyr::select(gbifID, taxonKey, species, decimalLatitude, decimalLongitude)
 
 plants_occ_selected <- plants_occ |> 
-  select(gbifID, taxonKey, scientificName, decimalLatitude, decimalLongitude)
+  dplyr::select(gbifID, taxonKey, species, decimalLatitude, decimalLongitude)
 
 # Save RData ---------------------------------------------------------------
 
-save(plants_occ_selected, plants_occ_selected, file = "b_data/gbif_occ_selected.Rdata")
+save(pollinators_occ_selected, plants_occ_selected, file = "b_data/gbif_occ_selected.Rdata")
