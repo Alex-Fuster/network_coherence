@@ -28,6 +28,9 @@ combined_df |>
 
 # Derivatives by group ----------------------------------------------------
 
+# df = dataframe with all environmental values and species occurrences
+# y = group name
+# x = environmental value to which we want to know the derivative
 
 derivative_by_group <- function(df, y, x){
   params <- df |> 
@@ -49,6 +52,9 @@ derivative_by_group <- function(df, y, x){
 
 
 # Derivatives by species --------------------------------------------------
+# df = dataframe with all environmental values and species occurrences
+# y = species name
+# x = environmental value to which we want to know the derivative
 
 derivative_by_species <- function(df, y, x){
   params <- df |> 
