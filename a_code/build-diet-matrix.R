@@ -72,6 +72,15 @@ library(DiagrammeR)
 g <- from_adj_matrix(X)
 render_graph(g, layout = "nicely", width = 600, height = 600)
 
+library(igraph)
+network <- graph_from_adjacency_matrix(X , mode='undirected', diag=F )
+
+par(mfrow=c(2,2), mar=c(1,1,1,1))
+plot(network, layout=layout.circle, main="circle")
+
+centrality = degree(network, normalized = TRUE)
+saveRDS(centrality, "c_outputs/fish-example/centrality.rds")
+
 # export as a figure
 # this looks pretty ugly, so nevermind!! I just took a screenshot called globi_foodweb.png
 # export_graph(g, file_name = "figures/globi_foodweb.svg", 
