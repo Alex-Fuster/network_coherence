@@ -6,38 +6,31 @@ source("a_code/example_bees/05-curves.R")
 source("a_code/example_bees/06-derivatives.R")
 
 # Get unique species names and environmental values
-species_names <- unique(combined_df$species)
+# species_names <- unique(combined_df$species)
   
-environ_values <- combined_df |> 
-  dplyr::select(environ_values) |>
-  drop_na() |>
+cell_values <- combined_df |> 
+  dplyr::select(cell) |>
   unique()
 
-# Initialize an empty list to store derivative matrices for each species
-derivative_df <- data.frame(species_name = character(),
-                            environ_values = numeric(),
-                            derivative = numeric())
+# Remove NAs from environ_values
+combined_df <- combined_df |>
+  filter(!is.na(environ_values))
+
+
+# Create new column for derivatives
+combined_df <- combined_df |> 
+  mutate(derivative = NA)
 
 # Loop through each species and calculate derivatives for environmental values
-for (i in species_names) {
-  for (j in environ_values){
+for (j in 1:nrow(combined_df)){
     
   # Calculate derivatives for environmental values
-  derivatives <- derivative_by_species(combined_df, i, j)
-  # Append values to the derivative_matrices data frame
-  derivative_df <- rbind(derivative_df, 
-                                data.frame(species_name = i, 
-                                           environ_values = j, 
-                                           derivative = derivatives))
-}}
+  combined_df$derivative[j] <- derivative_by_species(combined_df, 
+                                       combined_df$species[j], 
+                                       combined_df$environ_values[j])
+  
+}
 
-
-# Merge datasets ----------------------------------------------------------
-
-# Merge the derivative matrices with the combined_df
-combined_df <- combined_df |>
-  left_join(derivative_df, by = c("species" = "species_name",
-                                  "environ_values" = "environ_values"))
 
 # Clean NAs and empty data
 
