@@ -11,6 +11,9 @@ load("b_data/pollinization_df.RDS")
 source("a_code/example_bees/01.1-get_biome_shapefile.R")
 
 # Get GBIF taxon keys -----------------------------------------------------
+# Make sure to have your GBIF credentials in place for the code below. 
+# Read more about how to do it here: 
+# https://docs.ropensci.org/rgbif/articles/gbif_credentials.html
 
 plants_checklist <- unique(complete_df$spp_plants)
 pollinators_checklist <- unique(complete_df$spp_pollinators)
