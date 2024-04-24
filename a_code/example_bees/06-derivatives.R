@@ -74,3 +74,31 @@ derivative_by_species <- function(df, y, x){
   return(derivative)
 }
 
+
+# Calculate derivatives per cell and species ------------------------------
+
+
+# Get unique cells 
+
+cell_values <- combined_df |> 
+  dplyr::select(cell) |>
+  unique()
+
+# Remove NAs from environ_values
+combined_df <- combined_df |>
+  filter(!is.na(environ_values))
+
+
+# Create new column for derivatives
+combined_df <- combined_df |> 
+  mutate(derivative = NA)
+
+# Loop through each species and calculate derivatives for environmental values
+for (j in 1:nrow(combined_df)){
+  
+  # Calculate derivatives for environmental values
+  combined_df$derivative[j] <- derivative_by_species(combined_df, 
+                                                     combined_df$species[j], 
+                                                     combined_df$environ_values[j])
+  
+}
