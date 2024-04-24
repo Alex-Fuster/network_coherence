@@ -168,14 +168,3 @@ correlations_histogram_interacting / correlations_histogram_noninteracting +
   plot_annotation(tag_levels = "a")
 ggsave("c_outputs/figures/correlations_histogram_interactingVSnoninteracting.png", 
        width = 5, height = 8)
-
-
-ggpubr::ggdensity(data = corr_df_all, x = "value", 
-                  fill = "interacting", col = "interacting",
-                                           add = "mean") +
-                      labs(x = "Correlation between species (R)", y = "Density",
-                           fill = "Species", col = "Species") +
-  scale_fill_brewer(palette = "Set2") +
-  scale_color_brewer(palette = "Set2")
-ggsave("c_outputs/figures/correlations_density_interactingVSnoninteracting.png", 
-       width = 5, height = 5)
