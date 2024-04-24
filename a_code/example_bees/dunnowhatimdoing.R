@@ -1,6 +1,6 @@
 # Source previous scripts -------------------------------------------------
 source("a_code/example_bees/01.1-get_biome_shapefile.R")
-source("a_code/example_bees/03-Environmental_data.R") # careful with the last line!
+source("a_code/example_bees/03-Environmental_data.R") 
 source("a_code/example_bees/04-clean_data.R")
 source("a_code/example_bees/05-curves.R")
 source("a_code/example_bees/06-derivatives.R")
