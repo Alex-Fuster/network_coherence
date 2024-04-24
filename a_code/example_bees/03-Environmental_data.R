@@ -23,6 +23,7 @@ subset_env_layers <- str_subset(list_env_layers,
 
 # Random sample of environmental variables
 
+set.seed(42)
 environ_layers <- load_layers(sample(subset_env_layers, 1, replace = FALSE), 
                               rasterstack = FALSE, 
                               datadir = "b_data/environmental")
