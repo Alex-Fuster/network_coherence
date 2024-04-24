@@ -28,13 +28,11 @@ environ_layers <- load_layers(sample(subset_env_layers, 1, replace = FALSE),
                               rasterstack = FALSE, 
                               datadir = "b_data/environmental")
 
-# Define a boundary
-
-boundary <- terra::ext(ma_shapefile)
 
 # Cropping environmental variables based on the extent of the occurrence data.
 # Notice the name of the variable changes with sampling, you might need to change
 # the value after the dollar sign for environ_layers.
 
-environ_layers_cropped <- terra::crop(environ_layers$WC_tmean1, boundary@cpp$vector)
-
+environ_layers_cropped <- terra::crop(terra::mask(rast(environ_layers$WC_tmean1), 
+                                                  ma_shapefile),
+                                      ma_shapefile)
