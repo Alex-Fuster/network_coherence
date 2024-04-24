@@ -78,7 +78,8 @@ plants_occ <-
 # Retrieve data -----------------------------------------------------------
 dir.create("b_data/gbif")
 
-pollinators_occ <- occ_download_get('0204755-240321170329656', path = "b_data/gbif") |> 
+pollinators_occ <- occ_download_get('0204755-240321170329656',
+                                    path = "b_data/gbif")  |> 
   occ_download_import()
 
 plants_occ <- occ_download_get('0204757-240321170329656', path = "b_data/gbif") |> 
