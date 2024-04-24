@@ -15,8 +15,8 @@ source("a_code/example_bees/01.1-get_biome_shapefile.R")
 # Read more about how to do it here: 
 # https://docs.ropensci.org/rgbif/articles/gbif_credentials.html
 
-plants_checklist <- unique(complete_df$spp_plants)
-pollinators_checklist <- unique(complete_df$spp_pollinators)
+plants_checklist <- unique(interaction_matrix$spp_plants)
+pollinators_checklist <- unique(interaction_matrix$spp_pollinators)
 
 gbif_taxon_keys_pollinators <- pollinators_checklist |> 
   name_backbone_checklist()  |>  # match to backbone 
