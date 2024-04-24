@@ -17,7 +17,7 @@ ma_shapefile <- terra::forceCCW(ma_shapefile)
 
 # Get polygons WKT --------------------------------------------------------
 
-ma_shapefile_wkt <- terra::geom(ma_shapefile, wkt = TRUE)
+# ma_shapefile_wkt <- terra::geom(ma_shapefile, wkt = TRUE)
 
 
 
