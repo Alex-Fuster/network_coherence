@@ -22,10 +22,12 @@ interaction_matrix <- interaction_matrix |>
 
 # Creating long df --------------------------------------------------------
 
-complete_df <- interaction_matrix |> 
+interaction_matrix <- interaction_matrix |> 
   pivot_longer(-1,
                names_to = "spp_pollinators",
-               values_to = "weighted_interaction")
+               values_to = "weighted_interaction") |> 
+  filter(!str_detect(spp_plants, " sp"),
+         !str_detect(spp_pollinators, " sp.")) 
 
 
 save(interaction_matrix, complete_df, file = "b_data/pollinization_df.RDS")
