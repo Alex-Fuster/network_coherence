@@ -28,6 +28,3 @@ interaction_matrix <- interaction_matrix |>
                values_to = "weighted_interaction") |> 
   filter(!str_detect(spp_plants, " sp"),
          !str_detect(spp_pollinators, " sp.")) 
-
-
-save(interaction_matrix, complete_df, file = "b_data/pollinization_df.RDS")
