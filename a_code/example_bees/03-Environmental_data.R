@@ -36,3 +36,19 @@ environ_layers <- load_layers(sample(subset_env_layers, 1, replace = FALSE),
 environ_layers_cropped <- terra::crop(terra::mask(rast(environ_layers$WC_tmean1), 
                                                   ma_shapefile),
                                       ma_shapefile)
+
+# Get environmental values by cell ----------------------------------------
+
+environ_values_pollinators <- terra::extract(environ_layers_cropped, 
+                                             dplyr::select(pollinators_occ_selected, 
+                                                           decimalLongitude, 
+                                                           decimalLatitude),
+                                             cells = TRUE,
+                                             xy = TRUE)
+
+environ_values_plants <- terra::extract(environ_layers_cropped, 
+                                        dplyr::select(plants_occ_selected, 
+                                                      decimalLongitude, 
+                                                      decimalLatitude),
+                                        cells = TRUE,
+                                        xy = TRUE)
