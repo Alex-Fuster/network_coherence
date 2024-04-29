@@ -1,3 +1,4 @@
+library(ggplot2)
 y1 <- rnorm(1000, 5, 4)
 y2 <- rnorm(1000, 6, 2.5)
 y3 <- rnorm(1000, 7, 2.5)
@@ -16,4 +17,4 @@ ggplot(df, aes(x, color = sp, fill = sp)) +
   scale_fill_manual(values = c("#8d18e6ff", "#ca005bff", "#69d1c5ff", "#e0ca3cff")) +
   theme(legend.position = "none")
 
-ggsave("Documents/Projects/network_coherence/c_outputs/figures/svg/response_curves_conceptual.png", width = 12, height = 5)
+ggsave("~/Documents/Projects/network_coherence/c_outputs/figures/svg/response_curves_conceptual.png", width = 12, height = 5)
