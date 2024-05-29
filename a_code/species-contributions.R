@@ -102,9 +102,9 @@ df$sd_corr = apply(corrs, 2, sd, na.rm = TRUE)
 # medians, to see + and - contributions
 df$species = factor(df$species, 
                     levels = df$species[order(df$mu_corr)])
-ggplot(data = df,
+ggplot(data = df, 
        aes(x = mu_corr, y = species)) +
-  geom_vline(xintercept = mean(mu_corr, na.rm = T), lwd = .2) +
+  geom_vline(xintercept = mean(df$mu_corr, na.rm = T), lwd = .2) +
   geom_point(aes(fill = mu_corr), size = 3, pch = 21) +
   scale_fill_distiller(palette = "RdBu")
 
@@ -114,7 +114,7 @@ df$species = factor(df$species,
                     levels = df$species[order(df$abs_mu)])
 ggplot(data = df,
        aes(x = abs_mu, y = species)) +
-  geom_point(aes(fill = abs_mu), size = 3, pch = 21) +
+  geom_point(aes(fill = df$abs_mu), size = 3, pch = 21) +
   scale_fill_viridis_c(option = "plasma") +
   labs(x = "Contribution to community correlation\n(Absolute median correlation with all other species)",
        fill = "Median correlation", y = "") +
@@ -138,3 +138,82 @@ ggplot(data = df,
   labs(x = "Contribution to community coherence\n(Variance of each species' growth rate trend)",
        fill = "Variance", y = "") +
   theme(axis.text.y = element_text(face = "italic"))
+
+
+# plot coherence contribution vs. degree centrality ----------------------------
+
+# import degree centrality, which is measured in build-diet-matrix.R
+centrality = readRDS("c_outputs/fish-example/centrality.rds") |> as.data.frame()
+centrality$species = gsub("\\.", " ", rownames(centrality))
+colnames(centrality)[1] = "degree_centrality"
+
+# attach growth rates
+median_lambda = derivs_pops |> apply(2, median, na.rm = TRUE)
+names(median_lambda) = gsub("_", " ", df$species) |> stringr::str_to_sentence()
+lambdas = data.frame(
+  "species" = names(median_lambda),
+  "lambda" = unname(median_lambda)
+)
+# join the two tables
+df <- left_join(df, lambdas)
+
+# match up the species names
+df$species = gsub("Lycodes esmarki", "Lycodes esmarkii", df$species)
+df$species = gsub("Nezumia bairdi", "Nezumia bairdii", df$species)
+# synonyms
+# https://fishbase.mnhn.fr/Nomenclature/SynonymSummary.php?ID=167362&GSID=57841&GenusName=Notocanthus&SpeciesName=nasus&SpecCode=2661&SynonymsRef=92135
+df$species = gsub("Notacanthus nasus", "Notacanthus chemnitzii", df$species)
+df$species = gsub("Raja spinicauda", "Bathyraja spinicauda", df$species)
+df$species = gsub("Sebastes marinus", "Sebastes norvegicus", df$species)
+df$species = gsub("Urophycis chesteri", "Phycis chesteri", df$species)
+df$species = gsub("Raja radiata", "Amblyraja radiata", df$species)
+
+# join the two tables
+df <- left_join(df, centrality)
+
+# plot!
+ggplot(data = df,
+       aes(y = degree_centrality, x = var_sp)) +
+  geom_point(size = 3) +
+  labs(x = "Contribution to community coherence",
+       y = "Degree centrality")    
+
+
+# make a df to store results
+df = data.frame("species" = rownames(corrs),
+                "mu_corr" = NA,
+                "sd_corr" = NA)
+df$mu_corr = apply(corrs, 2, median, na.rm = TRUE) # median! not mean.
+df$sd_corr = apply(corrs, 2, sd, na.rm = TRUE)
+
+# medians, to see + and - contributions
+df$species = factor(df$species,
+                    levels = df$species[order(df$mu_corr)])
+
+df <- left_join(df, lambdas)
+
+# match up the species names
+df$species = gsub("Lycodes esmarki", "Lycodes esmarkii", df$species)
+df$species = gsub("Nezumia bairdi", "Nezumia bairdii", df$species)
+# synonyms
+# https://fishbase.mnhn.fr/Nomenclature/SynonymSummary.php?ID=167362&GSID=57841&GenusName=Notocanthus&SpeciesName=nasus&SpecCode=2661&SynonymsRef=92135
+df$species = gsub("Notacanthus nasus", "Notacanthus chemnitzii", df$species)
+df$species = gsub("Raja spinicauda", "Bathyraja spinicauda", df$species)
+df$species = gsub("Sebastes marinus", "Sebastes norvegicus", df$species)
+df$species = gsub("Urophycis chesteri", "Phycis chesteri", df$species)
+df$species = gsub("Raja radiata", "Amblyraja radiata", df$species)
+
+# join the two tables
+df <- left_join(df, centrality)
+
+# plot!
+(A = ggplot(data = df,
+       aes(y = degree_centrality, x = mu_corr, fill = lambda)) +
+    scale_fill_distiller(palette = "RdYlGn", direction = 1) +
+  geom_vline(xintercept = 0) +
+  geom_point(size = 4, pch = 21) +
+  labs(x = "Median correlation with all other species",
+       fill = "Species' trend",
+       y = "Degree centrality") )
+ggsave("c_outputs/fish-example/figures/coherence_vs_coherence.png",
+       width = 5.85, height = 5.49)
