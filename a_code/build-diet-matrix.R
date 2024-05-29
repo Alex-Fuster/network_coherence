@@ -22,6 +22,7 @@ taxon_names_fishbase = gsub("Raja spinicauda", "Bathyraja spinicauda", taxon_nam
 taxon_names_fishbase = gsub("Sebastes marinus", "Sebastes norvegicus", taxon_names_fishbase)
 taxon_names_fishbase = gsub("Urophycis chesteri", "Phycis chesteri", taxon_names_fishbase)
 taxon_names_fishbase = gsub("Raja radiata", "Amblyraja radiata", taxon_names_fishbase)
+taxon_names_fishbase = gsub("Eumicrotremus sp", "Eumicrotremus", taxon_names_fishbase)
 # taxon_names_fishbase = gsub("Raja senta", "Malacoraja senta", taxon_names_fishbase)
 
 
@@ -31,25 +32,44 @@ interactions <- rglobi::get_interaction_matrix(source.taxon.names = taxon_names_
                                                interaction.type = "eats")
 
 
-
-
 ######################################
 
 
 # Further search effort for those species missing interactions
+# Predator <- Prey
 
 # Raja senta <- Enchelyopus cimbrius
 #(reference: https://repository.library.noaa.gov/view/noaa/3755)
+interactions$`Enchelyopus cimbrius`[which(interactions$source.taxon.name == "Raja senta")] = 1
 
 # Limanda ferruginea  <- Clupea harengus
 #(reference: https://repository.library.noaa.gov/view/noaa/3755)
 
 # Lycodes -> Gadus morhua, Anarhichas lupus
 #(reference: GLOBI)
+interactions$`Lycodes reticulatus`[which(interactions$source.taxon.name == "Gadus morhua")] = 1
+interactions$`Lycodes reticulatus`[which(interactions$source.taxon.name == "Anarhichas lupus")] = 1
+interactions$`Lycodes esmarkii`[which(interactions$source.taxon.name == "Anarhichas lupus")] = 1
+interactions$`Lycodes vahlii`[which(interactions$source.taxon.name == "Anarhichas lupus")] = 1
 
-# Raja spinicauda <- sebastes metella
-#(reference: https://www.nafo.int/Portals/0/PDFs/sc/2002/scr02-093.pdf)
+# Bathyraja spinicauda eats:
+#(reference: https://www.nafo.int/Portals/0/PDFs/sc/2006/scr06-053.pdf)
+# redfish (28%), roughhead grenadier (20%), Greenland halibut (19%) 
+# Bathyraja spinicauda <- Sebastes mentella  
+# Bathyraja spinicauda <- Sebastes norvegicus
+# Bathyraja spinicauda <- Macrourus berglax  
+# Bathyraja spinicauda <- Reinhardtius hippoglossoides
+interactions$`Sebastes mentella`[which(interactions$source.taxon.name == "Bathyraja spinicauda")] = 1
+interactions$`Sebastes norvegicus`[which(interactions$source.taxon.name == "Bathyraja spinicauda")] = 1
+interactions$`Macrourus berglax`[which(interactions$source.taxon.name == "Bathyraja spinicauda")] = 1
+interactions$`Reinhardtius hippoglossoides`[which(interactions$source.taxon.name == "Bathyraja spinicauda")] = 1
 
+# Phycis chesteri is not eaten by any species in the dataset, and mostly feeds on crustaceans
+# predators: https://fishbase.mnhn.fr/TrophicEco/PredatorList.php?ID=1880&GenusName=Phycis&SpeciesName=chesteri 
+
+# Limanda ferruginea mostly eats worms, shrimps, etc. - not fish
+
+# Notacanthus chemnitzii is really unknown
 
 ######################################
 
@@ -73,7 +93,7 @@ g <- from_adj_matrix(X)
 render_graph(g, layout = "nicely", width = 600, height = 600)
 
 library(igraph)
-network <- graph_from_adjacency_matrix(X , mode='undirected', diag=F )
+network <- graph_from_adjacency_matrix(X , mode='undirected', diag=F)
 
 par(mfrow=c(2,2), mar=c(1,1,1,1))
 plot(network, layout=layout.circle, main="circle")
