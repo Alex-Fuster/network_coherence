@@ -67,7 +67,7 @@ dat$time <- as.integer(dat$time)
 data_train = dat
 
 # get species correlations
-sp_correlations = lv_correlations(mod1)
+sp_correlations = mvgam::lv_correlations(mod1)
 covmatrix = sp_correlations$mean_correlations
 
 # Interactions between species #################################################
@@ -91,6 +91,7 @@ colnames(covmatrix) <- gsub("Raja spinicauda", "Bathyraja spinicauda", colnames(
 colnames(covmatrix) <- gsub("Raja radiata", "Amblyraja radiata", colnames(covmatrix))
 colnames(covmatrix) <- gsub("Sebastes marinus", "Sebastes norvegicus", colnames(covmatrix))
 colnames(covmatrix) <- gsub("Urophycis chesteri", "Phycis chesteri", colnames(covmatrix))
+colnames(covmatrix) <- gsub("Eumicrotremus sp", "Eumicrotremus", colnames(covmatrix))
 
 rownames(covmatrix) <- rownames(covmatrix) |> stringr::str_to_sentence()
 rownames(covmatrix) <- gsub("_", " ", rownames(covmatrix))
@@ -102,6 +103,7 @@ rownames(covmatrix) <- gsub("Raja spinicauda", "Bathyraja spinicauda", rownames(
 rownames(covmatrix) <- gsub("Raja radiata", "Amblyraja radiata", rownames(covmatrix))
 rownames(covmatrix) <- gsub("Sebastes marinus", "Sebastes norvegicus", rownames(covmatrix))
 rownames(covmatrix) <- gsub("Urophycis chesteri", "Phycis chesteri", rownames(covmatrix))
+rownames(covmatrix) <- gsub("Eumicrotremus sp", "Eumicrotremus", rownames(covmatrix))
 
 # order the interaction matrix by the names in covmatrix so both matrices match
 A = A[rownames(covmatrix), colnames(covmatrix)]
@@ -168,3 +170,5 @@ correlations_histogram_interacting / correlations_histogram_noninteracting +
   plot_annotation(tag_levels = "a")
 ggsave("c_outputs/figures/correlations_histogram_interactingVSnoninteracting.png", 
        width = 5, height = 8)
+
+
