@@ -1,0 +1,146 @@
+---
+title: "Simulating the effects of network coherence on community response to perturbations"
+author: "Dominique Caron"
+date: "2024-06-10"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+set.seed(4321)
+
+# packages
+library(deSolve)
+library(faux)
+library(tidyr)
+library(MASS)
+library(ggplot2)
+library(knitr)
+source("simulate_dynamics.R")
+
+my_theme = theme(axis.text=element_text(size=12),
+                axis.title = element_text(size = 14),
+                legend.text=element_text(size=14),
+                legend.title = element_text(size=14),
+                plot.title = element_text(face="bold",size=14,margin=margin(0,0,20,0),hjust = 0.5),
+                axis.title.y = element_text(hjust = 0.5),
+                axis.title.x = element_text(hjust = 0.5))
+```
+
+## Introduction
+
+In this document, we demonstrate how the effects of network coherence on community response to a perturbation was simulated (so far).
+
+The simulation has five main steps:
+1. Simulate an interaction matrix, making sure the equilibrium is stable
+2. Generate species intrinsic growth rates, making sure that all species have positive biomasses at equilibrium
+3. Simulate a perturbation by changing the intrinsic growth rates of species
+4. Calculate network coherence
+
+## Parametrization
+
+We first need to set some parameters of the simulation. For this example, we will simlulate a predator-prey network of 10 species.
+
+```{r parameters}
+params <- list(
+  
+  # number of species
+  S = 10, 
+  
+  # simulating interaction networks 
+  Net_type = "predator-prey", # type of network: predator-prey, mutualistic, competition
+  C = 0.2, # connectance 
+  aij_params = c(0, 0.1), # mean and standard deviation of interaction strength
+  rho = 0, 
+  
+  # simulating species responses to an environmental perturbation
+  delta_r_params = c(0, 1), # mean and standard deviation of the changes in species growth rates after the perturbation (squared)
+
+  # simulating species dynamics 
+  maxt = 25 # number of time steps before and after the perturbation
+)
+```
+
+## Step 1: Simulate an interaction matrix
+
+First, we randomly simulate an predator-prey network. To do so, we set positive effects of prey on predators and negative effect of predators on prey. Here is the code of the function
+
+```{r simulate interaction matrix function}
+sim_quantitative_network
+```
+
+Let's simulate a network
+```{r simulate interaction matrix}
+A <- with(params, sim_quantitative_network(Net_type, S, C, aij_params, rho))
+kable(A, digits = 2)
+```
+
+## Step 2: Generate intrinsic growth rates
+
+Next, we generate intrinsic growth rates that allow species to persist with positive biomasses when the system is at equilibrium.
+
+```{r generate r}
+      Biomass_at_equilibrium <- runif(params$S, 1, 10)
+      r <- -A%*%Biomass_at_equilibrium
+      print(r)
+```
+
+Let's see what the dynamic of the system look like:
+
+```{r show dynamic pre-perturb, echo = F}
+      # simulate parameters before the perturbation 
+      dyn_params <- with(params, list(A = A, r = r, S = S))
+      pre_perturb <- simulate_dynamics_c(dyn_params, fw.model)
+      pivot_longer(pre_perturb, cols = c(2:(1+params$S)), names_to = "species", values_to = "biomass") %>%
+        ggplot(aes(x = time, y = biomass, color = species)) +
+        geom_line() +
+        my_theme
+```
+
+As expected, the system goes quickly to a stable equilibrium.
+
+## Step 3: Simulate a perturbation
+
+The third step is to simulate a perturbation. To do so, we will apply a change to the intrinsic growth rate of each species:
+
+```{r generate delta_r}
+      delta_r <- rnorm(10, mean = params$delta_r_params[1], sd = params$delta_r_params[2])
+      new_r <- r + delta_r
+      delta_r
+```
+
+Let's see what the dynamic look like pre- and post-perturbation
+
+```{r visualize dynamic, echo  = F}
+      equil <- as.numeric(pre_perturb[nrow(pre_perturb), -1])      
+      dyn_params$r <- new_r
+      post_perturb <- simulate_dynamics_c(dyn_params, fw.model, init_biomass = equil)
+      post_perturb$time = c((nrow(pre_perturb) + 1): (params$maxt*2))
+      dyn <- rbind(pre_perturb, post_perturb)
+      pivot_longer(dyn, cols = c(2:(1+params$S)), names_to = "species", values_to = "biomass") %>%
+        ggplot(aes(x = time, y = biomass, color = species)) +
+        geom_line() +
+        geom_vline(xintercept = params$maxt+1, linetype = "dashed", linewidth = 1) +
+        my_theme
+```
+
+So, the system goes to the pre-perturbation equilibrium until timestep 25, where we apply our perturbation. Then, the system gets to a new equilibrium pretty quickly. From the biomasses at pre- and post-equilibrium, we can calculate the effect of the perturbation.
+
+## Step 4: Calculate network coherence
+
+The objective of the simulation is to explore the consequences of network coherence on the response of a community to a perturbation. So, the final step is to calculate network coherence. Here, network coherence is a vector where each element represent how "coherent" a species is with its community. We calculate coherence of species $i$ as the covariance between the net effects of all other species ($a_{ij}^{-1}$, $j \neq i$) and the intrinsic responses of $r_{j \neq i}$.
+
+
+Here is the function:
+```{r net_coherence function}
+      net_coherence3
+```
+
+And here is the network coherence for our example:
+```{r net_coherence}
+      NC <- net_coherence3(delta_r, A)
+      NC
+```
+
+In this example, the mean network coherence is `r round(mean(NC), 2)` and the standard deviation is `r round(sd(NC), 2)`. Not surprisingly, the average network coherence is close to 0 since we simulated independently the interaction matrix $A$ and the response to the perturbation $delta\_r$. In Box 1, we simulated 300 communities of 100 species (and responses to perturbation). Ideally, we would be able to control for the network coherence to better explore the ranges of possible mean and sd network coherences.
+

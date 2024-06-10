@@ -41,9 +41,8 @@ sim_binary_network <- function(S, C) {
 ### C: connectance 
 ### rho correlation between aij and aji
 ### parametrization inspired from Allesina & Tang 2012 (https://doi.org/10.1038/nature10832)
-### efficiency: energy efficiency of predators (for predator-prey networks)
 
-sim_quantitative_network <- function(Net_type, S, C, aij_params, efficiency = 1, rho = 0) {
+sim_quantitative_network <- function(Net_type, S, C, aij_params, rho = 0) {
   
   # initialize network
   A <- matrix(0, S, S)
