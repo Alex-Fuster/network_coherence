@@ -29,17 +29,76 @@ my_theme = theme(axis.text=element_text(size=12),
 
 ## Introduction
 
-In this document, we demonstrate how the effects of network coherence on community response to a perturbation was simulated (so far).
+In this document, we demonstrate how the effects of network coherence on community response to a perturbation was simulated (so far). We first demonstrate how network coherence is defined in our simulations which use a Lotka-Volterra model. We then illustrate how simulations are performed with a step-by-step example.
 
 The simulation has five main steps:
+
 1. Simulate an interaction matrix, making sure the equilibrium is stable
 2. Generate species intrinsic growth rates, making sure that all species have positive biomasses at equilibrium
 3. Simulate a perturbation by changing the intrinsic growth rates of species
 4. Calculate network coherence
 
+## Defining network coherence in Lotka-Volterra model
+
+In our simulation, we will use a set of ordinary differential equations (sorry for mathematical notation, I don't often do "demonstrations"; this is based on a quick demonstration that Dom G did during the in-person meeting.):
+
+\begin{equation}
+\tag{1}
+\frac{dx_i}{dt} = x_i(\boldsymbol{r} + A \boldsymbol{x}) 
+\end{equation}
+
+where $\boldsymbol{x}$ is the vector of species biomass, $\boldsymbol{r}$ the vector of intrinsic growth rates, and $A$ the interaction matrix.  
+
+At equilibrium, we have:
+
+\begin{equation}
+\tag{2}
+\boldsymbol{x} = -A^{-1} \boldsymbol{r}
+\end{equation}
+
+If we apply a perturbation and assumes that interactions are not changed, we can show that the change in abundances pre- to post- perturbation is defined by:
+
+\begin{equation}
+\tag{3}
+\boldsymbol{\Delta x} = -A^{-1} \boldsymbol{\Delta r}
+\end{equation}
+
+If we focus on changes for species i and seperate intra-specific and inter-specifc effects:
+
+\begin{equation}
+\tag{4}
+\Delta x_i = -a_{ii}^{-1} \Delta r_i  - \sum a_{ij}^{-1} \Delta r_j, 
+\end{equation}
+
+where $j \neq i$.  
+
+In the context of network coherence, we are interested in the second term of the sum (interspecific effects).  
+
+We have the following theorems on the expectation of product of two random variables:
+\begin{equation}
+\tag{5}
+E[XY] = E[X]E[Y] + cov(X,Y) 
+\end{equation}
+
+and on the expectation of sums of random variables:
+\begin{equation}
+\tag{6}
+E[\sum X] = \sum E[X] 
+\end{equation}
+
+So, we have the following expectation for the second term:
+\begin{equation}
+\tag{7}
+ E[\sum a_{ij} \Delta r_j] = E[a_{ij}^{-1}] E[\Delta r_j] + cov(a_{ij}^{-1}, \Delta r_j),
+\end{equation}
+
+where $i \neq j$.  
+
+This last term is what we define here as the network coherence for specie $i$ and is the covariance between the net effects of all other species $j$ on $i$ ($a_{ij}^{-1}$) and the intrinsic responses of species $j$ ($\Delta r_{j \neq i}$).
+
 ## Parametrization
 
-We first need to set some parameters of the simulation. For this example, we will simlulate a predator-prey network of 10 species.
+Before beginning, let's set some parameters of the simulation. For this example, we will simlulate a predator-prey network of 10 species.
 
 ```{r parameters}
 params <- list(
@@ -128,7 +187,7 @@ So, the system goes to the pre-perturbation equilibrium until timestep 25, where
 
 ## Step 4: Calculate network coherence
 
-The objective of the simulation is to explore the consequences of network coherence on the response of a community to a perturbation. So, the final step is to calculate network coherence. Here, network coherence is a vector where each element represent how "coherent" a species is with its community. We calculate coherence of species $i$ as the covariance between the net effects of all other species ($a_{ij}^{-1}$, $j \neq i$) and the intrinsic responses of $r_{j \neq i}$.
+The objective of the simulation is to explore the consequences of network coherence on the response of a community to a perturbation. So, the final step is to calculate network coherence. Here, network coherence is a vector where each element represent how "coherent" a species is with its community. We calculate coherence of species $i$ as the covariance between the net effects of all other species ($a_{ij}^{-1}$, $j \neq i$) and the intrinsic responses of $\Delta r_{j \neq i}$.
 
 
 Here is the function:
