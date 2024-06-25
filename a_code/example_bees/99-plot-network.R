@@ -44,23 +44,24 @@ ggsave(filename = "c_outputs/figures/bees/interaction_matrix_visweb.png",
 
 # Plot binary network -----------------------------------------------------
 
-
 interaction_matrix_fig <-
   interaction_matrix |>
-  select(-correlation) |>                             # Exclude the correlation column
+  select(-correlation) |>   # Exclude the correlation column
   mutate(binary_interaction = case_when(weighted_interaction > 0 ~ 1,
                                           .default = weighted_interaction)) |>  # Binarize the matrix
   select(-weighted_interaction)                   # Exclude the weighted_interaction column
 
-ggplot(data = interaction_matrix_fig) +
+binary_network <- ggplot(data = interaction_matrix_fig) +
   geom_tile(aes(x = spp_plants, y = spp_pollinators, 
                 fill = as.character(binary_interaction)), col = "lightgrey") +
   theme_minimal() +
+  ggtitle("A matrix\n\nInteraction network") +
   theme(axis.text.x = element_text(angle = 90, 
                                    vjust = 0.5, hjust = 1, 
                                    face = "italic"),
         axis.text.y = element_text(face = "italic"),
-        legend.position = "right") +
+        legend.position = "right",
+        plot.title = element_text(hjust = 0.5)) +
   scale_fill_manual(values = c("white", "black")) +
   labs(fill = "Interaction", x = "", y = "")
 
