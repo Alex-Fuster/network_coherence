@@ -14,7 +14,6 @@ ipak(c("sf", "terra"))
 ma_shapefile <- terra::simplifyGeom(terra::union(terra::vect("b_data/shapefile/biome_border.shp")))
 ma_shapefile <- terra::forceCCW(ma_shapefile)
 
-
 # Get polygons WKT --------------------------------------------------------
 
 # ma_shapefile_wkt <- terra::geom(ma_shapefile, wkt = TRUE)
