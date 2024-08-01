@@ -337,24 +337,16 @@ pre = readRDS(paste0("c_outputs/gam_hierarchical_gp_precollapse.rds"))
 during = readRDS(paste0("c_outputs/gam_hierarchical_gp_duringcollapse.rds"))
 post = readRDS(paste0("c_outputs/gam_hierarchical_gp_postcollapse.rds"))
 
+# get species correlations
 pre_correlations = lv_correlations(pre)
 during_correlations = lv_correlations(during)
 post_correlations = lv_correlations(post)
 
-
-# Plot as histogram
-pre_correlations$mean_correlations[which(lower.tri(pre_correlations$mean_correlations))] |>
-  hist(col = "grey20", border = "white", lwd = .2,
-       xlab = "Corrélation entre espèces",
-       ylab = "Fréquence",
-       main = "", cex = 3)
-
+# make data frames for plotting
 pre_corrs = data.frame("group" = "pre", "value" = pre_correlations$mean_correlations[which(lower.tri(pre_correlations$mean_correlations))])
 during_corrs = data.frame("group" = "during", 
                           "value" = during_correlations$mean_correlations[which(lower.tri(during_correlations$mean_correlations))])
 post_corrs = data.frame("group" = "post", "value" = post_correlations$mean_correlations[which(lower.tri(post_correlations$mean_correlations))])
-corrs = rbind(pre_corrs, during_corrs, post_corrs)
-corrs$group = factor(corrs$group, levels = c("pre", "during", "post"))
 
 (A = ggplot(data = pre_corrs, aes(x = value)) +
     geom_histogram(aes(fill = after_stat(x)),bins = 15, col = "black", lwd = .1) +
@@ -400,4 +392,10 @@ corrs$group = factor(corrs$group, levels = c("pre", "during", "post"))
 A / B / C
 ggsave("c_outputs/fish-example/figures/coherence_preduringpostcollapse.png", width = 4.25, height = 7.64)
 
+# summary statistics ----
 
+summary_df = data.frame(
+  "period" = c("pre-collapse", "collapse", "post-collapse"),
+  "mean" = c(mean(pre_corrs$value), mean(during_corrs$value), mean(post_corrs$value)),
+  "sd" = c(sd(pre_corrs$value), sd(during_corrs$value), sd(post_corrs$value))
+)
