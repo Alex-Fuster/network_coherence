@@ -1,3 +1,6 @@
+# If you're running this script for the first time, make sure to run the previous 
+# scripts first. 
+
 source("a_code/example_bees/01-get_interaction_data.R")
 source("a_code/example_bees/01.1-get_biome_shapefile.R")
 source("a_code/example_bees/03-Environmental_data.R")

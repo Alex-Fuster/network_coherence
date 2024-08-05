@@ -1,13 +1,15 @@
-
 # Load packages -----------------------------------------------------------
 
 library(tidyverse)
 
 # Load data ----------------------------------------------------------------
 
-load("b_data/gbif_occ_selected.Rdata")
+load("b_data/gbif_occ_selected.Rdata") # Load selected GBIF occurrences for both groups
 
 # Combine datasets --------------------------------------------------------
+# Creates a combined dataset with the selected occurrences for both groups, the 
+# environmental values, geographical information, and the group to which each 
+# species belongs.
 
 combined_df <- bind_rows(
   bind_cols(species = pollinators_occ_selected$species, 
@@ -25,6 +27,8 @@ combined_df <- bind_rows(
 )
 
 # Sampling bias ------------------------------------------------------------
+# Process the combined dataset to remove sampling bias. This is done by removing 
+# duplicate points for each species and excluding species with only one point.
 
 # Sample unique points for each species
 
@@ -43,6 +47,8 @@ combined_df <- combined_df |>
   ungroup()
 
 # Clean interaction matrix ------------------------------------------------
+# Filter the interaction matrix to include only the species that are present in
+# the selected occurrences for both groups.
 
 interaction_matrix <- interaction_matrix |>
   filter(spp_plants %in% plants_occ_selected$species,

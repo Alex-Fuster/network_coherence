@@ -1,29 +1,18 @@
-
 # Load packages -----------------------------------------------------------
 library(truncnorm)
 library(numDeriv)
 
 # Design function ---------------------------------------------------------
 
+# Create a truncated normal distribution function
 pdf_truncnorm <- function(x, min, max, mean, sd) {
-  dtruncnorm(x, a = min, b = max, mean = mean, sd = sd)
+  dtruncnorm(x, a = min, b = max, mean = mean, sd = sd) 
 }
 
 # Function to calculate the derivative of PDF at a specific point using numerical differentiation
 calculate_derivative <- function(x, min, max, mean, sd) {
   grad(function(x) pdf_truncnorm(x, min, max, mean, sd), x)
 }
-
-
-combined_df |> 
-  filter(group == "pollinators") |> 
-  drop_na() |>
-  summarise(
-    min = min(environ_values),
-    max = max(environ_values),
-    mean = mean(environ_values),
-    sd = sd(environ_values)
-  )
 
 
 # Derivatives by group ----------------------------------------------------
@@ -33,11 +22,11 @@ combined_df |>
 # x = environmental value to which we want to know the derivative
 
 derivative_by_group <- function(df, y, x){
-  params <- df |> 
-    filter(group == y) |> 
-    drop_na() |>
+  params <- df |>                # Create a dataset with the values below
+    filter(group == y) |>        # Filter by group
+    drop_na() |>                 # Remove NAs
     summarise(
-      min = min(environ_values),
+      min = min(environ_values), # Calculate min, max, mean, and sd of the environmental values
       max = max(environ_values),
       mean = mean(environ_values),
       sd = sd(environ_values)
@@ -57,10 +46,10 @@ derivative_by_group <- function(df, y, x){
 # x = environmental value to which we want to know the derivative
 
 derivative_by_species <- function(df, y, x){
-  params <- df |> 
-    filter(species == y) |> 
-    drop_na() |>
-    summarise(
+  params <- df |>                 # Create a dataset with the values below
+    filter(species == y) |>       # Filter by species
+    drop_na() |>                  # Remove NAs
+    summarise(                    # Calculate min, max, mean, and sd of the environmental values
       min = min(environ_values),
       max = max(environ_values),
       mean = mean(environ_values),
@@ -76,7 +65,8 @@ derivative_by_species <- function(df, y, x){
 
 
 # Calculate derivatives per cell and species ------------------------------
-
+# For each cell, we can access the environmental value and the species occurrences. 
+# This information is then used to calculate the derivative for each species in that cell.
 
 # Get unique cells 
 
