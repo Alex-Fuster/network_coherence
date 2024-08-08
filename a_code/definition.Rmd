@@ -624,6 +624,8 @@ compute_cov_matrix <- function(delta_r_vectors) {
 # Simulating scenarios
 mean_change_strong <- 1.2
 mean_change_weak <- 0.5
+mean_change_strong_decrease <- -1.2
+mean_change_weak_decrease <- -0.5
 sd_variation <- 0.1
 
 # Function to simulate quantitative networks
@@ -705,16 +707,20 @@ calculate_metrics <- function(B, cov_delta_r, delta_r) {
 run_simulations_with_metrics <- function(num_simulations, Net_type, S, C, aij_params, scenario, mean_change_strong, mean_change_weak, sd_variation) {
   results <- replicate(num_simulations, {
     # Generate new C matrix for each iteration
-    if (scenario == "Strong Positive") {
+    if (scenario == "Strong Positive Increases") {
       rf <- generate_rf_positive(ri, mean_change_strong, sd_variation)
-    } else if (scenario == "Weak Positive") {
+    } else if (scenario == "Weak Positive Increases") {
       rf <- generate_rf_positive(ri, mean_change_weak, sd_variation)
+    } else if (scenario == "Strong Positive Decreases") {
+      rf <- generate_rf_positive(ri, mean_change_strong_decrease, sd_variation)
+    } else if (scenario == "Weak Positive Decreases") {
+      rf <- generate_rf_positive(ri, mean_change_weak_decrease, sd_variation)
     } else if (scenario == "Null") {
       rf <- ri
     } else if (scenario == "Mixed Weak") {
-      rf <- generate_rf_mixed(ri, mean_change_weak, -mean_change_weak, sd_variation)
+      rf <- generate_rf_mixed(ri, mean_change_weak, mean_change_weak_decrease, sd_variation)
     } else if (scenario == "Mixed Strong") {
-      rf <- generate_rf_mixed(ri, mean_change_strong, -mean_change_strong, sd_variation)
+      rf <- generate_rf_mixed(ri, mean_change_strong, mean_change_strong_decrease, sd_variation)
     }
     
     delta_r <- rf - ri
@@ -738,17 +744,16 @@ run_simulations_with_metrics <- function(num_simulations, Net_type, S, C, aij_pa
 }
 
 # Generate results for each scenario
-Net_type <- "predator-prey"
+Net_type <- "competition"
 C <- 0.2
 aij_params <- c(0, 0.1)
 num_simulations <- 100
 
-scenarios <- c("Strong Positive", "Weak Positive", "Null", "Mixed Weak", "Mixed Strong")
+scenarios <- c("Strong Positive Increases", "Weak Positive Increases", "Strong Positive Decreases", "Weak Positive Decreases", "Null", "Mixed Weak", "Mixed Strong")
 
 simulation_results_with_metrics <- lapply(scenarios, function(scenario) {
   run_simulations_with_metrics(num_simulations, Net_type, S, C, aij_params, scenario, mean_change_strong, mean_change_weak, sd_variation)
 })
-
 
 
 # Prepare the matrices data
@@ -773,8 +778,8 @@ prepare_matrices_data <- function(simulation_results) {
 combined_matrices_data <- prepare_matrices_data(setNames(simulation_results_with_metrics, scenarios))
 
 
+##########################################################
 
-###################################################
 
 # Prepare the data for plotting
 prepare_combined_plot_data <- function(simulation_results) {
@@ -796,11 +801,14 @@ prepare_combined_plot_data <- function(simulation_results) {
 # Prepare the data
 combined_plot_data <- prepare_combined_plot_data(setNames(simulation_results_with_metrics, scenarios))
 
+
 # Plot results
 scenario_order <- c(
-  "Strong Positive",
-  "Weak Positive",
+  "Strong Positive Increases",
+  "Weak Positive Increases",
   "Null",
+  "Strong Positive Decreases",
+  "Weak Positive Decreases",
   "Mixed Weak",
   "Mixed Strong"
 )
@@ -808,14 +816,12 @@ scenario_order <- c(
 combined_plot_data$Scenario <- factor(combined_plot_data$Scenario, levels = scenario_order)
 
 # Define color palette based on RdBu
-color_palette <- scales::brewer_pal(palette = "RdBu", direction = -1)(5)
+color_palette <- scales::brewer_pal(palette = "RdBu", direction = -1)(7)
 mixed_weak_color <- "violet"
 mixed_strong_color <- "magenta4"
 
 # Define scenario colors
-scenario_order <- c("Strong Positive", "Weak Positive", "Null", "Mixed Weak", "Mixed Strong")
-scenario_colors <- setNames(c(color_palette[1], color_palette[2], color_palette[3], mixed_weak_color, mixed_strong_color), scenario_order)
-
+scenario_colors <- setNames(c(color_palette[1], color_palette[2], color_palette[5], color_palette[1], color_palette[2], mixed_weak_color, mixed_strong_color), scenario_order)
 
 # Plot abundance change
 p1 <- ggplot(combined_plot_data, aes(x = Scenario, y = Abundance_Change, fill = Scenario)) +
@@ -825,8 +831,7 @@ p1 <- ggplot(combined_plot_data, aes(x = Scenario, y = Abundance_Change, fill = 
   geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
   labs(x = " ", y = "Abundance Change") +
   theme_classic() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none") +
-  my_theme
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none")
 
 # Plot variance in abundance change
 p2 <- ggplot(combined_plot_data, aes(x = Scenario, y = Variance, fill = Scenario)) +
@@ -835,14 +840,13 @@ p2 <- ggplot(combined_plot_data, aes(x = Scenario, y = Variance, fill = Scenario
   scale_color_manual(values = c(setNames(ifelse(scenario_order == "Null", "black", scenario_colors), scenario_order), "black")) +
   labs(x = " ", y = "Variance in Abundance Change") +
   theme_classic() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none") +
-  my_theme
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none")
 
 # Display plots
 ggarrange(p1, p2, nrow = 2, ncol = 1, labels = LETTERS[1:2])
 
 
-#ggsave("fig6.png", height = 10, width = 6)
+#ggsave("fig6.png", height = 8, width = 11)
 
 
 ```
