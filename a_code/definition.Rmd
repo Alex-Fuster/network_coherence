@@ -316,8 +316,7 @@ The scenarios discussed apply to communities where most interactions between spe
 ```{r}
 
 # Function to simulate quantitative networks
-# Function to simulate quantitative networks
-sim_quantitative_network <- function(Net_type, S, C, aij_params, rho = 0, diag) {
+sim_quantitative_network <- function(Net_type, S, C, aij_params, rho = 0, diag_type) {
   A <- matrix(0, S, S)
   n_pairs <- S * (S - 1) / 2
   B <- runif(n_pairs) <= C
@@ -345,20 +344,15 @@ sim_quantitative_network <- function(Net_type, S, C, aij_params, rho = 0, diag) 
     stop("Incorrect network type")
   }
   
-  if(diag == "zero"){
-    
+  if(diag_type == "zero"){
     diag(A) <- 0
-    
-  }else{
-    
+  } else {
     diag(A) <- -(max(Re(eigen(A)$values)) + runif(S, 0.1))
     while (max(Re(eigen(A)$values)) > 0) {
       diag(A) <- -(max(Re(eigen(A)$values)) + runif(S, 0.1))
     }
   }
   
-  
-  #diag(A) <- 0
   return(A)
 }
 
@@ -369,9 +363,9 @@ C <- 0.3  # Connectivity
 aij_params <- c(0, 1)  # Mean and SD for interaction strengths
 
 # Generate matrices
-A_foodweb <- sim_quantitative_network("predator-prey", S, C, aij_params, diag = "zero")
-A_competition <- sim_quantitative_network("competition", S, C, aij_params, diag = "zero")
-A_mutualistic <- sim_quantitative_network("mutualistic", S, C, aij_params, diag = "zero")
+A_foodweb <- sim_quantitative_network("predator-prey", S, C, aij_params, diag_type = "nonzero")
+A_competition <- sim_quantitative_network("competition", S, C, aij_params, diag_type = "nonzero")
+A_mutualistic <- sim_quantitative_network("mutualistic", S, C, aij_params, diag_type = "nonzero")
 
 # Invert matrices
 B_foodweb <- solve(A_foodweb)
@@ -418,7 +412,7 @@ pB <- ggarrange(p2,
 ggarrange(pA, pB, ncol = 2, nrow = 1,
           labels = LETTERS[1:2])
 
-ggsave("fig4.1.png", height = 8, width = 5)
+#ggsave("fig4.1.png", height = 8, width = 5)
 
 ```
 
@@ -442,7 +436,7 @@ contains_positive_values <- function(mat) {
 positive_values_found <- numeric(length = 1000)
 
 for (i in 1:1000) {
-  A <- sim_quantitative_network("mutualistic", S, C, aij_params, diag = "nonzero")
+  A <- sim_quantitative_network("mutualistic", S, C, aij_params, diag_type = "nonzero")
   B <- solve(A)
   positive_values_found[i] <- contains_positive_values(B)
 }
@@ -461,29 +455,96 @@ We simulate 100 food web structures with random interaction strengths and comput
 Covariance matrices:
 
 ```{r}
+# Number of species
 S <- 25
 
-set.seed(120)
+# Simulate initial r values (ri)
+set.seed(123)
+ri <- runif(S, -1, 1)
 
-# Function to generate mixed covariance matrices
-generate_mixed_cov_matrix <- function(S, range_neg, range_pos) {
-  mat <- matrix(runif(S^2, range_neg[1], range_pos[2]), nrow = S)
-  diag(mat) <- runif(S, range_neg[1], range_pos[2])
-  return(mat)
+# Function to generate rf values with positive covariance
+generate_rf_positive <- function(ri, mean_change, sd_variation) {
+  rf <- ri + rnorm(length(ri), mean_change, sd_variation)
+  return(rf)
 }
 
+# Mixed (positive and negative)
+generate_rf_mixed <- function(ri, mean_change_positive, mean_change_negative, sd_variation) {
+  rf <- ri
+  for (i in 1:length(ri)) {
+    if (i %% 2 == 0) {
+      rf[i] <- ri[i] + rnorm(1, mean_change_positive, sd_variation)
+    } else {
+      rf[i] <- ri[i] + rnorm(1, mean_change_negative, sd_variation)
+    }
+  }
+  return(rf)
+}
+
+# Compute the covariance matrix using delta_r vectors
+compute_cov_matrix <- function(delta_r_vectors) {
+  S <- nrow(delta_r_vectors)
+  cov_matrix <- matrix(NA, nrow = S, ncol = S)
+  for (i in 1:S) {
+    for (j in 1:S) {
+      cov_matrix[i, j] <- cov(delta_r_vectors[i, ], delta_r_vectors[j, ])
+    }
+  }
+  return(cov_matrix)
+}
+
+# Generate rf values for different scenarios
+mean_change_strong <- 1.2
+mean_change_weak <- 0.5
+sd_variation <- 0.1
+
+# Strong positive
+rf_strong_positive <- generate_rf_positive(ri, mean_change_strong, sd_variation)
+delta_r_strong_positive <- rf_strong_positive - ri
+
+# Weak positive
+rf_weak_positive <- generate_rf_positive(ri, mean_change_weak, sd_variation)
+delta_r_weak_positive <- rf_weak_positive - ri
+
+# Mixed weak
+mean_change_positive <- 0.5
+mean_change_negative <- -0.5
+rf_mixed_weak <- generate_rf_mixed(ri, mean_change_positive, mean_change_negative, sd_variation)
+delta_r_mixed_weak <- rf_mixed_weak - ri
+
+# Mixed strong
+mean_change_positive_strong <- 1.2
+mean_change_negative_strong <- -1.2
+rf_mixed_strong <- generate_rf_mixed(ri, mean_change_positive_strong, mean_change_negative_strong, sd_variation)
+delta_r_mixed_strong <- rf_mixed_strong - ri
+
+# Null (no change)
+delta_r_null <- rep(0, S)
+delta_r_vectors_null <- cbind(ri, ri)  # No change, so rf = ri
+
+# Create vectors delta_r for each species (each row corresponds to a species)
+delta_r_vectors_strong_positive <- cbind(ri, rf_strong_positive)
+delta_r_vectors_weak_positive <- cbind(ri, rf_weak_positive)
+delta_r_vectors_mixed_weak <- cbind(ri, rf_mixed_weak)
+delta_r_vectors_mixed_strong <- cbind(ri, rf_mixed_strong)
+
+# Compute C matrices
+cov_matrix_strong_positive <- compute_cov_matrix(delta_r_vectors_strong_positive)
+cov_matrix_weak_positive <- compute_cov_matrix(delta_r_vectors_weak_positive)
+cov_matrix_mixed_weak <- compute_cov_matrix(delta_r_vectors_mixed_weak)
+cov_matrix_mixed_strong <- compute_cov_matrix(delta_r_vectors_mixed_strong)
+cov_matrix_null <- matrix(0, nrow = S, ncol = S)  # Null scenario has no change
+
+# Combine all covariance matrices into a list
 cov_matrices <- list(
-  "Strong Positive" = matrix(runif(S^2, 0.6, 1), nrow = S),
-  "Weak Positive" = matrix(runif(S^2, 0.1, 0.4), nrow = S),
-  "Strong Negative" = matrix(runif(S^2, -1, -0.6), nrow = S),
-  "Weak Negative" = matrix(runif(S^2, -0.4, -0.1), nrow = S),
-  "Mixed Weak" = generate_mixed_cov_matrix(S, c(-0.4, 0), c(0, 0.4)),
-  "Mixed Strong" = generate_mixed_cov_matrix(S, c(-1, 0), c(0, 1)),
-  "Null" = matrix(0, nrow = S, ncol = S)
+  "Strong Positive" = cov_matrix_strong_positive,
+  "Weak Positive" = cov_matrix_weak_positive,
+  "Mixed Weak" = cov_matrix_mixed_weak,
+  "Mixed Strong" = cov_matrix_mixed_strong,
+  "Null" = cov_matrix_null
 )
 
-
-
+# Prepare the plot data for the example C matrices
 prepare_plot_data <- function(cov_matrices) {
   plot_data <- lapply(names(cov_matrices), function(name) {
     matrix <- cov_matrices[[name]]
@@ -495,36 +556,78 @@ prepare_plot_data <- function(cov_matrices) {
   return(combined_plot_data)
 }
 
-
+# Generate the plot data
 plot_data <- prepare_plot_data(cov_matrices)
 
+# Generate the plot
 p <- ggplot(plot_data, aes(x = Var1, y = Var2, fill = value)) +
   geom_tile(color = "white") +
   scale_fill_distiller(palette = "RdBu", direction = 1, na.value = "white") +
   labs(
-       x = NULL,
-       y = NULL,
-       fill = "Covariance") +
+    x = NULL,
+    y = NULL,
+    fill = "Covariance"
+  ) +
   theme_minimal() +
   theme(strip.text = element_text(size = 14)) +
-  facet_wrap(~ Scenario, ncol = 3, scales = "free")+
+  facet_wrap(~ Scenario, ncol = 3, scales = "free") +
   my_theme
 
-p
+# Display the plot
+print(p)
 
-#ggsave("fig5.png", height = 7, width = 9)
+#ggsave("fig5.png", height = 7, width = 10)
 
 ```
 
 Simulations (similar results for mutualistic, competition, and predator-prey interactions):
 
 ```{r}
+# Number of species
+S <- 25
 
-num_simulations <- 100
-set.seed(120)
+# Simulate initial r values (ri)
+set.seed(123)
+ri <- runif(S, -1, 1)
+
+# Function to generate rf values with positive covariance
+generate_rf_positive <- function(ri, mean_change, sd_variation) {
+  rf <- ri + rnorm(length(ri), mean_change, sd_variation)
+  return(rf)
+}
+
+# Function to generate rf values with Mixed covariance (positive and negative)
+generate_rf_mixed <- function(ri, mean_change_positive, mean_change_negative, sd_variation) {
+  rf <- ri
+  for (i in 1:length(ri)) {
+    if (i %% 2 == 0) {
+      rf[i] <- ri[i] + rnorm(1, mean_change_positive, sd_variation)
+    } else {
+      rf[i] <- ri[i] + rnorm(1, mean_change_negative, sd_variation)
+    }
+  }
+  return(rf)
+}
+
+# Compute the covariance matrix using delta_r vectors
+compute_cov_matrix <- function(delta_r_vectors) {
+  S <- nrow(delta_r_vectors)
+  cov_matrix <- matrix(NA, nrow = S, ncol = S)
+  for (i in 1:S) {
+    for (j in 1:S) {
+      cov_matrix[i, j] <- cov(delta_r_vectors[i, ], delta_r_vectors[j, ])
+    }
+  }
+  return(cov_matrix)
+}
+
+# Simulating scenarios
+mean_change_strong <- 1.2
+mean_change_weak <- 0.5
+sd_variation <- 0.1
 
 # Function to simulate quantitative networks
-sim_quantitative_network <- function(Net_type, S, C, aij_params, rho = 0) {
+sim_quantitative_network <- function(Net_type, S, C, aij_params, rho = 0, diag_type) {
   A <- matrix(0, S, S)
   n_pairs <- S * (S - 1) / 2
   B <- runif(n_pairs) <= C
@@ -551,53 +654,21 @@ sim_quantitative_network <- function(Net_type, S, C, aij_params, rho = 0) {
   } else {
     stop("Incorrect network type")
   }
-  diag(A) <- -(max(Re(eigen(A)$values)) + runif(S, 0.1))
-  while (max(Re(eigen(A)$values)) > 0) {
+  
+  if(diag_type == "zero"){
+    diag(A) <- 0
+  } else {
     diag(A) <- -(max(Re(eigen(A)$values)) + runif(S, 0.1))
+    while (max(Re(eigen(A)$values)) > 0) {
+      diag(A) <- -(max(Re(eigen(A)$values)) + runif(S, 0.1))
+    }
   }
+  
   return(A)
 }
 
-
-
-# calculate_metrics <- function(B, cov_delta_r) {
-#   n <- nrow(B)
-#   
-#   # Variance of Delta X
-#   var_delta_X <- numeric(n)
-#   for (i in 1:n) {
-#     var_sum <- 0
-#     for (k in 1:n) {
-#       for (l in 1:n) {
-#         var_sum <- var_sum + B[i, k] * B[i, l] * cov_delta_r[k, l]
-#       }
-#     }
-#     var_delta_X[i] <- var_sum
-# 
-#   }
-#   
-#   # Mean of the sum of each row of B
-#   mean_sum_B <- colMeans(B)
-#   
-#   # Mean of delta_r (assuming it is an average of a random distribution)
-#   mean_delta_r <- mean(cov_delta_r)
-#   
-#   # Covariance between sum of each row of B and delta_r
-#   cov_sum_B_delta_r <- cov(colSums(B), cov_delta_r)
-#   
-#   # Calculate Abundance Change
-#   abundance_change <- mean_sum_B * mean_delta_r + cov_sum_B_delta_r
-#   
-#   # Check for non-negative variance
-#   if (any(var_delta_X < 0)) {
-#     warning("Negative variance detected!")
-#   }
-#   
-#   return(list(Variance = var_delta_X, Abundance_Change = abundance_change))
-# }
-
-
-calculate_metrics <- function(B, cov_delta_r) {
+# Function to calculate metrics
+calculate_metrics <- function(B, cov_delta_r, delta_r) {
   n <- nrow(B)
   
   # Variance of Delta X
@@ -612,63 +683,103 @@ calculate_metrics <- function(B, cov_delta_r) {
     var_delta_X[i] <- var_sum
   }
   
+  # Compute column sums of B
+  col_sums_B <- colSums(B)
+  
   # Average of the sum of each column of B
-  mean_sum_B <- mean(colSums(B))
+  mean_sum_B <- mean(col_sums_B)
   
   # Mean of delta_r (assuming it is an average of a random distribution)
-  mean_delta_r <- mean(cov_delta_r)
+  mean_delta_r <- mean(delta_r)
   
   # Covariance between sum of each column of B and delta_r
-  cov_sum_B_delta_r <- cov(colSums(B), cov_delta_r)
+  cov_sum_B_delta_r <- cov(col_sums_B, delta_r)
   
   # Calculate Abundance Change
   abundance_change <- mean_sum_B * mean_delta_r + cov_sum_B_delta_r
   
-  # Check for non-negative variance
-  if (any(var_delta_X < 0)) {
-    warning("Negative variance detected!")
-  }
-  
   return(list(Variance = var_delta_X, Abundance_Change = abundance_change))
 }
 
-
-
-
-################# Simulation
-
-# Run simulations and check for issues in mixed scenarios
-run_simulations_with_metrics <- function(cov_matrix, num_simulations, Net_type, S, C, aij_params) {
+# Run simulations
+run_simulations_with_metrics <- function(num_simulations, Net_type, S, C, aij_params, scenario, mean_change_strong, mean_change_weak, sd_variation) {
   results <- replicate(num_simulations, {
-    interaction_matrix <- sim_quantitative_network(Net_type, S, C, aij_params)
+    # Generate new C matrix for each iteration
+    if (scenario == "Strong Positive") {
+      rf <- generate_rf_positive(ri, mean_change_strong, sd_variation)
+    } else if (scenario == "Weak Positive") {
+      rf <- generate_rf_positive(ri, mean_change_weak, sd_variation)
+    } else if (scenario == "Null") {
+      rf <- ri
+    } else if (scenario == "Mixed Weak") {
+      rf <- generate_rf_mixed(ri, mean_change_weak, -mean_change_weak, sd_variation)
+    } else if (scenario == "Mixed Strong") {
+      rf <- generate_rf_mixed(ri, mean_change_strong, -mean_change_strong, sd_variation)
+    }
+    
+    delta_r <- rf - ri
+    delta_r_vectors <- cbind(ri, rf)
+    cov_matrix <- compute_cov_matrix(delta_r_vectors) # compute C matrix from delta_r vectors
+    
+    interaction_matrix <- sim_quantitative_network(Net_type, S, C, aij_params, diag_type = "nonzero")
     inverse_matrix <- solve(interaction_matrix)
     if (is.null(inverse_matrix)) {
       return(list(Variance = rep(NA, S), Abundance_Change = NA))
     }
-    calculate_metrics(inverse_matrix, cov_matrix)
+    
+    metrics <- calculate_metrics(inverse_matrix, cov_matrix, delta_r)
+    list(metrics = metrics, A_matrix = interaction_matrix, B_matrix = inverse_matrix, C_matrix = cov_matrix)
   }, simplify = FALSE)
-  return(results)
+  
+  list(results = lapply(results, function(res) res$metrics), 
+       A_matrices = lapply(results, function(res) res$A_matrix), 
+       B_matrices = lapply(results, function(res) res$B_matrix), 
+       C_matrices = lapply(results, function(res) res$C_matrix))
 }
 
 # Generate results for each scenario
-Net_type <- "predator-prey"  # Example network type
-S <- 25  # Number of species
-C <- 0.2  # Connectance
-aij_params <- c(0, 0.1)  # Parameters for interaction strengths
-num_simulations <- 100  # Number of simulations
+Net_type <- "predator-prey"
+C <- 0.2
+aij_params <- c(0, 0.1)
+num_simulations <- 100
 
-simulation_results_with_metrics <- lapply(cov_matrices, function(cov_matrix) {
-  run_simulations_with_metrics(cov_matrix, num_simulations, Net_type, S, C, aij_params)
+scenarios <- c("Strong Positive", "Weak Positive", "Null", "Mixed Weak", "Mixed Strong")
+
+simulation_results_with_metrics <- lapply(scenarios, function(scenario) {
+  run_simulations_with_metrics(num_simulations, Net_type, S, C, aij_params, scenario, mean_change_strong, mean_change_weak, sd_variation)
 })
 
 
-############### Plot results
 
+# Prepare the matrices data
+prepare_matrices_data <- function(simulation_results) {
+  df_list_matrices <- lapply(names(simulation_results), function(scenario) {
+    A_matrices <- simulation_results[[scenario]]$A_matrices
+    B_matrices <- simulation_results[[scenario]]$B_matrices
+    C_matrices <- simulation_results[[scenario]]$C_matrices
+    df <- data.frame(
+      Scenario = rep(scenario, length(A_matrices)),
+      A_matrix = I(A_matrices),
+      B_matrix = I(B_matrices),
+      C_matrix = I(C_matrices)
+    )
+    return(df)
+  })
+  combined_df_matrices <- bind_rows(df_list_matrices)
+  return(combined_df_matrices)
+}
+
+# Prepare the matrices data
+combined_matrices_data <- prepare_matrices_data(setNames(simulation_results_with_metrics, scenarios))
+
+
+
+###################################################
 
 # Prepare the data for plotting
 prepare_combined_plot_data <- function(simulation_results) {
   df_list_var <- lapply(names(simulation_results), function(scenario) {
-    data <- simulation_results[[scenario]]
+    data <- simulation_results[[scenario]]$results
     df <- data.frame(
       Scenario = scenario,
       Variance = unlist(lapply(data, function(res) res$Variance)),
@@ -683,33 +794,28 @@ prepare_combined_plot_data <- function(simulation_results) {
 }
 
 # Prepare the data
-combined_plot_data <- prepare_combined_plot_data(simulation_results_with_metrics)
+combined_plot_data <- prepare_combined_plot_data(setNames(simulation_results_with_metrics, scenarios))
 
 # Plot results
 scenario_order <- c(
-  "Strong Negative",
-  "Weak Negative",
-  "Null",
-  "Weak Positive",
   "Strong Positive",
+  "Weak Positive",
+  "Null",
   "Mixed Weak",
   "Mixed Strong"
 )
 
 combined_plot_data$Scenario <- factor(combined_plot_data$Scenario, levels = scenario_order)
 
-# Calculate means for each scenario
-mean_variances <- combined_plot_data %>%
-  group_by(Scenario) %>%
-  summarize(Mean_Variance = mean(Variance, na.rm = TRUE),
-            Mean_Abundance_Change = mean(Abundance_Change, na.rm = TRUE))
-
 # Define color palette based on RdBu
 color_palette <- scales::brewer_pal(palette = "RdBu", direction = -1)(5)
-mixed_color <- "violet"
+mixed_weak_color <- "violet"
+mixed_strong_color <- "magenta4"
 
 # Define scenario colors
-scenario_colors <- setNames(c(color_palette, mixed_color, mixed_color), scenario_order)
+scenario_order <- c("Strong Positive", "Weak Positive", "Null", "Mixed Weak", "Mixed Strong")
+scenario_colors <- setNames(c(color_palette[1], color_palette[2], color_palette[3], mixed_weak_color, mixed_strong_color), scenario_order)
+
 
 # Plot abundance change
 p1 <- ggplot(combined_plot_data, aes(x = Scenario, y = Abundance_Change, fill = Scenario)) +
@@ -790,7 +896,7 @@ aij_params <- c(0, 1)  # Mean and SD for interaction strengths
 net_type <- "random"  # Type of network
 
 # Simulate the interaction matrix A
-A <- sim_quantitative_network(net_type, S, C, aij_params)
+A <- sim_quantitative_network(net_type, S, C, aij_params, diag_type = "nonzero")
 
 # Compute the inverse matrix B
 B <- solve(A)
