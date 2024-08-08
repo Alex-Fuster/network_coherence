@@ -959,6 +959,7 @@ The covariance contribution in Formula 10, $cov\left( \overrightarrow{1}^T B, \o
 
 ```{r}
 
+set.seed(123)
 
 # Define a grid for influence and response
 influence <- seq(-2, 2, length.out = 100)
@@ -973,27 +974,30 @@ grid$covariance <- grid$influence * grid$response
 # Create the plot
 ggplot(grid, aes(x = influence, y = response, fill = covariance)) +
   geom_tile() +
-  scale_fill_gradient2(low = "blue", high = "red", mid = "white", midpoint = 0, 
-                       limit = c(-4, 4), space = "Lab", 
-                       name = "Covariance\nContribution") +
+  scale_fill_distiller(palette = "RdBu", direction = 1, limits = c(-4, 4), name = expression(bar(Delta * X))) +
   geom_vline(xintercept = 0, linetype = "dashed", color = "black") +
   geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
   annotate("text", x = 1.5, y = 1.5, label = "(+,+)", size = 6, color = "black") +
   annotate("text", x = -1.5, y = 1.5, label = "(-,+)", size = 6, color = "black") +
   annotate("text", x = -1.5, y = -1.5, label = "(-,-)", size = 6, color = "black") +
   annotate("text", x = 1.5, y = -1.5, label = "(+,-)", size = 6, color = "black") +
-  labs(x = "Influence", y = "Response", title = "Influence vs Response with Covariance Contribution") +
+  labs(x = "Influence", y = "Response") +
   theme_minimal()
+
+#ggsave("figure9.png", height = 5, width = 6)
+
 
 ```
 
 ```{r}
 
+set.seed(123)
+
 # Parameters
 S <- 20  # Number of species
 C <- 0.3  # Connectivity
 aij_params <- c(0, 1)  # Mean and SD for interaction strengths
-net_type <- "random"  # Type of network
+net_type <- "predator-prey"  # Type of network
 
 # Simulate the interaction matrix A
 A <- sim_quantitative_network(net_type, S, C, aij_params, diag_type = "nonzero")
@@ -1015,24 +1019,26 @@ scale_to_range <- function(x, new_min = -2, new_max = 2) {
   (x - old_min) / (old_max - old_min) * (new_max - new_min) + new_min
 }
 
-influence <- scale_to_range(influence)
-response <- scale_to_range(response)
+scaled_influence <- scale_to_range(influence)
+scaled_response <- scale_to_range(response)
 
-# Generate a grid for the underlying color field
-x <- seq(-2, 2, length.out = 100)
-y <- seq(-2, 2, length.out = 100)
-grid <- expand.grid(influence = x, response = y)
-grid$covariance <- grid$influence * grid$response  # Covariance contribution
+# Define a grid for influence and response
+influence_grid <- seq(-2, 2, length.out = 100)
+response_grid <- seq(-2, 2, length.out = 100)
+
+# Create a dataframe with all combinations of influence and response
+grid <- expand.grid(influence = influence_grid, response = response_grid)
+
+# Compute the covariance contribution for each combination
+grid$covariance <- grid$influence * grid$response
 
 # Convert real network data to a data frame
-real_data <- data.frame(influence = influence, response = response)
+real_data <- data.frame(influence = scaled_influence, response = scaled_response)
 
 # Create the plot
 ggplot(grid, aes(x = influence, y = response, fill = covariance)) +
   geom_tile() +
-  scale_fill_gradient2(low = "blue", high = "red", midpoint = 0, 
-                       limit = c(-4, 4), space = "Lab", 
-                       name = expression(paste("Covariance\nContribution\nto", bar(Delta), "X"))) +
+  scale_fill_distiller(palette = "RdBu", direction = 1, limits = c(-4, 4), name = expression(bar(Delta * X))) +
   geom_vline(xintercept = 0, linetype = "dashed", color = "black") +
   geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
   annotate("text", x = 1.5, y = 1.5, label = "(+,+)", size = 6, color = "black") +
@@ -1040,11 +1046,10 @@ ggplot(grid, aes(x = influence, y = response, fill = covariance)) +
   annotate("text", x = -1.5, y = -1.5, label = "(-,-)", size = 6, color = "black") +
   geom_point(data = real_data, aes(x = influence, y = response), color = "black", size = 2, inherit.aes = FALSE) +
   annotate("text", x = 1.5, y = -1.5, label = "(+,-)", size = 6, color = "black") +
-  labs(x = "Influence", y = "Response", title = "Influence vs Response with Covariance Contribution") +
-  theme_minimal() +
-  theme(plot.title = element_text(hjust = 0.5))
+  labs(x = "Influence", y = "Response") +
+  theme_minimal()
 
-
+#ggsave("figure9.1.png", height = 5, width = 6)
 
 ```
 
