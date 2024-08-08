@@ -580,6 +580,9 @@ print(p)
 
 ```
 
+
+
+
 Simulations (similar results for mutualistic, competition, and predator-prey interactions):
 
 ```{r}
@@ -853,6 +856,99 @@ ggarrange(p1, p2, nrow = 2, ncol = 1, labels = LETTERS[1:2])
 
 
 The simulations confirm the expectation that the predictability of a community of interacting species increases when coherence is low (i.e. as values around 0 increase in the ENC pattern), whereas it decreases as coherence increases (i.e. as values approach the extremes -1 and 1 in the ENC pattern).
+
+
+translating to ENC patterns:
+
+
+```{r}
+# Sample one A and C matrix from each scenario
+sample_matrices <- combined_matrices_data %>%
+  group_by(Scenario) %>%
+  sample_n(1)
+
+# Convert A matrix to binary matrix
+convert_to_binary_matrix <- function(A_matrix) {
+  binary_A_matrix <- A_matrix
+  binary_A_matrix[binary_A_matrix > 0] <- 1
+  binary_A_matrix[binary_A_matrix < 0] <- 1
+  return(binary_A_matrix)
+}
+
+# Calculate ENC pattern by element-wise multiplication of binary A and C matrices
+calculate_enc_pattern <- function(A_matrix, C_matrix) {
+  binary_A_matrix <- convert_to_binary_matrix(A_matrix)
+  ENC_matrix <- binary_A_matrix * C_matrix
+  return(ENC_matrix)
+}
+
+# Initialize an empty list for ENC_matrix
+sample_matrices$ENC_matrix <- vector("list", nrow(sample_matrices))
+
+# Calculate ENC_matrix for each row
+for (i in 1:nrow(sample_matrices)) {
+  sample_matrices$ENC_matrix[[i]] <- calculate_enc_pattern(sample_matrices$A_matrix[[i]], sample_matrices$C_matrix[[i]])
+}
+
+# Find overall min and max ENC values across all scenarios
+all_enc_values <- unlist(lapply(sample_matrices$ENC_matrix, function(mat) mat[sample_matrices$A_matrix[[1]] != 0]))
+min_enc <- min(all_enc_values, na.rm = TRUE)
+max_enc <- max(all_enc_values, na.rm = TRUE)
+
+# Create a list to store plots
+plots <- list()
+
+# Loop through each scenario and create the plot
+for (i in 1:nrow(sample_matrices)) {
+  # Sample ENC matrix
+  enc_matrix <- sample_matrices$ENC_matrix[[i]]
+  
+  # Corresponding A matrix
+  a_matrix <- sample_matrices$A_matrix[[i]]
+  
+  # Convert the matrices to dataframes
+  enc_matrix_df <- as.data.frame(enc_matrix)
+  a_matrix_df <- as.data.frame(a_matrix)
+  
+  # Set ENC values to NA where A matrix has value 0
+  enc_matrix_df[a_matrix_df == 0] <- NA
+  
+  # Melt the dataframe to long format
+  enc_matrix_melt <- enc_matrix_df %>%
+    rownames_to_column(var = "Var1") %>%
+    gather(key = "Var2", value = "value", -Var1) %>%
+    drop_na(value)
+  
+  # Create the plot
+  p <- ggplot(enc_matrix_melt, aes(x = value)) +
+    geom_histogram(aes(fill = ..x..), bins = 30, alpha = 0.7) +
+    scale_fill_distiller(palette = "RdBu", direction = 1) +
+    scale_x_continuous(limits = c(min_enc, max_enc)) +
+    labs(x = "co-response", y = "Frequency", title = paste("ENC for", sample_matrices$Scenario[i])) +
+    theme_classic() +
+    theme(legend.position = "bottom", legend.title = element_blank(),
+          plot.title = element_text(hjust = 0.5))+
+    my_theme
+  
+  # Add the plot to the list
+  plots[[i]] <- p
+}
+
+
+ggarrange(plots[[5]],
+          plots[[7]],
+          plots[[3]],
+          plots[[4]],
+          plots[[6]],
+          plots[[2]],
+          plots[[1]],
+          ncol = 3,
+          nrow = 3,
+          common.legend = TRUE)
+
+#ggsave("figure8.png", height = 13, width = 9)
+
+```
 
 
 
