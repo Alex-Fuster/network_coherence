@@ -1,0 +1,172 @@
+---
+title: "LV simulation - AF"
+---
+
+```{r}
+library(deSolve)
+library(faux)
+library(tidyr)
+library(MASS)
+library(ggplot2)
+library(ggpubr)
+
+source("a_code/functions_LV_simulation.R")
+```
+
+```{r}
+# pars for plotting:
+
+my_theme = theme(axis.text=element_text(size=12),
+                 axis.title = element_text(size = 14),
+                 legend.text=element_text(size=14),
+                 legend.title = element_text(size=14),
+                 plot.title = element_text(face="bold",size=14,margin=margin(0,0,20,0),hjust = 0.5),
+                 axis.title.y = element_text(hjust = 0.5),
+                 axis.title.x = element_text(hjust = 0.5))
+```
+
+
+
+simulate species dynamics using the above parameters and a home-made function
+
+parameters
+
+```{r}
+params <- list(
+  
+  # number of species
+  S = 25, 
+  
+  # simulating interaction networks 
+  Net_type = "predator-prey", # type of network: predator-prey, mutualistic, competition
+  C = 0.2, # connectance 
+  aij_params = c(0, 0.1), # mean and standard deviation of interaction strength
+  efficiency = 0.5, # efficiency of predators to transform prey biomass 
+  rho = 0, 
+  
+  # simulating species responses to an environmental perturbation
+  NC_parms = 0, # network coherence 
+  delta_r_params = c(0, 1), # mean and standard deviation of the changes in species growth rates after the perturbation (squared)
+  prop_neg = 0.5, # proportion of delta r dans are negative
+  
+  # simulating species dynamics 
+  maxt = 100 # number of time steps before and after the perturbation
+)
+```
+
+
+Simulation
+
+```{r}
+
+NC_list <- list()
+delta_biomass_list <- list()
+A_list <- list()
+C_list <- list()
+r_list <- list()
+new_r_list <- list()
+
+
+df <- data.frame()
+for (Net_type in c("random", "predator-prey", "mutualistic", "competition")) {
+  params$Net_type <- Net_type
+  params$NC_parms <- c(runif(1,-1,1),runif(1,0,1))
+  for (i in 1:300) {
+    out <- simulate_dynamics(params)
+   # NC <- net_coherence3(out$delta_r, out$A)
+    NC <- calculate_enc_pattern(A_matrix = out$A, C_matrix = out$C)
+    delta_biomass <- out$dyn[nrow(out$dyn),] - out$dyn[params$maxt,]
+    extinctions <- sum(out$dyn[nrow(out$dyn),-1] < 0.01)
+    df <- rbind(df,
+                data.frame(Net_type = Net_type, 
+                           NC_mean = mean(NC, na.rm = T), 
+                           NC_sd = sd(NC, na.rm = T), 
+                           delta_biom_sum = sum(delta_biomass),
+                           delta_biom_mean = mean(delta_biomass),
+                           delta_biom_sd = sd(delta_biomass), 
+                           extinctions = extinctions))
+  
+    NC_list[[i]] <- NC
+    delta_biomass_list[[i]] <- delta_biomass
+    A_list[[i]] <- out$A
+    C_list[[i]] <- out$C 
+    r_list[[i]] <- out$r
+    new_r_list[[i]] <- out$new_r
+
+    }
+}
+```
+
+
+## Plot ENC-biomass change relationships
+
+```{r}
+p1 <- ggplot(df) +
+  geom_point(aes(NC_mean, delta_biom_sum, colour = Net_type), alpha = 0.25) +
+  geom_smooth(aes(NC_mean, delta_biom_sum, colour = Net_type), se = F) +
+  labs(x = "Mean ENC", y = expression(paste(italic(Delta)," total biomass")),
+         colour = "Network type") +
+  theme_classic()+
+  my_theme
+
+
+p2 <- ggplot(df) +
+  geom_point(aes(NC_mean, delta_biom_sd, colour = Net_type), alpha = 0.25) +
+  geom_smooth(aes(NC_mean, delta_biom_sd, colour = Net_type), se = F) +
+  scale_y_continuous(trans = "log", breaks = c(0.2, 1, 5), limits = c(0.2, 10)) +
+  labs(x = "Mean ENC", y = "SD in biomass", colour = "Network type") +
+  theme_classic()+
+  my_theme
+
+
+
+p3 <- ggplot(df) +
+  geom_point(aes(NC_sd, delta_biom_sum, colour = Net_type), alpha = 0.25) +
+  geom_smooth(aes(NC_sd, delta_biom_sum, colour = Net_type), se = F) +
+  labs(x = "SD ENC", y = expression(paste(italic(Delta)," total biomass")), colour = "Network type") +
+  theme_classic()+
+  my_theme
+
+
+p4 <- ggplot(df) +
+  geom_point(aes(NC_sd, delta_biom_sd, colour = Net_type), alpha = 0.25) +
+  geom_smooth(aes(NC_sd, delta_biom_sd, colour = Net_type), se = F) +
+  scale_y_continuous(trans = "log", breaks = c(0.2, 1, 5), limits = c(0.2, 10)) +
+  labs(x = "SD ENC", y = "SD in biomass", colour = "Network type") +
+  theme_classic()+
+  my_theme
+
+
+
+
+ggarrange(
+  p1, 
+  p2, 
+  p3,
+  p4,
+  
+  nrow = 2,
+  ncol = 2,
+  
+  labels = LETTERS[1:4],
+  
+  common.legend = TRUE
+)
+
+#ggsave("c_outputs/figures/LVsimulations_cov_100sp.png", height = 9, width = 10)
+
+```
+
+
+## plot species dynamics
+
+```{r}
+plot_dynamic <- function(dyn){
+  plot(y = dyn[,2], x = 1:nrow(dyn), type = "l", ylim = c(0, max(dyn[,c(2:ncol(dyn))])), xlab = "time", ylab = "Biomass")
+  cols <- sample(1:ncol(dyn))
+  for (i in 3:ncol(dyn)){
+    lines(y = dyn[,i], x = 1:nrow(dyn), col = cols[i])
+  }
+}
+plot_dynamic(out$dyn)
+```
