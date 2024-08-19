@@ -109,21 +109,53 @@ sim_quantitative_network <- function(Net_type, S, C, aij_params) {
 ### prop_neg: proportion of delta r dans are negative
 
 
-sim_delta_r <- function(A, NC_parms, delta_r_params) {
+# sim_delta_r <- function(A, NC_parms, delta_r_params) {
+# 
+#   # inverse the matrix of quantitative interactions
+#   A_inv <- solve(A)
+#   n <- nrow(A)
+#   # simulate NCs
+#   NC <- rnorm(n, NC_parms[1], NC_parms[2])
+#   delta_r <- rep(0,n)
+#   for (i in 1:n){
+#     delta_r[i] <- sum(NC[-i] * A_inv[-i,i])
+#   }
+#   
+#   # center and scale
+#   delta_r <- delta_r - mean(delta_r) + delta_r_params[1]
+#   delta_r <- delta_r/sd(delta_r) * delta_r_params[2]
+#   
+#   return(delta_r)
+#}
 
-  # inverse the matrix of quantitative interactions
-  A_inv <- solve(A)
+sim_delta_r <- function(A, delta_r_params, cov_type = "weak") {
   n <- nrow(A)
-  # simulate NCs
-  NC <- rnorm(n, NC_parms[1], NC_parms[2])
-  delta_r <- rep(0,n)
-  for (i in 1:n){
-    delta_r[i] <- sum(NC[-i] * A_inv[-i,i])
-  }
+  delta_r <- rep(0, n)
   
-  # center and scale
-  delta_r <- delta_r - mean(delta_r) + delta_r_params[1]
-  delta_r <- delta_r/sd(delta_r) * delta_r_params[2]
+  if (cov_type == "weak_negative") {
+    # Small perturbations, mostly around zero
+    delta_r <- -abs(rnorm(n, delta_r_params[1], 0.1))
+    
+  }else if (cov_type == "weak_positive") {
+    # Larger perturbations
+    delta_r <- abs(rnorm(n, delta_r_params[1], 0.1))
+    
+  } else if (cov_type == "strong_negative") {
+    # Larger perturbations
+    delta_r <- -abs(rnorm(n, delta_r_params[1], 1))
+    
+  } else if (cov_type == "strong_positive") {
+    # Strong positive perturbations
+    delta_r <- abs(rnorm(n, delta_r_params[1], 1))
+    
+  } else if (cov_type == "strong_mixed") {
+    # Strong positive and negative perturbations
+    delta_r <- sample(c(-1, 1), n, replace = TRUE) * rnorm(n, delta_r_params[1], 1)
+    
+  } else if (cov_type == "weak_mixed") {
+    # Small mixed perturbations
+    delta_r <- sample(c(-0.1, 0.1), n, replace = TRUE) * rnorm(n, delta_r_params[1], 0.1)
+  }
   
   return(delta_r)
 }
@@ -174,56 +206,96 @@ simulate_dynamics_c <- function(parms, model, init_biomass = runif(length(parms$
 ### params: list of parameters for all of the subfunctions
 ### model: food-web model (defined at step 4)
 
-simulate_dynamics <- function(params, model = fw.model) {
+# simulate_dynamics <- function(params, model = fw.model) {
+# 
+#     with(params, {
+#       
+#       # simulate quantitative adjacency matrix 
+#       A <- sim_quantitative_network(Net_type, S, C, aij_params) 
+#       
+#       # define initial intrinsic growth rates of species
+#       # to make sure all species have a positive biomass at equilibrium
+#       Biomass_at_equilibrium <- runif(S, 1, 10)
+#       r <- -A%*%Biomass_at_equilibrium
+#                  
+#       # simulate parameters before the perturbation 
+#       dyn_params <- list(A = A, r = r, S = S)
+#       pre_perturb <- simulate_dynamics_c(dyn_params, fw.model)
+#       
+#       # get delta r
+#       delta_r <- sim_delta_r(A, NC_parms, delta_r_params) 
+#       #delta_r <- rnorm(S, delta_r_params[1], delta_r_params[2]) 
+# 
+#       # calculate new r
+#       new_r <- r + delta_r
+#       dyn_params$r <- new_r
+#       
+#       #########################################
+#       
+#       delta_r_vectors <- cbind(r, new_r)
+#       C <- compute_cov_matrix(delta_r_vectors) # compute C matrix from delta_r vectors
+#       
+#       ##########################################
+#       
+#       # find values at equilibrium 
+#       equil <- as.numeric(pre_perturb[nrow(pre_perturb), -1])
+#       
+#       # simulate dynamics after the perturbation 
+#       post_perturb <- simulate_dynamics_c(dyn_params, fw.model, init_biomass = equil)
+#       
+#       dyn <- rbind(pre_perturb, post_perturb)
+#       dyn[dyn < 0] <- 0
+#       
+#       out <- list(dyn = dyn,
+#                   A = A,
+#                   r = r,
+#                   new_r = new_r,
+#                   delta_r = delta_r,
+#                   C = C)
+#       
+#     return(out)
+#     
+#     })
+# }
 
-    with(params, {
-      
-      # simulate quantitative adjacency matrix 
-      A <- sim_quantitative_network(Net_type, S, C, aij_params) 
-      
-      # define initial intrinsic growth rates of species
-      # to make sure all species have a positive biomass at equilibrium
-      Biomass_at_equilibrium <- runif(S, 1, 10)
-      r <- -A%*%Biomass_at_equilibrium
-                 
-      # simulate parameters before the perturbation 
-      dyn_params <- list(A = A, r = r, S = S)
-      pre_perturb <- simulate_dynamics_c(dyn_params, fw.model)
-      
-      # get delta r
-      delta_r <- sim_delta_r(A, NC_parms, delta_r_params) 
-      #delta_r <- rnorm(S, delta_r_params[1], delta_r_params[2]) 
 
-      # calculate new r
-      new_r <- r + delta_r
-      dyn_params$r <- new_r
-      
-      #########################################
-      
-      delta_r_vectors <- cbind(r, new_r)
-      C <- compute_cov_matrix(delta_r_vectors) # compute C matrix from delta_r vectors
-      
-      ##########################################
-      
-      # find values at equilibrium 
-      equil <- as.numeric(pre_perturb[nrow(pre_perturb), -1])
-      
-      # simulate dynamics after the perturbation 
-      post_perturb <- simulate_dynamics_c(dyn_params, fw.model, init_biomass = equil)
-      
-      dyn <- rbind(pre_perturb, post_perturb)
-      dyn[dyn < 0] <- 0
-      
-      out <- list(dyn = dyn,
-                  A = A,
-                  r = r,
-                  new_r = r,
-                  delta_r = delta_r,
-                  C = C)
-      
-    return(out)
+simulate_dynamics <- function(params, cov_type = "weak", model = fw.model) {
+  with(params, {
     
-    })
+    # Simulate quantitative interaction matrix
+    A <- sim_quantitative_network(Net_type, S, C, aij_params)
+    
+    # Define initial intrinsic growth rates (r) of species
+    Biomass_at_equilibrium <- runif(S, 1, 10)
+    r <- -A %*% Biomass_at_equilibrium
+    
+    # Simulate dynamics before the perturbation
+    dyn_params <- list(A = A, r = r, S = S)
+    pre_perturb <- simulate_dynamics_c(dyn_params, fw.model)
+    
+    # Simulate perturbation (delta_r) based on desired covariance structure
+    delta_r <- sim_delta_r(A, delta_r_params, cov_type = cov_type)
+    
+    # Calculate new growth rates (r_new)
+    new_r <- r + delta_r
+    dyn_params$r <- new_r
+    
+    # Compute covariance matrix based on r and r_new
+    delta_r_vectors <- cbind(r, new_r)
+    C <- compute_cov_matrix(delta_r_vectors)  # This will capture the covariance based on delta_r
+    
+    # Find equilibrium values and simulate dynamics after perturbation
+    equil <- as.numeric(pre_perturb[nrow(pre_perturb), -1])
+    post_perturb <- simulate_dynamics_c(dyn_params, fw.model, init_biomass = equil)
+    
+    dyn <- rbind(pre_perturb, post_perturb)
+    dyn[dyn < 0] <- 0
+    
+    # Return simulation output
+    out <- list(dyn = dyn, A = A, r = r, new_r = new_r, delta_r = delta_r, C = C)
+    
+    return(out)
+  })
 }
 
 

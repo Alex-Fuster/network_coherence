@@ -10,7 +10,7 @@ library(MASS)
 library(ggplot2)
 library(ggpubr)
 
-source("a_code/functions_LV_simulation.R")
+source(here::here("a_code/functions_LV_simulation_AF.R"))
 ```
 
 ```{r}
@@ -59,46 +59,171 @@ Simulation
 
 ```{r}
 
-NC_list <- list()
+covariance_types <- c("strong_negative","weak_negative","weak_mixed", "weak_positive", "strong_positive", "strong_mixed")
+
+ENC_list <- list()
 delta_biomass_list <- list()
 A_list <- list()
 C_list <- list()
 r_list <- list()
 new_r_list <- list()
 
-
 df <- data.frame()
 for (Net_type in c("random", "predator-prey", "mutualistic", "competition")) {
-  params$Net_type <- Net_type
-  params$NC_parms <- c(runif(1,-1,1),runif(1,0,1))
-  for (i in 1:300) {
-    out <- simulate_dynamics(params)
-   # NC <- net_coherence3(out$delta_r, out$A)
-    NC <- calculate_enc_pattern(A_matrix = out$A, C_matrix = out$C)
-    delta_biomass <- out$dyn[nrow(out$dyn),] - out$dyn[params$maxt,]
-    extinctions <- sum(out$dyn[nrow(out$dyn),-1] < 0.01)
-    df <- rbind(df,
-                data.frame(Net_type = Net_type, 
-                           NC_mean = mean(NC, na.rm = T), 
-                           NC_sd = sd(NC, na.rm = T), 
-                           delta_biom_sum = sum(delta_biomass),
-                           delta_biom_mean = mean(delta_biomass),
-                           delta_biom_sd = sd(delta_biomass), 
-                           extinctions = extinctions))
-  
-    NC_list[[i]] <- NC
-    delta_biomass_list[[i]] <- delta_biomass
-    A_list[[i]] <- out$A
-    C_list[[i]] <- out$C 
-    r_list[[i]] <- out$r
-    new_r_list[[i]] <- out$new_r
-
+  for (cov_type in covariance_types) {
+    params$Net_type <- Net_type
+    for (i in 1:100) {
+      out <- simulate_dynamics(params, cov_type = cov_type)
+      
+      NC <- calculate_enc_pattern(A_matrix = out$A, C_matrix = out$C)
+      delta_biomass <- out$dyn[nrow(out$dyn), ] - out$dyn[params$maxt, ]
+      extinctions <- sum(out$dyn[nrow(out$dyn), -1] < 0.01)
+      
+      df <- rbind(df,
+                  data.frame(Net_type = Net_type, 
+                             cov_type = cov_type,
+                             NC_mean = mean(NC, na.rm = T), 
+                             NC_sd = sd(NC, na.rm = T), 
+                             delta_biom_sum = sum(delta_biomass),
+                             delta_biom_sd = sd(delta_biomass), 
+                             extinctions = extinctions))
+      
+      ENC_list[[i]] <- NC
+      delta_biomass_list[[i]] <- delta_biomass
+      A_list[[i]] <- out$A
+      C_list[[i]] <- out$C
+      r_list[[i]] <- out$r
+      new_r_list[[i]] <- out$new_r
     }
+  }
 }
+
 ```
 
 
-## Plot ENC-biomass change relationships
+## plot per C structure
+
+```{r}
+# Plot 1: Mean Total Biomass Change across Scenarios
+p1 <- ggplot(df, aes(x = cov_type, y = delta_biom_sum, fill = cov_type)) +
+  geom_boxplot(alpha = 0.7) +
+  labs(x = "Covariance Type", 
+       y = expression(paste(italic(Delta), " Total Biomass")), 
+       title = "Total Biomass Change Across Scenarios") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_brewer(palette = "RdBu", direction = 1)
+
+# Plot 2: Variance in Biomass Change across Scenarios
+p2 <- ggplot(df, aes(x = cov_type, y = delta_biom_sd, fill = cov_type)) +
+  geom_boxplot(alpha = 0.7) +
+  labs(x = "Covariance Type", 
+       y = "Variance in Biomass Change", 
+       title = "Variance in Biomass Change Across Scenarios") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_brewer(palette = "RdBu", direction = 1)
+
+# Arrange the plots side by side
+final_plot <- ggarrange(p1, p2, ncol = 2, common.legend = TRUE, legend = "bottom")
+
+# Display the plot
+final_plot
+```
+
+
+
+
+```{r}
+library(scales) # for brewer_pal
+
+df$cov_type <- factor(df$cov_type, 
+                      levels = c("strong_negative", "weak_negative", "weak_mixed", 
+                                 "weak_positive", "strong_positive", "strong_mixed"))
+
+# Define the color palette for the scenarios
+color_palette <- c("weak_negative" = brewer_pal(palette = "RdBu", direction = -1)(10)[8],  # Weak red
+                   "strong_negative" = brewer_pal(palette = "RdBu", direction = -1)(10)[9], # Strong red
+                   "weak_positive" = brewer_pal(palette = "RdBu", direction = 1)(10)[8],    # Weak blue
+                   "strong_positive" = brewer_pal(palette = "RdBu", direction = 1)(10)[9],  # Strong blue
+                   "weak_mixed" = "violet",  # Violet color
+                   "strong_mixed" = "magenta4")  # Magenta4 color
+
+# Plot 1: Mean Total Biomass Change across Scenarios
+p1 <- ggplot(df, aes(x = cov_type, y = delta_biom_sum, color = cov_type)) +
+  geom_jitter(alpha = 0.7, width = 0.2) +  # Jitter points instead of using boxplot
+  scale_color_manual(values = color_palette) +
+  labs(x = "Covariance type", 
+       y = expression(paste(italic(Delta), " Total Biomass"))) +
+  theme_classic() +
+  geom_hline(yintercept = 0, linetype = "dashed")+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  my_theme
+
+# Plot 2: Variance in Biomass Change across Scenarios
+p2 <- ggplot(df, aes(x = cov_type, y = delta_biom_sd, color = cov_type)) +
+  geom_jitter(alpha = 0.7, width = 0.2) +  # Jitter points instead of using boxplot
+  scale_color_manual(values = color_palette) +
+  labs(x = "Covariance type", 
+       y = expression(paste("SD(" ,italic(Delta), " Total Biomass)"))) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  my_theme
+
+# Arrange the plots side by side
+plot_cov_scenarios <- ggarrange(p1, 
+                        p2, 
+                        ncol = 2, 
+                        labels = LETTERS[1:2],
+                        legend = "none")
+
+
+# Display the plot
+plot_cov_scenarios
+
+
+```
+
+For all interaction types:
+
+```{r}
+p1 <- ggplot(df, aes(x = cov_type, y = delta_biom_sum, color = cov_type)) +
+  geom_jitter(alpha = 0.7, width = 0.2) +  # Jitter points instead of using boxplot
+  scale_color_manual(values = color_palette) +
+  labs(x = "Covariance type", 
+       y = expression(paste(italic(Delta), " Total Biomass"))) +
+  theme_classic() +
+  geom_hline(yintercept = 0, linetype = "dashed")+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  facet_wrap(~Net_type) +
+  my_theme
+
+# Plot 2: Variance in Biomass Change across Scenarios
+p2 <- ggplot(df, aes(x = cov_type, y = delta_biom_sd, color = cov_type)) +
+  geom_jitter(alpha = 0.7, width = 0.2) +  # Jitter points instead of using boxplot
+  scale_color_manual(values = color_palette) +
+  labs(x = "Covariance type", 
+       y = expression(paste("SD(" ,italic(Delta), " Total Biomass)"))) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  facet_wrap(~Net_type) +
+  my_theme
+
+# Arrange the plots side by side
+plot_cov_scenarios_int <- ggarrange(p1, 
+                        p2, 
+                        ncol = 2, 
+                        labels = LETTERS[1:2],
+                        legend = "none")
+
+
+# Display the plot
+plot_cov_scenarios_int
+```
+
+
+
+## Plot per ENC values
 
 ```{r}
 p1 <- ggplot(df) +
@@ -170,3 +295,104 @@ plot_dynamic <- function(dyn){
 }
 plot_dynamic(out$dyn)
 ```
+
+
+
+## Plot r values for one community
+
+```{r}
+plot_r_dynamics <- function(r, new_r, delta_r, community_num) {
+  data <- data.frame(Species = 1:length(r), r = r, new_r = new_r, delta_r = delta_r)
+  
+  data_long <- data %>%
+    pivot_longer(cols = c(r, new_r, delta_r), names_to = "Variable", values_to = "Value")
+  
+  ggplot(data_long, aes(x = Species, y = Value, color = Variable)) +
+    geom_point(size = 3) +
+    scale_color_manual(values = c("r" = "blue", "new_r" = "green", "delta_r" = "red")) +
+    labs(title = paste("r, new_r, and delta_r for Community", community_num),
+         x = "Species", y = "Value") +
+    geom_hline(yintercept = 0, linetype = "dashed")+
+    theme_classic() +
+    my_theme
+}
+
+# Example usage:
+
+ plot_r_dynamics(r_list[[1]], new_r_list[[1]], new_r_list[[1]] - r_list[[1]], 1)
+ 
+
+```
+
+
+
+
+
+## plot C matrix
+
+```{r}
+# Assuming `C_matrix` is your C matrix
+# Convert the matrix to a dataframe for plotting the distribution
+C_values <- as.vector(C_list[[1]])
+data <- data.frame(response = C_values)
+
+# Create the plot
+ggplot(data, aes(x = response, fill = ..x..)) +
+  geom_histogram(bins = 30, alpha = 0.7) +
+  scale_fill_distiller(palette = "RdBu", limits = c(-3, 3), direction = 1) +
+  labs(x = "Covariance between species responses", 
+       y = "Frequency", 
+       title = "Distribution of Species Response Covariances") +
+  theme_classic() +
+  xlim(-3, 3) +
+  theme(legend.position = "none",
+        plot.title = element_text(hjust = 0.5)) +
+  my_theme
+
+
+```
+
+
+
+
+- all distributions have many weak covariances and small extreme values, and is pretty even. I should come up with distributions that are shifted towards positive covariances for instance, or that have both strong positive and negative and few weak covariances.
+
+
+
+## Plot ENC
+
+```{r}
+
+plot_ENC_onesim <- function(sim, ENC_list, A_list) {
+  
+  # Extract the ENC matrix and the A matrix
+ENC_matrix <- ENC_list[[sim]] # Replace with your actual ENC matrix list item
+A_matrix <- A_list[[sim]] # Replace with your actual A matrix list item
+
+# Filter out the ENC values where the corresponding A matrix value is 0
+ENC_filtered <- ENC_matrix[A_matrix != 0]
+
+# Convert the filtered ENC values to a dataframe for plotting
+data <- data.frame(response = ENC_filtered)
+
+# Create the plot
+ggplot(data, aes(x = response, fill = ..x..)) +
+  geom_histogram(bins = 30, alpha = 0.7) +
+  scale_fill_distiller(palette = "RdBu", limits = c(-3, 3), direction = 1) +
+  labs(x = "Covariance between species responses", 
+       y = "Frequency", 
+       title = "Distribution of Species Response Covariances") +
+  theme_classic() +
+  xlim(-3, 3) +
+  theme(legend.position = "none",
+        plot.title = element_text(hjust = 0.5)) +
+  my_theme
+  
+}
+
+plot_ENC_onesim(4, ENC_list, A_list)
+
+
+```
+
+- ENC shows a much strong pattern of many 0 covariance or very weak, and very few strong. 
