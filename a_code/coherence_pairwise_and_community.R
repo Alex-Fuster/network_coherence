@@ -176,6 +176,9 @@ derivs_pops = do.call(cbind, lapply(derivs_ls, FUN = function(x) apply(x, 2, med
 derivs_pops_lower = do.call(cbind, lapply(derivs_ls, FUN = function(x) apply(x, 2, quantile, probs = .05, na.rm = TRUE)))
 derivs_pops_upper = do.call(cbind, lapply(derivs_ls, FUN = function(x) apply(x, 2, quantile, probs = .95, na.rm = TRUE)))
 matplot(derivs_pops, x = time+1981, type = "l")
+abline(h = 0)
+abline(v = 1990, lty = 2) # start of the cod collapse according to Pedersen 2017
+abline(v = 2000, lty = 2) # start of the recovery phase (beginning of the 2000s)
 
 # get each species' mean derivative over the whole time series ----
 
