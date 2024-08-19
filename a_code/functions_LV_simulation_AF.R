@@ -132,19 +132,19 @@ sim_delta_r <- function(A, delta_r_params, cov_type = "weak") {
   n <- nrow(A)
   delta_r <- rep(0, n)
   
-  if (cov_type == "weak_negative") {
+  if (cov_type == "weak_positive_decreases") {
     # Small perturbations, mostly around zero
     delta_r <- -abs(rnorm(n, delta_r_params[1], 0.1))
     
-  }else if (cov_type == "weak_positive") {
+  }else if (cov_type == "weak_positive_increases") {
     # Larger perturbations
     delta_r <- abs(rnorm(n, delta_r_params[1], 0.1))
     
-  } else if (cov_type == "strong_negative") {
+  } else if (cov_type == "strong_positive_decreases") {
     # Larger perturbations
     delta_r <- -abs(rnorm(n, delta_r_params[1], 1))
     
-  } else if (cov_type == "strong_positive") {
+  } else if (cov_type == "strong_positive_increases") {
     # Strong positive perturbations
     delta_r <- abs(rnorm(n, delta_r_params[1], 1))
     

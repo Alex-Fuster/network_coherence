@@ -9,7 +9,7 @@ library(tidyr)
 library(MASS)
 library(ggplot2)
 library(ggpubr)
-
+library(scales)
 source(here::here("a_code/functions_LV_simulation_AF.R"))
 ```
 
@@ -59,7 +59,7 @@ Simulation
 
 ```{r}
 
-covariance_types <- c("strong_negative","weak_negative","weak_mixed", "weak_positive", "strong_positive", "strong_mixed")
+covariance_types <- c("strong_positive_decreases","weak_positive_decreases","weak_mixed", "weak_positive_increases", "strong_positive_increases", "strong_mixed")
 
 ENC_list <- list()
 delta_biomass_list <- list()
@@ -135,17 +135,17 @@ final_plot
 
 
 ```{r}
-library(scales) # for brewer_pal
+ # for brewer_pal
 
 df$cov_type <- factor(df$cov_type, 
-                      levels = c("strong_negative", "weak_negative", "weak_mixed", 
-                                 "weak_positive", "strong_positive", "strong_mixed"))
+                      levels = c("strong_positive_decreases", "weak_positive_decreases", "weak_mixed", 
+                                 "weak_positive_increases", "strong_positive_increases", "strong_mixed"))
 
 # Define the color palette for the scenarios
-color_palette <- c("weak_negative" = brewer_pal(palette = "RdBu", direction = -1)(10)[8],  # Weak red
-                   "strong_negative" = brewer_pal(palette = "RdBu", direction = -1)(10)[9], # Strong red
-                   "weak_positive" = brewer_pal(palette = "RdBu", direction = 1)(10)[8],    # Weak blue
-                   "strong_positive" = brewer_pal(palette = "RdBu", direction = 1)(10)[9],  # Strong blue
+color_palette <- c("weak_positive_decreases" = brewer_pal(palette = "RdBu", direction = -1)(10)[8],  # Weak red
+                   "strong_positive_decreases" = brewer_pal(palette = "RdBu", direction = -1)(10)[9], # Strong red
+                   "weak_positive_increases" = brewer_pal(palette = "RdBu", direction = 1)(10)[8],    # Weak blue
+                   "strong_positive_increases" = brewer_pal(palette = "RdBu", direction = 1)(10)[9],  # Strong blue
                    "weak_mixed" = "violet",  # Violet color
                    "strong_mixed" = "magenta4")  # Magenta4 color
 
@@ -281,6 +281,76 @@ ggarrange(
 #ggsave("c_outputs/figures/LVsimulations_cov_100sp.png", height = 9, width = 10)
 
 ```
+
+
+```{r}
+# Filter the dataframe for only predator-prey networks
+df_predator_prey <- df %>% dplyr::filter(Net_type == "predator-prey")
+
+# Plot 1: Mean Total Biomass Change vs Mean ENC
+p1 <- ggplot(df_predator_prey) +
+  geom_point(aes(NC_mean, delta_biom_sum, color = cov_type), alpha = 0.25) +
+  geom_smooth(aes(NC_mean, delta_biom_sum), se = F, color = "black", linetype = "dashed") +
+  labs(x = "Mean ENC", y = expression(paste(italic(Delta)," total biomass")), color = "cov type") +
+  theme_classic() +
+  my_theme
+
+# Plot 2: Variance in Biomass Change vs Mean ENC
+p2 <- ggplot(df_predator_prey) +
+  geom_point(aes(NC_mean, delta_biom_sd, color = cov_type), alpha = 0.25) +
+  geom_smooth(aes(NC_mean, delta_biom_sd), se = F, color = "black", linetype = "dashed") +
+  scale_y_continuous(trans = "log", breaks = c(0.2, 1, 5), limits = c(0.2, 10)) +
+  labs(x = "Mean ENC", y = "SD in biomass", color = "cov type") +
+  theme_classic() +
+  my_theme
+
+# Plot 3: Mean Total Biomass Change vs SD ENC
+p3 <- ggplot(df_predator_prey) +
+  geom_point(aes(NC_sd, delta_biom_sum, color = cov_type), alpha = 0.25) +
+  geom_smooth(aes(NC_sd, delta_biom_sum), se = F, color = "black", linetype = "dashed") +
+  labs(x = "SD ENC", y = expression(paste(italic(Delta)," total biomass")), color = "cov type") +
+  theme_classic() +
+  my_theme
+
+# Plot 4: Variance in Biomass Change vs SD ENC
+p4 <- ggplot(df_predator_prey) +
+  geom_point(aes(NC_sd, delta_biom_sd, color = cov_type), alpha = 0.25) +
+  geom_smooth(aes(NC_sd, delta_biom_sd), se = F, color = "black", linetype = "dashed") +
+  scale_y_continuous(trans = "log", breaks = c(0.2, 1, 5), limits = c(0.2, 10)) +
+  labs(x = "SD ENC", y = "SD in biomass", color = "cov type") +
+  theme_classic() +
+  my_theme
+
+# Arrange the plots in a 2x2 grid
+final_plot <- ggarrange(
+  p1, 
+  p2, 
+  p3,
+  p4,
+  
+  nrow = 2,
+  ncol = 2,
+  
+  labels = LETTERS[1:4],
+  
+  common.legend = TRUE
+)
+
+
+# Display the plot
+final_plot
+
+```
+
+
+
+
+
+
+
+
+
+
 
 
 ## plot species dynamics
