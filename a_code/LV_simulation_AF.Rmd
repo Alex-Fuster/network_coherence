@@ -1,5 +1,6 @@
 ---
 title: "LV simulation - AF"
+output: word_document
 ---
 
 ```{r}
@@ -177,6 +178,7 @@ plot_cov_scenarios <- ggarrange(p1,
 # Display the plot
 plot_cov_scenarios
 
+ggsave(here::here("a_code/lv_sim_cov_scenarios.png"), height = 7, width = 9)
 
 ```
 
@@ -215,6 +217,8 @@ plot_cov_scenarios_int <- ggarrange(p1,
 
 # Display the plot
 plot_cov_scenarios_int
+
+ggsave(here::here("a_code/lv_sim_cov_int.png"), height = 7, width = 12)
 ```
 
 
@@ -274,7 +278,7 @@ ggarrange(
   common.legend = TRUE
 )
 
-#ggsave("c_outputs/figures/LVsimulations_cov_100sp.png", height = 9, width = 10)
+ggsave(here::here("a_code/lv_sim_enc_cont.png"), height = 7, width = 9)
 
 ```
 
@@ -324,7 +328,7 @@ p4 <- ggplot(df_predator_prey) +
   my_theme
 
 # Arrange the plots in a 2x2 grid
-final_plot <- ggarrange(
+plot_enc_cont_cov <- ggarrange(
   p1, 
   p2, 
   p3,
@@ -338,9 +342,10 @@ final_plot <- ggarrange(
   common.legend = TRUE
 )
 
+annotate_figure(plot_enc_cont_cov,top = "predator-prey")
 
-# Display the plot
-final_plot
+
+ggsave(here::here("a_code/lv_sim_enc_cont_cov.png"), height = 8, width = 9)
 
 ```
 
@@ -463,6 +468,8 @@ ggarrange(
   nrow = 2
 )
 
+ggsave(here::here("a_code/lv_sim_enc_examples.png"), height = 8, width = 9)
+
 ```
 
 
@@ -473,14 +480,14 @@ ggarrange(
 ## plot species dynamics 
 
 ```{r}
-plot_dynamic <- function(dyn){
-  plot(y = dyn[,2], x = 1:nrow(dyn), type = "l", ylim = c(0, max(dyn[,c(2:ncol(dyn))])), xlab = "time", ylab = "Biomass")
-  cols <- sample(1:ncol(dyn))
-  for (i in 3:ncol(dyn)){
-    lines(y = dyn[,i], x = 1:nrow(dyn), col = cols[i])
-  }
-}
-plot_dynamic(out$dyn)
+# plot_dynamic <- function(dyn){
+#   plot(y = dyn[,2], x = 1:nrow(dyn), type = "l", ylim = c(0, max(dyn[,c(2:ncol(dyn))])), xlab = "time", ylab = "Biomass")
+#   cols <- sample(1:ncol(dyn))
+#   for (i in 3:ncol(dyn)){
+#     lines(y = dyn[,i], x = 1:nrow(dyn), col = cols[i])
+#   }
+# }
+# plot_dynamic(out$dyn)
 ```
 
 
@@ -488,26 +495,26 @@ plot_dynamic(out$dyn)
 ## Plot r values for one community
 
 ```{r}
-plot_r_dynamics <- function(r, new_r, delta_r, community_num) {
-  data <- data.frame(Species = 1:length(r), r = r, new_r = new_r, delta_r = delta_r)
-  
-  data_long <- data %>%
-    pivot_longer(cols = c(r, new_r, delta_r), names_to = "Variable", values_to = "Value")
-  
-  ggplot(data_long, aes(x = Species, y = Value, color = Variable)) +
-    geom_point(size = 3) +
-    scale_color_manual(values = c("r" = "blue", "new_r" = "green", "delta_r" = "red")) +
-    labs(title = paste("r, new_r, and delta_r for Community", community_num),
-         x = "Species", y = "Value") +
-    geom_hline(yintercept = 0, linetype = "dashed")+
-    theme_classic() +
-    my_theme
-}
-
-# Example usage:
-
- plot_r_dynamics(r_list[[1]], new_r_list[[1]], new_r_list[[1]] - r_list[[1]], 1)
- 
+# plot_r_dynamics <- function(r, new_r, delta_r, community_num) {
+#   data <- data.frame(Species = 1:length(r), r = r, new_r = new_r, delta_r = delta_r)
+#   
+#   data_long <- data %>%
+#     pivot_longer(cols = c(r, new_r, delta_r), names_to = "Variable", values_to = "Value")
+#   
+#   ggplot(data_long, aes(x = Species, y = Value, color = Variable)) +
+#     geom_point(size = 3) +
+#     scale_color_manual(values = c("r" = "blue", "new_r" = "green", "delta_r" = "red")) +
+#     labs(title = paste("r, new_r, and delta_r for Community", community_num),
+#          x = "Species", y = "Value") +
+#     geom_hline(yintercept = 0, linetype = "dashed")+
+#     theme_classic() +
+#     my_theme
+# }
+# 
+# # Example usage:
+# 
+#  plot_r_dynamics(r_list[[1]], new_r_list[[1]], new_r_list[[1]] - r_list[[1]], 1)
+#  
 
 ```
 
