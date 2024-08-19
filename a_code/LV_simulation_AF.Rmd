@@ -289,35 +289,39 @@ df_predator_prey <- df %>% dplyr::filter(Net_type == "predator-prey")
 
 # Plot 1: Mean Total Biomass Change vs Mean ENC
 p1 <- ggplot(df_predator_prey) +
-  geom_point(aes(NC_mean, delta_biom_sum, color = cov_type), alpha = 0.25) +
+  geom_point(aes(NC_mean, delta_biom_sum, color = cov_type), alpha = 0.5) +
   geom_smooth(aes(NC_mean, delta_biom_sum), se = F, color = "black", linetype = "dashed") +
   labs(x = "Mean ENC", y = expression(paste(italic(Delta)," total biomass")), color = "cov type") +
   theme_classic() +
+  scale_color_manual(values = color_palette)+
   my_theme
 
 # Plot 2: Variance in Biomass Change vs Mean ENC
 p2 <- ggplot(df_predator_prey) +
-  geom_point(aes(NC_mean, delta_biom_sd, color = cov_type), alpha = 0.25) +
+  geom_point(aes(NC_mean, delta_biom_sd, color = cov_type), alpha = 0.5) +
   geom_smooth(aes(NC_mean, delta_biom_sd), se = F, color = "black", linetype = "dashed") +
   scale_y_continuous(trans = "log", breaks = c(0.2, 1, 5), limits = c(0.2, 10)) +
   labs(x = "Mean ENC", y = "SD in biomass", color = "cov type") +
+  scale_color_manual(values = color_palette)+
   theme_classic() +
   my_theme
 
 # Plot 3: Mean Total Biomass Change vs SD ENC
 p3 <- ggplot(df_predator_prey) +
-  geom_point(aes(NC_sd, delta_biom_sum, color = cov_type), alpha = 0.25) +
+  geom_point(aes(NC_sd, delta_biom_sum, color = cov_type), alpha = 0.5) +
   geom_smooth(aes(NC_sd, delta_biom_sum), se = F, color = "black", linetype = "dashed") +
   labs(x = "SD ENC", y = expression(paste(italic(Delta)," total biomass")), color = "cov type") +
+  scale_color_manual(values = color_palette)+
   theme_classic() +
   my_theme
 
 # Plot 4: Variance in Biomass Change vs SD ENC
 p4 <- ggplot(df_predator_prey) +
-  geom_point(aes(NC_sd, delta_biom_sd, color = cov_type), alpha = 0.25) +
+  geom_point(aes(NC_sd, delta_biom_sd, color = cov_type), alpha = 0.5) +
   geom_smooth(aes(NC_sd, delta_biom_sd), se = F, color = "black", linetype = "dashed") +
   scale_y_continuous(trans = "log", breaks = c(0.2, 1, 5), limits = c(0.2, 10)) +
   labs(x = "SD ENC", y = "SD in biomass", color = "cov type") +
+  scale_color_manual(values = color_palette)+
   theme_classic() +
   my_theme
 
