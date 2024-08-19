@@ -1,0 +1,110 @@
+# Script to get a diet matrix from GloBI for the Newfoundland shelf groundfish 
+# community
+
+# groundfish-data-analysis contains the data folder that is copied from a clone of:
+# https://github.com/eric-pedersen/groundfish-data-analysis
+load("groundfish-data-analysis/data/year_geom_means.Rdata")
+rm(Year_Geom_Means, Year_Geom_Means_rare, Year_Geom_Means_SE)
+
+# get species names from the abundance matrix
+taxon_names <- colnames(Year_Geom_Means_all)
+taxon_names <- gsub("_", " ", taxon_names)
+taxon_names <- stringr::str_to_sentence(taxon_names)
+
+taxon_names_fishbase = taxon_names
+# misspellings
+taxon_names_fishbase = gsub("Lycodes esmarki", "Lycodes esmarkii", taxon_names_fishbase)
+taxon_names_fishbase = gsub("Nezumia bairdi", "Nezumia bairdii", taxon_names_fishbase)
+# synonyms
+# https://fishbase.mnhn.fr/Nomenclature/SynonymSummary.php?ID=167362&GSID=57841&GenusName=Notocanthus&SpeciesName=nasus&SpecCode=2661&SynonymsRef=92135
+taxon_names_fishbase = gsub("Notacanthus nasus", "Notacanthus chemnitzii", taxon_names_fishbase)
+taxon_names_fishbase = gsub("Raja spinicauda", "Bathyraja spinicauda", taxon_names_fishbase)
+taxon_names_fishbase = gsub("Sebastes marinus", "Sebastes norvegicus", taxon_names_fishbase)
+taxon_names_fishbase = gsub("Urophycis chesteri", "Phycis chesteri", taxon_names_fishbase)
+taxon_names_fishbase = gsub("Raja radiata", "Amblyraja radiata", taxon_names_fishbase)
+taxon_names_fishbase = gsub("Eumicrotremus sp", "Eumicrotremus", taxon_names_fishbase)
+# taxon_names_fishbase = gsub("Raja senta", "Malacoraja senta", taxon_names_fishbase)
+
+
+# get interaction matrix from GloBI
+interactions <- rglobi::get_interaction_matrix(source.taxon.names = taxon_names_fishbase,
+                                               target.taxon.names = taxon_names_fishbase,
+                                               interaction.type = "eats")
+
+
+######################################
+
+
+# Further search effort for those species missing interactions
+# Predator <- Prey
+
+# Raja senta <- Enchelyopus cimbrius
+#(reference: https://repository.library.noaa.gov/view/noaa/3755)
+interactions$`Enchelyopus cimbrius`[which(interactions$source.taxon.name == "Raja senta")] = 1
+
+# Limanda ferruginea  <- Clupea harengus
+#(reference: https://repository.library.noaa.gov/view/noaa/3755)
+
+# Lycodes -> Gadus morhua, Anarhichas lupus
+#(reference: GLOBI)
+interactions$`Lycodes reticulatus`[which(interactions$source.taxon.name == "Gadus morhua")] = 1
+interactions$`Lycodes reticulatus`[which(interactions$source.taxon.name == "Anarhichas lupus")] = 1
+interactions$`Lycodes esmarkii`[which(interactions$source.taxon.name == "Anarhichas lupus")] = 1
+interactions$`Lycodes vahlii`[which(interactions$source.taxon.name == "Anarhichas lupus")] = 1
+
+# Bathyraja spinicauda eats:
+#(reference: https://www.nafo.int/Portals/0/PDFs/sc/2006/scr06-053.pdf)
+# redfish (28%), roughhead grenadier (20%), Greenland halibut (19%) 
+# Bathyraja spinicauda <- Sebastes mentella  
+# Bathyraja spinicauda <- Sebastes norvegicus
+# Bathyraja spinicauda <- Macrourus berglax  
+# Bathyraja spinicauda <- Reinhardtius hippoglossoides
+interactions$`Sebastes mentella`[which(interactions$source.taxon.name == "Bathyraja spinicauda")] = 1
+interactions$`Sebastes norvegicus`[which(interactions$source.taxon.name == "Bathyraja spinicauda")] = 1
+interactions$`Macrourus berglax`[which(interactions$source.taxon.name == "Bathyraja spinicauda")] = 1
+interactions$`Reinhardtius hippoglossoides`[which(interactions$source.taxon.name == "Bathyraja spinicauda")] = 1
+
+# Phycis chesteri is not eaten by any species in the dataset, and mostly feeds on crustaceans
+# predators: https://fishbase.mnhn.fr/TrophicEco/PredatorList.php?ID=1880&GenusName=Phycis&SpeciesName=chesteri 
+
+# Limanda ferruginea mostly eats worms, shrimps, etc. - not fish
+
+# Notacanthus chemnitzii is really unknown
+
+######################################
+
+
+# format into a matrix for saving
+diet <- lapply(interactions, unlist) 
+diet <- do.call(cbind, diet)
+rownames(diet) = diet[,1]
+diet <- diet[,-1]
+
+write.csv(diet, "b_data/clean/globi_diet_matrix.csv", row.names = TRUE)
+
+# prepare the adjacency matrix
+X <- diet
+X <- as.matrix(X)
+diag(X) <- 0
+
+# plot the network
+library(DiagrammeR)
+g <- from_adj_matrix(X)
+render_graph(g, layout = "nicely", width = 600, height = 600)
+
+library(igraph)
+network <- graph_from_adjacency_matrix(X , mode='undirected', diag=F)
+
+par(mfrow=c(2,2), mar=c(1,1,1,1))
+plot(network, layout=layout.circle, main="circle")
+
+centrality = degree(network, normalized = TRUE)
+saveRDS(centrality, "c_outputs/fish-example/centrality.rds")
+
+# export as a figure
+# this looks pretty ugly, so nevermind!! I just took a screenshot called globi_foodweb.png
+# export_graph(g, file_name = "figures/globi_foodweb.svg", 
+#              width = 1000, height = 1000)
+
+# save the adjacency matrix
+write.csv(X, "b_data/clean/globi_adjacencymatrix.csv", row.names = TRUE)
