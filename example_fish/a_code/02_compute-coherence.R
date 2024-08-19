@@ -161,7 +161,7 @@ dev.off()
 # take the derivative of each population trend ----
 
 # load this mvgam function I customised to access the derivatives more easily
-source("a_code/plot_mvgam_trend_custom.R")
+source("a_code/functions/plot_mvgam_trend_custom.R")
 
 trend_vals = list()
 derivs_ls = list()
