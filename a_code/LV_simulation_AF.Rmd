@@ -467,7 +467,10 @@ ggarrange(
 
 
 
-## plot species dynamics
+
+------------------------------------
+
+## plot species dynamics 
 
 ```{r}
 plot_dynamic <- function(dyn){
@@ -512,59 +515,3 @@ plot_r_dynamics <- function(r, new_r, delta_r, community_num) {
 
 
 
-## plot C matrix
-
-```{r}
-# Assuming `C_matrix` is your C matrix
-# Convert the matrix to a dataframe for plotting the distribution
-C_values <- as.vector(df_matrices$C_matrix[[1]])
-data <- data.frame(response = C_values)
-
-# Create the plot
-ggplot(data, aes(x = response, fill = ..x..)) +
-  geom_histogram(bins = 30, alpha = 0.7) +
-  scale_fill_distiller(palette = "RdBu", limits = c(-3, 3), direction = 1) +
-  labs(x = "Covariance between species responses", 
-       y = "Frequency", 
-       title = "Distribution of Species Response Covariances") +
-  theme_classic() +
-  xlim(-3, 3) +
-  theme(legend.position = "none",
-        plot.title = element_text(hjust = 0.5)) +
-  my_theme
-
-
-```
-
-
-
-
-- all distributions have many weak covariances and small extreme values, and is pretty even. I should come up with distributions that are shifted towards positive covariances for instance, or that have both strong positive and negative and few weak covariances.
-
-
-
-## Plot ENC
-
-```{r}
-
-df_matrices$ENC_filtered <- vector("list", nrow(df_matrices))
-
-# Loop through each row of the dataframe to filter ENC matrices based on A matrices
-for (i in 1:nrow(df_matrices)) {
-  
-  # Extract the ENC_matrix and A_matrix for the current row
-  ENC_matrix <- df_matrices$ENC_matrix[[i]]
-  A_matrix <- df_matrices$A_matrix[[i]]
-  
-  # Filter out the ENC values corresponding to non-zero A_matrix values
-  ENC_filtered <- ENC_matrix[A_matrix != 0]
-  
-  # Add the filtered ENC matrix to the new column
-  df_matrices$ENC_filtered[[i]] <- ENC_filtered
-}
-
-
-
-```
-
-- ENC shows a much strong pattern of many 0 covariance or very weak, and very few strong. 
