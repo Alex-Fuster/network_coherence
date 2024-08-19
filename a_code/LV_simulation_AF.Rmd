@@ -61,12 +61,16 @@ Simulation
 
 covariance_types <- c("strong_positive_decreases","weak_positive_decreases","weak_mixed", "weak_positive_increases", "strong_positive_increases", "strong_mixed")
 
-ENC_list <- list()
-delta_biomass_list <- list()
-A_list <- list()
-C_list <- list()
-r_list <- list()
-new_r_list <- list()
+net_type_list <- list()
+ ENC_list <- list()
+# delta_biomass_list <- list()
+ A_list <- list()
+ C_list <- list()
+ cov_type_list <- list()
+# r_list <- list()
+# new_r_list <- list()
+
+
 
 df <- data.frame()
 for (Net_type in c("random", "predator-prey", "mutualistic", "competition")) {
@@ -88,48 +92,40 @@ for (Net_type in c("random", "predator-prey", "mutualistic", "competition")) {
                              delta_biom_sd = sd(delta_biomass), 
                              extinctions = extinctions))
       
-      ENC_list[[i]] <- NC
-      delta_biomass_list[[i]] <- delta_biomass
-      A_list[[i]] <- out$A
-      C_list[[i]] <- out$C
-      r_list[[i]] <- out$r
-      new_r_list[[i]] <- out$new_r
+      # ENC_list[[i]] <- NC
+      # delta_biomass_list[[i]] <- delta_biomass
+      # A_list[[i]] <- out$A
+      # C_list[[i]] <- out$C
+      # r_list[[i]] <- out$r
+      # new_r_list[[i]] <- out$new_r
+      
+ # Store the matrices and associated information only on the last iteration (i == 100)
+      if (i == 100) {
+        net_type_list <- c(net_type_list, Net_type)
+        cov_type_list <- c(cov_type_list, cov_type)
+        ENC_list <- c(ENC_list, list(NC))
+        A_list <- c(A_list, list(out$A))
+        C_list <- c(C_list, list(out$C))
+      }
+      
+      # Append to the dataframe
+
     }
   }
 }
 
+
+df_matrices <- data.frame(
+  net_type = unlist(net_type_list),
+  cov_type = unlist(cov_type_list),
+  ENC_matrix = I(ENC_list),
+  A_matrix = I(A_list),
+  C_matrix = I(C_list),
+  stringsAsFactors = FALSE
+)
+
 ```
 
-
-## plot per C structure
-
-```{r}
-# Plot 1: Mean Total Biomass Change across Scenarios
-p1 <- ggplot(df, aes(x = cov_type, y = delta_biom_sum, fill = cov_type)) +
-  geom_boxplot(alpha = 0.7) +
-  labs(x = "Covariance Type", 
-       y = expression(paste(italic(Delta), " Total Biomass")), 
-       title = "Total Biomass Change Across Scenarios") +
-  theme_classic() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  scale_fill_brewer(palette = "RdBu", direction = 1)
-
-# Plot 2: Variance in Biomass Change across Scenarios
-p2 <- ggplot(df, aes(x = cov_type, y = delta_biom_sd, fill = cov_type)) +
-  geom_boxplot(alpha = 0.7) +
-  labs(x = "Covariance Type", 
-       y = "Variance in Biomass Change", 
-       title = "Variance in Biomass Change Across Scenarios") +
-  theme_classic() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  scale_fill_brewer(palette = "RdBu", direction = 1)
-
-# Arrange the plots side by side
-final_plot <- ggarrange(p1, p2, ncol = 2, common.legend = TRUE, legend = "bottom")
-
-# Display the plot
-final_plot
-```
 
 
 
@@ -283,6 +279,8 @@ ggarrange(
 ```
 
 
+
+
 ```{r}
 # Filter the dataframe for only predator-prey networks
 df_predator_prey <- df %>% dplyr::filter(Net_type == "predator-prey")
@@ -347,13 +345,125 @@ final_plot
 ```
 
 
+## plot C matrices examples per scenario
+
+
+```{r}
+# Filter the dataframe for predator-prey interactions
+df_predator_prey <- df_matrices[df_matrices$net_type == "predator-prey",]
 
 
 
+# Initialize an empty list to store the plots
+plot_list <- list()
+
+# Loop through each cov_type to generate individual plots
+for (i in 1:nrow(df_predator_prey)) {
+  
+  # Extract the C matrix and convert to a dataframe for plotting
+  C_values <- as.vector(df_predator_prey$C_matrix[[i]])
+  data <- data.frame(response = C_values)
+  
+  # Create the plot for each covariance type
+  p <- ggplot(data, aes(x = response, fill = ..x..)) +
+    geom_histogram(bins = 30, alpha = 0.9) +
+    scale_fill_distiller(palette = "RdBu", limits = c(-2, 2), direction = 1) +
+    labs(x = "Covariance between species responses", 
+         y = "Frequency", 
+         title = df_predator_prey$cov_type[i]) +
+    theme_classic() +
+    xlim(-3, 3) +
+    theme(legend.position = "none",
+          plot.title = element_text(hjust = 0.5)) +
+    my_theme
+  
+  # Add the plot to the list
+  plot_list[[i]] <- p
+}
 
 
+ggarrange(
+  
+  plot_list[[1]],
+  plot_list[[2]],
+  plot_list[[3]],
+  plot_list[[4]],
+  plot_list[[5]],
+  plot_list[[6]],
+  
+  ncol = 3,
+  nrow = 2
+)
+
+```
+
+## plot ENC matrices examples per scenario
 
 
+```{r}
+
+df_matrices$ENC_filtered <- vector("list", nrow(df_matrices))
+
+# Loop through each row of the dataframe to filter ENC matrices based on A matrices
+for (i in 1:nrow(df_matrices)) {
+  
+  # Extract the ENC_matrix and A_matrix for the current row
+  ENC_matrix <- df_matrices$ENC_matrix[[i]]
+  A_matrix <- df_matrices$A_matrix[[i]]
+  
+  # Filter out the ENC values corresponding to non-zero A_matrix values
+  ENC_filtered <- ENC_matrix[A_matrix != 0]
+  
+  # Add the filtered ENC matrix to the new column
+  df_matrices$ENC_filtered[[i]] <- ENC_filtered
+}
+
+
+df_predator_prey <- df_matrices[df_matrices$net_type == "predator-prey",]
+
+
+# Initialize an empty list to store the plots
+plot_list <- list()
+
+# Loop through each cov_type to generate individual plots
+for (i in 1:nrow(df_predator_prey)) {
+  
+  # Extract the C matrix and convert to a dataframe for plotting
+  C_values <- df_predator_prey$ENC_filtered[[i]]
+  data <- data.frame(response = C_values)
+  
+  # Create the plot for each covariance type
+  p <- ggplot(data, aes(x = response, fill = ..x..)) +
+    geom_histogram(bins = 30, alpha = 0.9) +
+    scale_fill_distiller(palette = "RdBu", limits = c(-2, 2), direction = 1) +
+    labs(x = "Covariance between species responses", 
+         y = "Frequency", 
+         title = df_predator_prey$cov_type[i]) +
+    theme_classic() +
+    xlim(-3, 3) +
+    theme(legend.position = "none",
+          plot.title = element_text(hjust = 0.5)) +
+    my_theme
+  
+  # Add the plot to the list
+  plot_list[[i]] <- p
+}
+
+
+ggarrange(
+  
+  plot_list[[1]],
+  plot_list[[2]],
+  plot_list[[3]],
+  plot_list[[4]],
+  plot_list[[5]],
+  plot_list[[6]],
+  
+  ncol = 3,
+  nrow = 2
+)
+
+```
 
 
 
@@ -407,7 +517,7 @@ plot_r_dynamics <- function(r, new_r, delta_r, community_num) {
 ```{r}
 # Assuming `C_matrix` is your C matrix
 # Convert the matrix to a dataframe for plotting the distribution
-C_values <- as.vector(C_list[[1]])
+C_values <- as.vector(df_matrices$C_matrix[[1]])
 data <- data.frame(response = C_values)
 
 # Create the plot
@@ -437,34 +547,22 @@ ggplot(data, aes(x = response, fill = ..x..)) +
 
 ```{r}
 
-plot_ENC_onesim <- function(sim, ENC_list, A_list) {
+df_matrices$ENC_filtered <- vector("list", nrow(df_matrices))
+
+# Loop through each row of the dataframe to filter ENC matrices based on A matrices
+for (i in 1:nrow(df_matrices)) {
   
-  # Extract the ENC matrix and the A matrix
-ENC_matrix <- ENC_list[[sim]] # Replace with your actual ENC matrix list item
-A_matrix <- A_list[[sim]] # Replace with your actual A matrix list item
-
-# Filter out the ENC values where the corresponding A matrix value is 0
-ENC_filtered <- ENC_matrix[A_matrix != 0]
-
-# Convert the filtered ENC values to a dataframe for plotting
-data <- data.frame(response = ENC_filtered)
-
-# Create the plot
-ggplot(data, aes(x = response, fill = ..x..)) +
-  geom_histogram(bins = 30, alpha = 0.7) +
-  scale_fill_distiller(palette = "RdBu", limits = c(-3, 3), direction = 1) +
-  labs(x = "Covariance between species responses", 
-       y = "Frequency", 
-       title = "Distribution of Species Response Covariances") +
-  theme_classic() +
-  xlim(-3, 3) +
-  theme(legend.position = "none",
-        plot.title = element_text(hjust = 0.5)) +
-  my_theme
+  # Extract the ENC_matrix and A_matrix for the current row
+  ENC_matrix <- df_matrices$ENC_matrix[[i]]
+  A_matrix <- df_matrices$A_matrix[[i]]
   
+  # Filter out the ENC values corresponding to non-zero A_matrix values
+  ENC_filtered <- ENC_matrix[A_matrix != 0]
+  
+  # Add the filtered ENC matrix to the new column
+  df_matrices$ENC_filtered[[i]] <- ENC_filtered
 }
 
-plot_ENC_onesim(4, ENC_list, A_list)
 
 
 ```
