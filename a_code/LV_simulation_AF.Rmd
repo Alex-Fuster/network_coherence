@@ -178,7 +178,7 @@ plot_cov_scenarios <- ggarrange(p1,
 # Display the plot
 plot_cov_scenarios
 
-ggsave(here::here("a_code/lv_sim_cov_scenarios.png"), height = 7, width = 9)
+#ggsave(here::here("a_code/lv_sim_cov_scenarios.png"), height = 7, width = 9)
 
 ```
 
@@ -218,7 +218,7 @@ plot_cov_scenarios_int <- ggarrange(p1,
 # Display the plot
 plot_cov_scenarios_int
 
-ggsave(here::here("a_code/lv_sim_cov_int.png"), height = 7, width = 12)
+#ggsave(here::here("a_code/lv_sim_cov_int.png"), height = 7, width = 12)
 ```
 
 
@@ -278,7 +278,7 @@ ggarrange(
   common.legend = TRUE
 )
 
-ggsave(here::here("a_code/lv_sim_enc_cont.png"), height = 7, width = 9)
+#ggsave(here::here("a_code/lv_sim_enc_cont.png"), height = 7, width = 9)
 
 ```
 
@@ -345,7 +345,7 @@ plot_enc_cont_cov <- ggarrange(
 annotate_figure(plot_enc_cont_cov,top = "predator-prey")
 
 
-ggsave(here::here("a_code/lv_sim_enc_cont_cov.png"), height = 8, width = 9)
+#ggsave(here::here("a_code/lv_sim_enc_cont_cov.png"), height = 8, width = 9)
 
 ```
 
@@ -468,7 +468,7 @@ ggarrange(
   nrow = 2
 )
 
-ggsave(here::here("a_code/lv_sim_enc_examples.png"), height = 8, width = 9)
+#ggsave(here::here("a_code/lv_sim_enc_examples.png"), height = 8, width = 9)
 
 ```
 
