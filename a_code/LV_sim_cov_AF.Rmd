@@ -1,0 +1,142 @@
+---
+title: "LV simulations - new"
+
+---
+
+```{r}
+library(deSolve)
+library(faux)
+library(tidyr)
+library(MASS)
+library(ggplot2)
+library(ggpubr)
+library(scales)
+library(Matrix)
+```
+```{r}
+# pars for plotting:
+
+my_theme = theme(axis.text=element_text(size=12),
+                 axis.title = element_text(size = 14),
+                 legend.text=element_text(size=14),
+                 legend.title = element_text(size=14),
+                 plot.title = element_text(face="bold",size=14,margin=margin(0,0,20,0),hjust = 0.5),
+                 axis.title.y = element_text(hjust = 0.5),
+                 axis.title.x = element_text(hjust = 0.5))
+```
+
+
+
+How to generate changes in delta_r with pre-defined covariance structures?
+
+
+- delta_r = multinormal (n = S, mu = 0, sigma)
+- sigma = matrix (rnorm(S^2, 0, sd), S, S)
+- diag(sigma) = 1
+
+sigma is the covariance matrix that will modify the r values. We can generate covariance structures with values centered in 0 or shifted towards positive or negative values varying mu, or generate weaker or stronger covariances by varying sd.
+
+STEPS:
+
+1) generate A -> B
+2) Generate r
+3) r' = r + delta_r
+4) X = Br, and X' = Br'
+5) delta_X = X = X'
+
+
+Fix A and r and then simulate a gradient of covariances.
+
+We could generate a set of simulations that combine variations in mu and sd, with a plot showing mu values in the x axis and sd values in the y axis. For each mu and sd combination, we could generate n foodweb structures, so we would be plotting the mean results:
+
+
+```{r}
+# Create an empty data frame for plotting
+empty_data <- data.frame(x = numeric(0), y = numeric(0))
+
+# Create the plot
+ggplot(empty_data, aes(x, y)) +
+  geom_blank() +
+  scale_x_continuous(name = expression(mu), limits = c(-3, 3), breaks = c(0)) +
+  scale_y_continuous(name = "variance", limits = c(0, 3)) +
+  theme_classic() +
+  my_theme
+```
+
+
+```{r}
+
+
+# Function to generate a symmetric matrix
+generate_symmetric_matrix <- function(S, sd) {
+  # Generate the upper triangle matrix
+  upper_tri <- matrix(rnorm(S^2, 0, sd), S, S)
+  
+  # Symmetrize the matrix by adding its transpose and subtracting the diagonal
+  sigma <- upper_tri + t(upper_tri)
+  diag(sigma) <- rnorm(S, mean = 0, sd = 0.1)  # Add some jitter to the diagonal
+  
+  return(sigma)
+}
+
+# Function to find the nearest positive definite matrix
+make_positive_definite <- function(matrix) {
+  return(nearPD(matrix)$mat)
+}
+
+# Simulate delta_r using a positive definite covariance matrix
+simulate_delta_r <- function(S, sd) {
+  # Generate the symmetric covariance matrix
+  sigma <- generate_symmetric_matrix(S, sd)
+  
+  # Ensure the matrix is positive definite
+  sigma <- make_positive_definite(sigma)
+  
+  # Set the mean vector (mu) to 0
+  mu <- rep(0, S)
+  
+  # Simulate delta_r using the covariance matrix (sigma)
+  delta_r <- MASS::mvrnorm(n = 1, mu = mu, Sigma = sigma)
+  
+  return(list(delta_r = delta_r, sigma = sigma))
+}
+
+# Example usage
+S <- 5  # Number of species
+sd <- 1  # Standard deviation for the covariance structure
+
+# Simulate delta_r
+result <- simulate_delta_r(S, sd)
+
+# Print the generated delta_r vector
+print(result$delta_r)
+
+# Print the generated positive definite sigma matrix (covariance matrix)
+print(result$sigma)
+
+# Convert the covariance matrix to a long format for plotting as a heatmap
+sigma_matrix <- result$sigma
+sigma_long <- as.data.frame(as.table(as.matrix(sigma_matrix)))
+
+# Reverse the y-axis by reversing the factor levels of Var1
+sigma_long$Var2 <- factor(sigma_long$Var2, levels = rev(levels(sigma_long$Var2)))
+
+# Create the heatmap with the diagonal from top-left to bottom-right
+ggplot(sigma_long, aes(x = as.factor(Var1), y = as.factor(Var2), fill = Freq)) +
+  geom_tile() +
+  scale_fill_distiller(palette = "RdBu", limits = c(-3, 3), direction = 1) +
+  labs(x = "Species", 
+       y = "Species", 
+       title = "Covariance Matrix Heatmap") +
+  theme_classic() +
+  theme(legend.position = "right",
+        plot.title = element_text(hjust = 0.5)) +
+  coord_fixed()  # Ensures the heatmap tiles are square
+
+
+
+
+```
+
+
+
