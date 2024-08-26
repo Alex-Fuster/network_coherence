@@ -1,0 +1,121 @@
+---
+title: "LV - simulations"
+output: html_document
+date: "2024-08-26"
+---
+
+```{r}
+set.seed(1234)
+library(deSolve)
+library(faux)
+library(tidyr)
+library(MASS)
+library(ggplot2)
+library(patchwork)
+library(scales)
+library(Matrix)
+library(tibble)
+source("simulate_dynamics.R")
+```
+```{r}
+# pars for plotting:
+
+my_theme = theme(axis.text=element_text(size=12),
+                 axis.title = element_text(size = 14),
+                 legend.text=element_text(size=14),
+                 legend.title = element_text(size=14),
+                 plot.title = element_text(face="bold",size=14,margin=margin(0,0,20,0),hjust = 0.5),
+                 axis.title.y = element_text(hjust = 0.5),
+                 axis.title.x = element_text(hjust = 0.5))
+```
+
+
+
+How to generate changes in delta_r with pre-defined covariance structures?
+
+- delta_r = multinormal (n = S, mu = 0, sigma)
+- sigma = matrix (rnorm(S^2, 0, sd), S, S)
+- diag(sigma) = 1
+
+sigma is the covariance matrix that will modify the r values. We can generate covariance structures with values centered in 0 or shifted towards positive or negative values varying mu, or generate weaker or stronger covariances by varying sd.
+
+STEPS:
+
+1) generate A -> B
+2) Generate r
+3) r' = r + delta_r
+4) X = Br, and X' = Br'
+5) delta_X = X = X'
+
+
+Fix A and r and then simulate a gradient of covariances.
+
+We could generate a set of simulations that combine variations in mu and sd, with a plot showing mu values in the x axis and sd values in the y axis. For each mu and sd combination, we could generate n foodweb structures, so we would be plotting the mean results:
+
+First step is to generate A and B. For the example, let's do a 10 species community. 
+```{r}
+S = 10
+C = 0.2
+A <- sim_quantitative_network("predator-prey", S = S, C = C, aij_params = c(0, 0.1))
+B <- ginv(A)
+p1 <- A %>%
+  as_tibble() %>%
+  rownames_to_column("Var1") %>%
+  pivot_longer(-Var1, names_to = "Var2", values_to = "value") %>%
+  ggplot(aes(Var1, Var2)) +
+  geom_tile(aes(fill = value)) +
+  scale_fill_distiller(palette = "RdBu", direction = -1, limits = c(-1,1)*max(abs(A)))
+p2 <- B %>%
+  as_tibble() %>%
+  rownames_to_column("Var1") %>%
+  pivot_longer(-Var1, names_to = "Var2", values_to = "value") %>%
+  ggplot(aes(Var1, Var2)) +
+  geom_tile(aes(fill = value)) +
+  scale_fill_distiller(palette = "RdBu", direction =-1, limits = c(-1,1)*max(abs(B)))
+p1 + p2
+```
+
+The second step is to generate r, delta_r, and r'. There are 3 parameters to play with. The mean and sd of the normal distribution used to generate the covariance matrix, and the mean of the responses.
+```{r}
+Biomass_at_equilibrium <- runif(S, 1, 10)
+r <- -A%*%Biomass_at_equilibrium
+
+#### Not sure what it does here, but seems to work to create the covariance matrix
+x <- qr.Q(qr(matrix(rnorm(S^2, mean = 0, sd = 1), n)))
+Sigma <- crossprod(x, x*(5:1))
+#### 
+
+p3 <- Sigma %>%
+  as_tibble() %>%
+  rownames_to_column("Var1") %>%
+  pivot_longer(-Var1, names_to = "Var2", values_to = "value") %>%
+  ggplot(aes(Var1, Var2)) +
+  geom_tile(aes(fill = value)) +
+  scale_fill_distiller(palette = "RdBu", direction = -1, limits = c(-1,1)*max(abs(Sigma)))
+
+delta_r <- mvrnorm(n = 1, mu = rep(0, S), Sigma = Sigma)
+new_r <- r + delta_r
+```
+
+calculate new equilibrium (Br') and compare to old equilibrium
+```{r}
+# define matrix of initial biomasses
+out <- matrix(c(0, Biomass_at_equilibrium), ncol = params$S + 1)
+colnames(out) <- c("time", as.character(1:params$S))
+  
+# define time steps 
+times <- seq(from = 1, to = 100)
+  
+# dynamical model 
+out <- rbind(out[-nrow(out),],
+              ode(
+                 func = fw.model,
+                 y = Biomass_at_equilibrium,
+                 times = times,
+                 parms = c(A = A, r = new_r, S = S),
+               ) %>%
+                 as.data.frame())
+new_equilibrium <- out[100,c(2:S+1)]
+delta_X <- new_equilibrium - Biomass_at_equilibrium
+
+```
