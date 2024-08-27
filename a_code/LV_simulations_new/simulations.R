@@ -69,10 +69,30 @@ for (i in 1:100){
   )
 }
 
+# Scenario 5: mixed correlations (cor between 0 and 1) among species responses, highly variable responses (sd_delta_r = 0.5), and positive on average (mu_delta_r = 0.5)
+params$mu_delta_r <- 0.5
+for (i in 1:100){
+  X <- with(params, simulate_response(S, C, aij_params, mu_delta_r, sd_delta_r, covMatrix_type, sd_X))
+  out <- rbind(
+    out,
+    data.frame(covtype = "mixed", perturbation = "strong positive", sum_deltaX = sum(X$X_pre - X$X_post), sd_deltaX = sd(X$X_pre - X$X_post))
+  )
+}
+
+# Scenario 6: positive correlations (cor between 0 and 1) among species responses, highly variable responses (sd_delta_r = 0.5), and positive on average (mu_delta_r = 0.5)
+params$covMatrix_type <- "positive"
+for (i in 1:100){
+  X <- with(params, simulate_response(S, C, aij_params, mu_delta_r, sd_delta_r, covMatrix_type, sd_X))
+  out <- rbind(
+    out,
+    data.frame(covtype = "positive", perturbation = "strong positive", sum_deltaX = sum(X$X_pre - X$X_post), sd_deltaX = sd(X$X_pre - X$X_post))
+  )
+}
+
 ggplot(out) +
   geom_boxplot(aes(x = covtype, y = sum_deltaX, fill = perturbation)) +
   lims(y = c(-100, 100))
 
 ggplot(out) +
   geom_boxplot(aes(x = covtype, y = sd_deltaX, fill = perturbation)) +
-  lims(y = c(0, 100))
+  lims(y = c(0, 25))
