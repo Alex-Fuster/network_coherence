@@ -3,7 +3,7 @@
 
 ### TODO: calculate network coherence using procrustes 
 
-set.seed(4321)
+set.seed(1234)
 
 # packages
 library(deSolve)
@@ -23,14 +23,10 @@ params <- list(
   Net_type = "predator-prey", # type of network: predator-prey, mutualistic, competition
   C = 0.2, # connectance 
   aij_params = c(0, 0.1), # mean and standard deviation of interaction strength
-  efficiency = 0.5, # efficiency of predators to transform prey biomass 
-  rho = 0, 
-  
+
   # simulating species responses to an environmental perturbation
-  NC_parms = 0, # network coherence 
   delta_r_params = c(0, 1), # mean and standard deviation of the changes in species growth rates after the perturbation (squared)
-  prop_neg = 0.5, # proportion of delta r dans are negative
-  
+
   # simulating species dynamics 
   maxt = 100 # number of time steps before and after the perturbation
 )

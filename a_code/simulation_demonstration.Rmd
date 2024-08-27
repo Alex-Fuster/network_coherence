@@ -7,7 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-set.seed(4321)
+set.seed(1234567)
 
 # packages
 library(deSolve)
@@ -116,7 +116,7 @@ params <- list(
   delta_r_params = c(0, 1), # mean and standard deviation of the changes in species growth rates after the perturbation (squared)
 
   # simulating species dynamics 
-  maxt = 25 # number of time steps before and after the perturbation
+  maxt = 100 # number of time steps before and after the perturbation
 )
 ```
 
@@ -127,6 +127,8 @@ First, we randomly simulate an predator-prey network. To do so, we set positive 
 ```{r simulate interaction matrix function}
 sim_quantitative_network
 ```
+
+At the last few lines of the function, we set intraspecific effects (the diagonal of the matrix) by drawing random numbers between -1 and 0 from a uniform distribution. We verify that the equilibrium is stable by making sure that the leading eigenvalue is real and positive, or that the real part of the imaginary eigenvalue is positive. If the equilibrium is not stable, we repeat the sampling of intraspecific effects. 
 
 Let's simulate a network
 ```{r simulate interaction matrix}
@@ -201,5 +203,5 @@ And here is the network coherence for our example:
       NC
 ```
 
-In this example, the mean network coherence is `r round(mean(NC), 2)` and the standard deviation is `r round(sd(NC), 2)`. Not surprisingly, the average network coherence is close to 0 since we simulated independently the interaction matrix $A$ and the response to the perturbation $delta\_r$. In Box 1, we simulated 300 communities of 100 species (and responses to perturbation). Ideally, we would be able to control for the network coherence to better explore the ranges of possible mean and sd network coherences.
+In this example, the mean network coherence is `r round(mean(NC), 2)` and the standard deviation is `r round(sd(NC), 2)`. In Box 1, we simulated 300 communities of 100 species (and responses to perturbation). As demonstrated, we generate delta_r and A independently, so we are not controlling network coherence. With 100 species, it is harder to get large mean(NC) and sd(NC). Ideally, we would be able to control for the network coherence to better explore the ranges of possible mean and sd network coherences.
 

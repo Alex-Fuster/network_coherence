@@ -39,10 +39,9 @@ sim_binary_network <- function(S, C) {
 ### Net_type: network type (random, predator-prey, competition, mutualistic) 
 ### S: number of species 
 ### C: connectance 
-### rho correlation between aij and aji
 ### parametrization inspired from Allesina & Tang 2012 (https://doi.org/10.1038/nature10832)
 
-sim_quantitative_network <- function(Net_type, S, C, aij_params, rho = 0) {
+sim_quantitative_network <- function(Net_type, S, C, aij_params) {
   
   # initialize network
   A <- matrix(0, S, S)
@@ -90,11 +89,11 @@ sim_quantitative_network <- function(Net_type, S, C, aij_params, rho = 0) {
     A[upper.tri(A)] <- B * aij[(n_pairs+1):length(aij)]
     
   } else { stop("Incorrect network type") }
-  diag(A) <- -(max(Re(eigen(A)$values)) + runif(S, 0.1))
+  diag(A) <- -runif(S, min = 0, max = 1)
   
   # make sure that the equilibrium is stable
   while(max(Re(eigen(A)$values)) > 0){
-    diag(A) <- -(max(Re(eigen(A)$values)) + runif(S, 0.1))
+    diag(A) <- -runif(S, min = 0, max = 1)
   }
   
   return(A)
@@ -195,7 +194,7 @@ simulate_dynamics <- function(params, model = fw.model) {
     with(params, {
       
       # simulate quantitative adjacency matrix 
-      A <- sim_quantitative_network(Net_type, S, C, aij_params, efficiency, rho) 
+      A <- sim_quantitative_network(Net_type, S, C, aij_params) 
       
       # define initial intrinsic growth rates of species
       # to make sure all species have a positive biomass at equilibrium
