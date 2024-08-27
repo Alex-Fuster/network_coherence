@@ -50,7 +50,7 @@ for (i in 1:100){
     data.frame(covtype = "positive", perturbation = "weak", sum_deltaX = sum(X$X_pre - X$X_post), sd_deltaX = sd(X$X_pre - X$X_post))
   )
 }
-# Scenario 3: mixed correlations (cor between 0 and 1) among species responses, weakly variable responses (sd_delta_r = 0.1)
+# Scenario 3: mixed correlations (cor between -1 and 1) among species responses, weakly variable responses (sd_delta_r = 0.1)
 params$covMatrix_type <- "mixed"
 for (i in 1:100){
   X <- with(params, simulate_response(S, C, aij_params, mu_delta_r, sd_delta_r, covMatrix_type, sd_X))
@@ -59,7 +59,7 @@ for (i in 1:100){
     data.frame(covtype = "mixed", perturbation = "weak", sum_deltaX = sum(X$X_pre - X$X_post), sd_deltaX = sd(X$X_pre - X$X_post))
   )
 }
-# Scenario 4: mixed correlations (cor between 0 and 1) among species responses, highly variable responses (sd_delta_r = 0.5)
+# Scenario 4: mixed correlations (cor between -1 and 1) among species responses, highly variable responses (sd_delta_r = 0.5)
 params$sd_delta_r <- 0.5
 for (i in 1:100){
   X <- with(params, simulate_response(S, C, aij_params, mu_delta_r, sd_delta_r, covMatrix_type, sd_X))
@@ -69,7 +69,7 @@ for (i in 1:100){
   )
 }
 
-# Scenario 5: mixed correlations (cor between 0 and 1) among species responses, highly variable responses (sd_delta_r = 0.5), and positive on average (mu_delta_r = 0.5)
+# Scenario 5: mixed correlations (cor between -1 and 1) among species responses, highly variable responses (sd_delta_r = 0.5), and positive on average (mu_delta_r = 0.5)
 params$mu_delta_r <- 0.5
 for (i in 1:100){
   X <- with(params, simulate_response(S, C, aij_params, mu_delta_r, sd_delta_r, covMatrix_type, sd_X))
@@ -86,6 +86,27 @@ for (i in 1:100){
   out <- rbind(
     out,
     data.frame(covtype = "positive", perturbation = "strong positive", sum_deltaX = sum(X$X_pre - X$X_post), sd_deltaX = sd(X$X_pre - X$X_post))
+  )
+}
+
+# Scenario 7: mixed correlations (cor between 0 and 1) among species responses, highly variable responses (sd_delta_r = 0.5), and positive on average (mu_delta_r = 0.5)
+params$covMatrix_type <- "mixed"
+params$mu_delta_r <- -0.5
+for (i in 1:100){
+  X <- with(params, simulate_response(S, C, aij_params, mu_delta_r, sd_delta_r, covMatrix_type, sd_X))
+  out <- rbind(
+    out,
+    data.frame(covtype = "mixed", perturbation = "strong negative", sum_deltaX = sum(X$X_pre - X$X_post), sd_deltaX = sd(X$X_pre - X$X_post))
+  )
+}
+
+# Scenario 8: positive correlations (cor between 0 and 1) among species responses, highly variable responses (sd_delta_r = 0.5), and positive on average (mu_delta_r = 0.5)
+params$covMatrix_type <- "positive"
+for (i in 1:100){
+  X <- with(params, simulate_response(S, C, aij_params, mu_delta_r, sd_delta_r, covMatrix_type, sd_X))
+  out <- rbind(
+    out,
+    data.frame(covtype = "positive", perturbation = "strong negative", sum_deltaX = sum(X$X_pre - X$X_post), sd_deltaX = sd(X$X_pre - X$X_post))
   )
 }
 
