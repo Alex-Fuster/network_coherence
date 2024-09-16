@@ -5,7 +5,7 @@ library(dplyr)
 library(tidyr)
 library(ggplot2)
 library(tibble)
-source("LV_simulations_new/functions.R")
+source(here::here("a_code/LV_simulations_new/functions.R"))
 
 # parameters
 params <- list(
@@ -109,6 +109,81 @@ for (i in 1:100){
     data.frame(covtype = "positive", perturbation = "strong negative", sum_deltaX = sum(X$X_pre - X$X_post), sd_deltaX = sd(X$X_pre - X$X_post))
   )
 }
+
+ggplot(out) +
+  geom_boxplot(aes(x = covtype, y = sum_deltaX, fill = perturbation)) +
+  lims(y = c(-100, 100))
+
+ggplot(out) +
+  geom_boxplot(aes(x = covtype, y = sd_deltaX, fill = perturbation)) +
+  lims(y = c(0, 25))
+
+
+
+##################################
+
+# MEAN = 0, SD WEAK VS STRONG
+
+out <- data.frame()
+
+params$mu_delta_r <- 0
+params$sd_delta_r <- 0.1
+for (i in 1:100){
+  X <- with(params, simulate_response(S, C, aij_params, mu_delta_r, sd_delta_r, covMatrix_type, sd_X))
+  out <- rbind(
+    out,
+    data.frame(covtype = "mixed", perturbation = "weak", sum_deltaX = sum(X$X_pre - X$X_post), sd_deltaX = sd(X$X_pre - X$X_post))
+  )
+}
+
+params$mu_delta_r <- 0
+params$sd_delta_r <- 2
+for (i in 1:100){
+  X <- with(params, simulate_response(S, C, aij_params, mu_delta_r, sd_delta_r, covMatrix_type, sd_X))
+  out <- rbind(
+    out,
+    data.frame(covtype = "mixed", perturbation = "strong", sum_deltaX = sum(X$X_pre - X$X_post), sd_deltaX = sd(X$X_pre - X$X_post))
+  )
+}
+
+
+
+ggplot(out) +
+  geom_boxplot(aes(x = covtype, y = sum_deltaX, fill = perturbation)) +
+  lims(y = c(-100, 100))
+
+ggplot(out) +
+  geom_boxplot(aes(x = covtype, y = sd_deltaX, fill = perturbation)) +
+  lims(y = c(0, 25))
+
+
+##################################
+
+# MEAN = 0.5, SD WEAK VS STRONG
+
+out <- data.frame()
+
+params$mu_delta_r <- -0.5
+params$sd_delta_r <- 0.1
+for (i in 1:100){
+  X <- with(params, simulate_response(S, C, aij_params, mu_delta_r, sd_delta_r, covMatrix_type, sd_X))
+  out <- rbind(
+    out,
+    data.frame(covtype = "mixed", perturbation = "weak", sum_deltaX = sum(X$X_pre - X$X_post), sd_deltaX = sd(X$X_pre - X$X_post))
+  )
+}
+
+params$mu_delta_r <- -0.5
+params$sd_delta_r <- 2
+for (i in 1:100){
+  X <- with(params, simulate_response(S, C, aij_params, mu_delta_r, sd_delta_r, covMatrix_type, sd_X))
+  out <- rbind(
+    out,
+    data.frame(covtype = "mixed", perturbation = "strong", sum_deltaX = sum(X$X_pre - X$X_post), sd_deltaX = sd(X$X_pre - X$X_post))
+  )
+}
+
+
 
 ggplot(out) +
   geom_boxplot(aes(x = covtype, y = sum_deltaX, fill = perturbation)) +
