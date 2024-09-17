@@ -95,6 +95,11 @@ simulate_response <- function(S, C, aij_params, mu_delta_r, sd_delta_r, covMatri
   return(list(df = df, pre_perturb = pre_perturb, post_perturb = post_perturb, Sigma = covMat))
 }
 
+
+
+
+########################################################## DEMONSTRATION
+
 # Run the simulation for demonstration
 result <- simulate_response(params$S, params$C, params$aij_params, params$mu_delta_r, params$sd_delta_r, params$covMatrix_type, params$sd_X, params$maxt)
 
@@ -127,6 +132,9 @@ p3 <- result$Sigma %>%
 print(p1)
 print(p2)
 print(p3)
+
+
+########################################################## SIMULATION
 
 # Save necessary data to make these plots
 out <- data.frame()
