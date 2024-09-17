@@ -13,7 +13,7 @@ params <- list(
   mu_delta_r = 0, # mean responses to perturbation
   sd_delta_r = 0.5, # sd of response to perturbation
   covMatrix_type = "positive", # type of covariance (mixed or all positive)
-  sd_X = rep(0.1, 10), # standard deviations of responses for each species
+  sd_X = rep(1, 10), # standard deviations of responses for each species
   maxt = 100 # maximum time for dynamics
 )
 
@@ -54,8 +54,6 @@ sim_quantitative_network <- function(Net_type, S, C, aij_params) {
 # Function to simulate dynamics
 fw.model <- function(t, B, params) {
   with(as.list(c(B, params)), {
-    B[B < 10^-8] <- 0 
-    B[B < 0] <- 0 # Prevent negative biomass
     dBdt <- (params$r + params$A %*% B) * B
     
     list(dBdt)
@@ -156,6 +154,7 @@ print(p3)
 out <- data.frame()
 
 params$mu_delta_r <- 0
+params$covMatrix_type = "positive"
 params$sd_delta_r <- 0.1
 for (i in 1:100){
   X <- with(params, simulate_response(S, C, aij_params, mu_delta_r, sd_delta_r, covMatrix_type, sd_X, maxt)$df)
