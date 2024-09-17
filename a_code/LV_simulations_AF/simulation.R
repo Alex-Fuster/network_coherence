@@ -105,6 +105,10 @@ simulate_response <- function(S, C, aij_params, mu_delta_r, sd_delta_r, covMatri
 # Run the simulation for demonstration
 result <- simulate_response(params$S, params$C, params$aij_params, params$mu_delta_r, params$sd_delta_r, params$covMatrix_type, params$sd_X, params$maxt)
 
+
+
+
+
 # Plot species biomass dynamics
 pre_perturb_long <- result$pre_perturb %>%
   pivot_longer(-time, names_to = "species", values_to = "biomass")
@@ -120,6 +124,9 @@ p2 <- ggplot(post_perturb_long, aes(x = time, y = biomass, color = species)) +
   geom_line() +
   ggtitle("Post-Perturbation Biomass Dynamics")
 
+print(p1)
+print(p2)
+
 # Plot the covariance matrix
 p3 <- result$Sigma %>%
   as_tibble() %>%
@@ -130,9 +137,6 @@ p3 <- result$Sigma %>%
   scale_fill_distiller(palette = "RdBu", direction = -1, limits = c(-1,1)*max(abs(result$Sigma))) +
   ggtitle("Covariance Matrix")
 
-# Display the plots
-print(p1)
-print(p2)
 print(p3)
 
 
