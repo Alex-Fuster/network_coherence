@@ -55,7 +55,9 @@ sim_quantitative_network <- function(Net_type, S, C, aij_params) {
 fw.model <- function(t, B, params) {
   with(as.list(c(B, params)), {
     B[B < 10^-8] <- 0 
+    B[B < 0] <- 0 # Prevent negative biomass
     dBdt <- (params$r + params$A %*% B) * B
+    
     list(dBdt)
   })
 }
@@ -145,17 +147,17 @@ for (i in 1:100){
   X <- with(params, simulate_response(S, C, aij_params, mu_delta_r, sd_delta_r, covMatrix_type, sd_X, maxt)$df)
   out <- rbind(
     out,
-    data.frame(covtype = "mixed", perturbation = "weak", sum_deltaX = sum(X$X_pre - X$X_post), sd_deltaX = sd(X$X_pre - X$X_post))
+    data.frame(covtype = "mixed", perturbation = "weak", sum_deltaX = sum(X$X_pre - X$X_post), sd_deltaX = sd(X$X_pre - X$X_post), X_pre = X$X_pre, X_post = X$X_post)
   )
 }
 
 params$mu_delta_r <- 0
-params$sd_delta_r <- 2
+params$sd_delta_r <- 0.5
 for (i in 1:100){
   X <- with(params, simulate_response(S, C, aij_params, mu_delta_r, sd_delta_r, covMatrix_type, sd_X, maxt)$df)
   out <- rbind(
     out,
-    data.frame(covtype = "mixed", perturbation = "strong", sum_deltaX = sum(X$X_pre - X$X_post), sd_deltaX = sd(X$X_pre - X$X_post))
+    data.frame(covtype = "mixed", perturbation = "strong", sum_deltaX = sum(X$X_pre - X$X_post), sd_deltaX = sd(X$X_pre - X$X_post), X_pre = X$X_pre, X_post = X$X_post)
   )
 }
 
