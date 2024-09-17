@@ -13,7 +13,7 @@ params <- list(
   mu_delta_r = 0, # mean responses to perturbation
   sd_delta_r = 0.5, # sd of response to perturbation
   covMatrix_type = "positive", # type of covariance (mixed or all positive)
-  sd_X = rep(1, 10), # standard deviations of responses for each species
+  sd_X = rep(0.1, 10), # standard deviations of responses for each species
   maxt = 100 # maximum time for dynamics
 )
 
@@ -62,6 +62,13 @@ fw.model <- function(t, B, params) {
   })
 }
 
+eventfun <- function(t, B, parms){
+  with(as.list(B), {
+    B[B < 1e-6] <- 0
+    return(B)
+  })
+}
+
 simulate_dynamics_c <- function(params, model, init_biomass = runif(params$S, min = 1, max = 10)) {
   init_biomass <- as.numeric(init_biomass)
   times <- seq(from = 1, to = params$maxt)
@@ -69,7 +76,8 @@ simulate_dynamics_c <- function(params, model, init_biomass = runif(params$S, mi
     y = init_biomass,
     times = times,
     func = fw.model,
-    parms = params
+    parms = params,
+    events = list(func = eventfun, time = times)
   ) %>% as.data.frame()
   return(out)
 }
@@ -107,8 +115,9 @@ simulate_response <- function(S, C, aij_params, mu_delta_r, sd_delta_r, covMatri
 # Run the simulation for demonstration
 result <- simulate_response(params$S, params$C, params$aij_params, params$mu_delta_r, params$sd_delta_r, params$covMatrix_type, params$sd_X, params$maxt)
 
-
-
+while (all(result$post_perturb[nrow(result$post_perturb),]>0)) {
+  result <- simulate_response(params$S, params$C, params$aij_params, params$mu_delta_r, params$sd_delta_r, params$covMatrix_type, params$sd_X, params$maxt)
+}
 
 
 # Plot species biomass dynamics
