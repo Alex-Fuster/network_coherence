@@ -6,6 +6,18 @@ library(dplyr)
 library(tidyr)
 library(ggpubr)
 
+
+# pars for plotting
+
+
+my_theme<-theme(axis.text=element_text(size=12),
+                axis.title = element_text(size = 14),
+                legend.text=element_text(size=10),
+                legend.title = element_text(size=12),
+                plot.title = element_text(face="bold",size=14,margin=margin(0,0,20,0),hjust = 0.5),
+                axis.title.y = element_text(hjust = 0.5),
+                axis.title.x = element_text(hjust = 0.5))
+
 # Define parameters for dynamic simulation
 params <- list(
   S = 10, # number of species
@@ -305,3 +317,102 @@ ggarrange(p1,
           p2,
           ncol = 1,
           nrow = 2)
+
+
+########################################################################
+# SAME BUT CREATING ENC PLOTS
+########################################################################
+
+# Function to compute and plot ENC pattern for each scenario
+plot_enc_pattern <- function(a_matrix, c_matrix, scenario_name) {
+  # Multiply the A matrix by the C matrix to get the ENC matrix
+  enc_matrix <- a_matrix * c_matrix
+  
+  # Convert the matrices to data frames
+  enc_matrix_df <- as.data.frame(enc_matrix)
+  a_matrix_df <- as.data.frame(a_matrix)
+  
+  # Set ENC values to NA where A matrix has value 0
+  enc_matrix_df[a_matrix_df == 0] <- NA
+  
+  # Melt the dataframe to long format
+  enc_matrix_melt <- enc_matrix_df %>%
+    rownames_to_column(var = "Var1") %>%
+    gather(key = "Var2", value = "value", -Var1) %>%
+    drop_na(value)
+  
+  # Determine the limits for the x-axis
+  min_enc <- min(enc_matrix_melt$value, na.rm = TRUE)
+  max_enc <- max(enc_matrix_melt$value, na.rm = TRUE)
+  
+  # Create the plot
+  p <- ggplot(enc_matrix_melt, aes(x = value)) +
+    geom_histogram(aes(fill = ..x..), bins = 30, alpha = 0.7) +
+    scale_fill_distiller(palette = "RdBu", direction = 1) +
+    scale_x_continuous(limits = c(min_enc, max_enc)) +
+    labs(x = "Co-response", y = "Frequency", title = paste("ENC for", scenario_name)) +
+    theme_classic() +
+    theme(legend.position = "bottom", legend.title = element_blank(),
+          plot.title = element_text(hjust = 0.5)) +
+    my_theme
+  
+  return(p)
+}
+
+# Initialize a list to store plots
+plot_list <- list()
+
+# Define the range of values to test
+mu_delta_r_values <- seq(-3, 3, by = 1)    # mu_delta_r from -3 to 3 by 1
+sd_delta_r_values <- seq(0, 3, by = 0.5)   # sd_delta_r from 0 to 3 by 0.5
+
+# Loop through each combination of mu_delta_r and sd_delta_r
+for (mu_delta_r in mu_delta_r_values) {
+  
+  print(paste(mu_delta_r, "to", length(mu_delta_r_values), "mu values"))
+  
+  for (sd_delta_r in sd_delta_r_values) {
+    # Update parameters for the current scenario
+    params$covMatrix_type <- "mixed"
+    params$mu_delta_r <- mu_delta_r
+    params$sd_delta_r <- sd_delta_r
+    
+    print(paste(sd_delta_r, "to", length(sd_delta_r_values), "sd values"))
+    
+    # Run 100 simulations for each scenario
+    for (i in 1:100) {
+      # Simulate response for the current parameters
+      response <- with(params, simulate_response(S, C, aij_params, mu_delta_r, sd_delta_r, covMatrix_type, sd_X, maxt))
+      X <- response$df
+      a_matrix <- response$pre_perturb  # Example: Use pre-perturbation A matrix
+      c_matrix <- response$Sigma  # Example: Use covariance matrix
+      
+      # Store the results
+      out <- rbind(
+        out,
+        data.frame(
+          mu_delta_r = mu_delta_r,
+          sd_delta_r = sd_delta_r,
+          sum_deltaX = sum(X$X_pre - X$X_post), 
+          sd_deltaX = sd(X$X_pre - X$X_post)
+        )
+      )
+    }
+    
+    # After simulations, generate ENC plot for the current scenario
+    scenario_name <- paste("mu_delta_r:", mu_delta_r, "sd_delta_r:", sd_delta_r)
+    enc_plot <- plot_enc_pattern(a_matrix, c_matrix, scenario_name)
+    
+    # Save the plot in the list
+    plot_list[[scenario_name]] <- enc_plot
+  }
+}
+
+# Example to print one plot from the list
+print(plot_list[["mu_delta_r: -3 sd_delta_r: 1"]])
+
+print(plot_list[["mu_delta_r: 0 sd_delta_r: 1"]])
+
+print(plot_list[["mu_delta_r: 3 sd_delta_r: 1"]])
+
+print(plot_list[["mu_delta_r: -3 sd_delta_r: 3"]])
