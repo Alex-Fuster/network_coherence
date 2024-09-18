@@ -1,4 +1,4 @@
-# Load necessary library
+
 library(ggplot2)
 library(MASS)
 library(dplyr)
@@ -39,22 +39,22 @@ createCorMat <- function(S, type, target_mean = 0, target_sd = 0.1){
 }
 
 
-# Create a correlation matrix with target mean 0 and standard deviation 0.2
+# Create a correlation matrix with target mean and standard deviation
 S <- 20  # Number of species
 cor_matrix <- createCorMat(S, type = "mixed", target_mean = 0, target_sd = 0.3)
 
 
+#cor_matrix[which(lower.tri(cor_matrix))] <- NA
 
-cor_matrix %>%
-   as_tibble() %>%
-   rownames_to_column("Var1") %>%
-   pivot_longer(-Var1, names_to = "Var2", values_to = "value") %>%
-   ggplot(aes(Var1, Var2)) +
-   geom_tile(aes(fill = value)) +
-   scale_fill_distiller(palette = "RdBu", direction = -1, limits = c(-1,1)*max(abs(cor_matrix))) +
-   ggtitle("Covariance Matrix")
+cor_matrix <- as.data.frame(cor_matrix)
+cor_matrix$Var1 = paste0("V", rownames(cor_matrix))
+cor_matrix = cor_matrix %>%
+  pivot_longer(-Var1, names_to = "Var2", values_to = "value") #|> na.omit()
+cor_matrix$Var1 = factor(cor_matrix$Var1, levels = unique(cor_matrix$Var1))
+cor_matrix$Var2 = factor(cor_matrix$Var2, levels = rev(unique(cor_matrix$Var2)))
 
-
-
-
-
+ggplot(data = cor_matrix,
+       aes(x = Var1, y = Var2)) +
+  geom_tile(aes(fill = value)) +
+  scale_fill_distiller(palette = "RdBu", direction = -1, limits = c(-1,1)*max(abs(cor_matrix$value))) +
+  ggtitle("Covariance Matrix")
