@@ -20,30 +20,39 @@ my_theme<-theme(axis.text=element_text(size=12),
 
 # Define parameters for dynamic simulation
 params <- list(
-  S = 10, # number of species
+  S = 20, # number of species
   C = 0.2, # connectance of the food web
   aij_params = c(0, 0.5), # minimum and maximum interspecific effect of predation
   mu_delta_r = 0, # mean responses to perturbation
   sd_delta_r = 0.5, # sd of response to perturbation
-  covMatrix_type = "positive", # type of covariance (mixed or all positive)
-  sd_X = rep(0.1, 10), # standard deviations of responses for each species
+  sd_X = rep(0.1, 20), # standard deviations of responses for each species
   maxt = 100 # maximum time for dynamics
 )
 
-# Function to create a correlation matrix
-createCorMat <- function(S, type){
-  if (type == "positive"){
-    cor <- runif((S*(S-1)/2), 0, 1)
-  } else if (type == "mixed"){
-    cor <- runif((S*(S-1)/2), -1, 1)
-  } else {
-    stop("type not defined")
-  }
+# Function to create a correlation matrix with specified mean and sd
+createCorMat <- function(S, target_mean = C_mean, target_sd = C_sd){
+  # Define the number of off-diagonal elements
+  n_off_diag <- S * (S - 1) / 2
+  
+  cor_values <- runif(n_off_diag, -1, 1)
+  
+  # Adjust mean and sd to match the target
+  cor_values <- scale(cor_values, center = mean(cor_values), scale = sd(cor_values))  # Standardize values
+  cor_values <- cor_values * C_sd + C_mean  # Rescale to desired mean and sd
+  
+  # Ensure values stay between -1 and 1
+  cor_values[cor_values < -1] <- -1
+  cor_values[cor_values > 1] <- 1
+  
+  # Create a symmetric matrix with the correlation values
   corMat <- matrix(1, nrow = S, ncol = S)
-  corMat[upper.tri(corMat)] <- cor
-  corMat <- corMat * t(corMat)
+  corMat[upper.tri(corMat)] <- cor_values
+  corMat <- corMat * t(corMat)  # Make the matrix symmetric
+  
+  
   return(corMat)
 }
+
 
 # Function to simulate quantitative network
 sim_quantitative_network <- function(Net_type, S, C, aij_params) {
@@ -96,9 +105,34 @@ simulate_dynamics_c <- function(params, model, init_biomass = runif(params$S, mi
 }
 
 # Function to simulate response
-simulate_response <- function(S, C, aij_params, mu_delta_r, sd_delta_r, covMatrix_type, sd_X, maxt){
-  corMat <- createCorMat(S, covMatrix_type)
-  covMat <- as.matrix(Matrix::nearPD(sd_X %*% t(sd_X) * corMat)$mat)
+simulate_response <- function(S, C, aij_params, mu_delta_r, sd_delta_r, sd_X, maxt, C_mean, C_sd){
+  
+  # compute C matrix
+  cor_matrix <- createCorMat(S, target_mean = C_mean, target_sd = C_sd)
+  
+  # adjust C matrix
+  
+  cor_matrix <- as.data.frame(cor_matrix)
+  cor_matrix$Var1 = paste0("V", rownames(cor_matrix))
+  cor_matrix = cor_matrix %>%
+    pivot_longer(-Var1, names_to = "Var2", values_to = "value") #|> na.omit()
+  cor_matrix$Var1 = factor(cor_matrix$Var1, levels = unique(cor_matrix$Var1))
+  cor_matrix$Var2 = factor(cor_matrix$Var2, levels = rev(unique(cor_matrix$Var2)))
+  
+  ## Pivot the long-format dataframe back to wide format
+  wide_cor_matrix <- cor_matrix %>%
+    pivot_wider(names_from = Var2, values_from = value)
+  
+  ## Remove the row identifier column (Var1) to convert it back to a matrix
+  wide_cor_matrix <- wide_cor_matrix %>%
+    select(-Var1)
+  
+  ## Convert the dataframe back to a matrix
+  recovered_matrix <- as.matrix(wide_cor_matrix)
+  
+  
+  
+  covMat <- as.matrix(Matrix::nearPD(sd_X %*% t(sd_X) * recovered_matrix)$mat)
   A <- sim_quantitative_network("predator-prey", S = S, C = C, aij_params = aij_params)
   
   # Simulate pre-perturbation equilibrium
@@ -117,7 +151,7 @@ simulate_response <- function(S, C, aij_params, mu_delta_r, sd_delta_r, covMatri
   equilibrium_post <- as.numeric(post_perturb[nrow(post_perturb), -1])
   
   df <- data.frame(species = paste0("sp", c(1:S)), X_pre = equilibrium_pre, X_post = equilibrium_post)
-  return(list(df = df, pre_perturb = pre_perturb, post_perturb = post_perturb, Sigma = covMat))
+  return(list(df = df, pre_perturb = pre_perturb, post_perturb = post_perturb, Sigma = covMat, C_matrix = recovered_matrix))
 }
 
 
@@ -126,10 +160,26 @@ simulate_response <- function(S, C, aij_params, mu_delta_r, sd_delta_r, covMatri
 ########################################################## DEMONSTRATION
 
 # Run the simulation for demonstration
-result <- simulate_response(params$S, params$C, params$aij_params, params$mu_delta_r, params$sd_delta_r, params$covMatrix_type, params$sd_X, params$maxt)
+result <- simulate_response(params$S, 
+                            params$C, 
+                            params$aij_params, 
+                            params$mu_delta_r, 
+                            params$sd_delta_r, 
+                            params$sd_X, 
+                            params$maxt,
+                            C_mean = 0,
+                            C_sd = 0.3)
 
 while (all(result$post_perturb[nrow(result$post_perturb),]>0)) {
-  result <- simulate_response(params$S, params$C, params$aij_params, params$mu_delta_r, params$sd_delta_r, params$covMatrix_type, params$sd_X, params$maxt)
+  result <- simulate_response(params$S, 
+                              params$C, 
+                              params$aij_params, 
+                              params$mu_delta_r, 
+                              params$sd_delta_r, 
+                              params$sd_X, 
+                              params$maxt,
+                              C_mean = 0,
+                              C_sd = 0.3)
 }
 
 
@@ -168,31 +218,20 @@ print(p2)
 # Save necessary data to make these plots
 out <- data.frame()
 
-# params$mu_delta_r <- 0
-# params$sd_delta_r <- 0.1
-# for (i in 1:100){
-#   X <- with(params, simulate_response(S, C, aij_params, mu_delta_r, sd_delta_r, covMatrix_type, sd_X, maxt)$df)
-#   out <- rbind(
-#     out,
-#     data.frame(covtype = "positive", perturbation = "weak", sum_deltaX = sum(X$X_pre - X$X_post), sd_deltaX = sd(X$X_pre - X$X_post), X_pre = X$X_pre, X_post = X$X_post)
-#   )
-# }
-# 
-# params$mu_delta_r <- 0
-# params$sd_delta_r <- 0.5
-# for (i in 1:100){
-#   X <- with(params, simulate_response(S, C, aij_params, mu_delta_r, sd_delta_r, covMatrix_type, sd_X, maxt)$df)
-#   out <- rbind(
-#     out,
-#     data.frame(covtype = "positive", perturbation = "strong", sum_deltaX = sum(X$X_pre - X$X_post), sd_deltaX = sd(X$X_pre - X$X_post), X_pre = X$X_pre, X_post = X$X_post)
-#   )
-# }
 
-params$covMatrix_type <- "mixed"
+
 params$mu_delta_r <- 0
 params$sd_delta_r <- 0.1
 for (i in 1:100){
-  X <- with(params, simulate_response(S, C, aij_params, mu_delta_r, sd_delta_r, covMatrix_type, sd_X, maxt)$df)
+  X <- with(params, simulate_response(params$S, 
+                                      params$C, 
+                                      params$aij_params, 
+                                      params$mu_delta_r, 
+                                      params$sd_delta_r, 
+                                      params$sd_X, 
+                                      params$maxt,
+                                      C_mean = 0,
+                                      C_sd = 0.3)$df)
   out <- rbind(
     out,
     data.frame(covtype = "mixed", perturbation = "weak", sum_deltaX = sum(X$X_pre - X$X_post), sd_deltaX = sd(X$X_pre - X$X_post), X_pre = X$X_pre, X_post = X$X_post)
