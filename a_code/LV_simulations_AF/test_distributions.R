@@ -211,29 +211,48 @@ ggplot(data = cor_matrix,
 
 
 
+################# TESTING PARAMETERS
+
+
+
+###### NORMAL DISTRIBUTION
 
 
 
 
+# Function to generate and plot Normal distribution based on createCorMat approach
+plot_normal_distribution_with_rescale <- function(mean = 0, sd = 1, n = 10000) {
+  
+  # Generate Normal distribution using specified mean and sd
+  normal_values <- rnorm(n, mean = mean, sd = sd)
+  
+  # Adjust mean and sd to match the target
+  normal_values <- scale(normal_values, center = mean(normal_values), scale = sd(normal_values))  # Standardize values
+  normal_values <- normal_values * sd + mean  # Rescale to desired mean and sd
+  
+  # Ensure values stay between -1 and 1
+  normal_values[normal_values < -1] <- -1
+  normal_values[normal_values > 1] <- 1
+  
+  # Plot the rescaled Normal distribution
+  ggplot(data.frame(x = normal_values), aes(x = x)) +
+    geom_histogram(aes(y = ..density..), bins = 50, fill = "blue", alpha = 0.7) +
+    ggtitle(paste("Normal Distribution Mapped to [-1, 1] with mean =", mean, "and sd =", sd)) +
+    labs(x = "Mapped Value", y = "Density") +
+    theme_minimal()+
+    xlim(-1,1)
+}
+
+# Example usage: Normal distribution with mean = 0, sd = 1
+plot_normal_distribution_with_rescale(mean = 0, sd = 0.1)
+
+# SCENARIOS OF gaussian distribution
+# strong pattern: mean = 0, sd = 0.1
+# weak pattern: mean = 0, sd = 0.4
 
 
-############ U distrib
+###### BETA DISTRIBUTIONS
 
-library(ggplot2)
-
-# Generate U-shaped distribution using specified shape parameters
-n <- 10000
-u_shaped_values <- rbeta(n, shape1 = 0.5, shape2 = 0.5)  # Example values for the U-shape
-u_shaped_values <- 2 * (u_shaped_values - 0.5)  # Map to [-1, 1]
-
-# Plot the U-shaped distribution
-ggplot(data.frame(x = u_shaped_values), aes(x = x)) +
-  geom_histogram(aes(y = ..density..), bins = 50, fill = "blue", alpha = 0.7) +
-  ggtitle("U-shaped Distribution") +
-  labs(x = "Value", y = "Density") +
-  theme_minimal()
-
-################# B distrib
 
 # Function to generate and plot Beta distribution, mapped to [-1, 1]
 plot_mapped_beta_distribution <- function(shape1 = 2, shape2 = 5, n = 10000) {
@@ -260,3 +279,16 @@ plot_mapped_beta_distribution(shape1 = 5, shape2 = 2)
 
 # Example usage: U-shaped Beta distribution with shape1 = 0.5, shape2 = 0.5
 plot_mapped_beta_distribution(shape1 = 0.5, shape2 = 0.5)
+
+
+# SCENARIOS OF Beta negative
+# strong pattern: shape1 = 2, shape2 = 5
+# weak pattern: shape1 = 2, shape2 = 3
+
+# SCENARIOS OF Beta positive
+# strong pattern: shape1 = 5, shape2 = 2
+# weak pattern: shape1 = 3, shape2 = 2
+
+# SCENARIOS OF U SHAPED
+# strong pattern: shape1 = 0.1, shape2 = 0.1
+# weak pattern: shape1 = 0.5, shape2 = 0.5
