@@ -123,8 +123,8 @@ simulate_response <- function(S, C, aij_params, mu_delta_r, sd_delta_r, sd_X, ma
   pre_perturb <- simulate_dynamics_c(dyn_params, fw.model)
   equilibrium_pre <- as.numeric(pre_perturb[nrow(pre_perturb), -1])
   
- # delta_r <- MASS::mvrnorm(n = 1, mu = rnorm(S, mu_delta_r, sd_delta_r), Sigma = covMat, empirical = FALSE)
-  delta_r <- MASS::mvrnorm(n = 1, mu = rep(0, S), Sigma = covMat, empirical = FALSE)
+  delta_r <- MASS::mvrnorm(n = 1, mu = rnorm(S, mu_delta_r, sd_delta_r), Sigma = covMat, empirical = FALSE)
+ # delta_r <- MASS::mvrnorm(n = 1, mu = rep(0, S), Sigma = covMat, empirical = FALSE)
   dyn_params$r <- dyn_params$r + delta_r 
   
   post_perturb <- simulate_dynamics_c(dyn_params, fw.model, init_biomass = equilibrium_pre)
@@ -171,7 +171,7 @@ for (i in 1:nrow(scenarios)) {
                                 aij_params = c(0, 0.5), 
                                 mu_delta_r = 0, 
                                 sd_delta_r = 0.5, 
-                                sd_X = rep(0.9, 20), 
+                                sd_X = rep(1.1, 20), 
                                 maxt = 100,
                                 distribution_type = scenario$distribution,
                                 mean = scenario$mean,
@@ -226,7 +226,8 @@ p5 <- ggplot(results, aes(x = scenario, y = sd_deltaX, fill = distribution)) +
                               "Beta - weak", "Beta - strong", 
                               "U-shaped weak", "U-shaped strong")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  ylim(0,20)
 
 print(p4)
 print(p5)

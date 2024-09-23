@@ -73,7 +73,7 @@ print(recovered_matrix)
 
 ################################# COVARIANCE MATRIX
 
-sd_X = rep(0.1, 20)
+sd_X = rep(2, 20)
 
 covMat <- as.matrix(Matrix::nearPD(sd_X %*% t(sd_X) * as.matrix(recovered_matrix))$mat)
 

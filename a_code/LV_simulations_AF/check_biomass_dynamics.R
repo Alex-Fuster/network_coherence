@@ -13,7 +13,7 @@ for (i in 1:nrow(scenarios)) {
                                 aij_params = c(0, 0.5), 
                                 mu_delta_r = 0, 
                                 sd_delta_r = 0.5, 
-                                sd_X = rep(0.9, 20), 
+                                sd_X = rep(1, 20), 
                                 maxt = 100,
                                 distribution_type = scenario$distribution,
                                 mean = scenario$mean,

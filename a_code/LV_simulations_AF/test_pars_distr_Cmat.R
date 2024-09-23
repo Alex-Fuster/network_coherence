@@ -41,14 +41,15 @@ createCorMat <- function(S, distribution_type = "normal",
 
 
 
+
 #############################################
 
 
 S <- 20
 
-cor_matrix <- createCorMat(S, distribution_type = "normal", mean = 0, sd = 0.3)
+cor_matrix <- createCorMat(S, distribution_type = "normal", mean = 0, sd = 0.4)
 
-#cor_matrix <- createCorMat(S, distribution_type = "beta", beta_shape1 = 2, beta_shape2 = 5)
+cor_matrix <- createCorMat(S, distribution_type = "beta", beta_shape1 = 0.05, beta_shape2 = 0.05)
 
 #cor_matrix <- createCorMat(S, distribution_type = "u_shaped", ushape1 = 0.5, ushape2 = 0.5)
 
@@ -68,7 +69,7 @@ ggplot(data = cor_matrix,
        aes(x = Var1, y = Var2)) +
   geom_tile(aes(fill = value)) +
   scale_fill_distiller(palette = "RdBu", direction = -1, limits = c(-1,1)*max(abs(cor_matrix$value))) +
-  ggtitle("Covariance Matrix")
+  ggtitle("Correlation Matrix")
 
 
 
@@ -82,7 +83,7 @@ recovered_matrix <- as.matrix(wide_cor_matrix)
 
 # COMPUTE COVARIANCE MATRIX
 
-sd_X = rep(0.9, 20)
+sd_X = rep(1.1, 20)
 
 covMat <- as.matrix(Matrix::nearPD(sd_X %*% t(sd_X) * recovered_matrix)$mat)
 
@@ -101,9 +102,15 @@ covMat_long <- covMat %>%
 covMat_long$Var1 <- factor(covMat_long$Var1, levels = unique(covMat_long$Var1))  # Row order (Var1)
 covMat_long$Var2 <- factor(covMat_long$Var2, levels = rev(unique(covMat_long$Var2)))  # Reverse order for Var2
 
-# Plot the covariance matrix using ggplot2
+# Plot the covariance matrix
+# ggplot(data = covMat_long, aes(x = Var1, y = Var2)) +
+#   geom_tile(aes(fill = value)) +
+#   scale_fill_distiller(palette = "RdBu", direction = -1, limits = c(-1, 1) * max(abs(covMat_long$value), na.rm = TRUE)) +
+#   ggtitle("Covariance Matrix") +
+#   theme_minimal()
+
 ggplot(data = covMat_long, aes(x = Var1, y = Var2)) +
   geom_tile(aes(fill = value)) +
-  scale_fill_distiller(palette = "RdBu", direction = -1, limits = c(-1, 1) * max(abs(covMat_long$value), na.rm = TRUE)) +
+  scale_fill_distiller(palette = "RdBu", direction = -1, limits = c(-1, 1)) +
   ggtitle("Covariance Matrix") +
   theme_minimal()
