@@ -3,6 +3,7 @@ library(tidyr)
 library(dplyr)
 library(Matrix)
 library(deSolve)
+library(radiant.data)
 
 # Function to create a correlation matrix with different distributions
 createCorMat <- function(S, distribution_type = "normal", 
@@ -49,7 +50,7 @@ S <- 20
 
 cor_matrix <- createCorMat(S, distribution_type = "normal", mean = 0, sd = 0.4)
 
-cor_matrix <- createCorMat(S, distribution_type = "beta", beta_shape1 = 0.05, beta_shape2 = 0.05)
+#cor_matrix <- createCorMat(S, distribution_type = "beta", beta_shape1 = 0.05, beta_shape2 = 0.05)
 
 #cor_matrix <- createCorMat(S, distribution_type = "u_shaped", ushape1 = 0.5, ushape2 = 0.5)
 
@@ -83,10 +84,11 @@ recovered_matrix <- as.matrix(wide_cor_matrix)
 
 # COMPUTE COVARIANCE MATRIX
 
-sd_X = rep(1.1, 20)
+sd_X = rep(1, 20)
 
-covMat <- as.matrix(Matrix::nearPD(sd_X %*% t(sd_X) * recovered_matrix)$mat)
-
+#covMat <- as.matrix(Matrix::nearPD(sd_X %*% t(sd_X) * recovered_matrix)$mat)
+covMat <- diag(sd_X)%*%recovered_matrix%*%diag(sd_X)
+covMat <- as.matrix(Matrix::nearPD(covMat)$mat)
 
 # PLOT COVARIANCE MATRIX
 

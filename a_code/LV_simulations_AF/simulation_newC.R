@@ -4,6 +4,16 @@ library(dplyr)
 library(Matrix)
 library(deSolve)
 
+
+# Set up parameters for simulation
+params <- list(
+  S = 20, # Number of species
+  C = 0.2, # Connectance (fraction of possible links)
+  aij_params = c(0, 0.5), # Range of interaction strengths
+  maxt = 100 # Maximum time for the simulation
+)
+
+
 # Function to create a correlation matrix with different distributions
 createCorMat <- function(S, distribution_type = "normal", 
                          mean = 0, sd = 1, 
@@ -114,7 +124,9 @@ simulate_response <- function(S, C, aij_params, mu_delta_r, sd_delta_r, sd_X, ma
   # Convert back to a matrix
   recovered_matrix <- as.matrix(wide_cor_matrix)
   
-  covMat <- as.matrix(Matrix::nearPD(sd_X %*% t(sd_X) * recovered_matrix)$mat)
+  #covMat <- as.matrix(Matrix::nearPD(sd_X %*% t(sd_X) * recovered_matrix)$mat)
+  covMat <- diag(sd_X)%*%recovered_matrix%*%diag(sd_X)
+  covMat <- as.matrix(Matrix::nearPD(covMat)$mat)
   A <- sim_quantitative_network("predator-prey", S = S, C = C, aij_params = aij_params)
   
   equilibrium_pre <- runif(S, 1, 10)
@@ -171,7 +183,7 @@ for (i in 1:nrow(scenarios)) {
                                 aij_params = c(0, 0.5), 
                                 mu_delta_r = 0, 
                                 sd_delta_r = 0.5, 
-                                sd_X = rep(1.1, 20), 
+                                sd_X = rep(2, 20), 
                                 maxt = 100,
                                 distribution_type = scenario$distribution,
                                 mean = scenario$mean,
