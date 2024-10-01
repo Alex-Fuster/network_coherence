@@ -19,6 +19,8 @@ createCorMat <- function(S, distribution_type = "normal",
                          mean = 0, sd = 1, 
                          beta_shape1 = NULL, beta_shape2 = NULL, 
                          ushape1 = NULL, ushape2 = NULL) {
+  
+  
   n_off_diag <- S * (S - 1) / 2
   
   # Generate correlation values based on the chosen distribution
@@ -126,7 +128,7 @@ simulate_response <- function(S, C, aij_params, mu_delta_r, sd_delta_r, sd_X, ma
   
   #covMat <- as.matrix(Matrix::nearPD(sd_X %*% t(sd_X) * recovered_matrix)$mat)
   covMat <- diag(sd_X)%*%recovered_matrix%*%diag(sd_X)
-  covMat <- as.matrix(Matrix::nearPD(covMat)$mat)
+  #covMat <- as.matrix(Matrix::nearPD(covMat)$mat)
   A <- sim_quantitative_network("predator-prey", S = S, C = C, aij_params = aij_params)
   
   equilibrium_pre <- runif(S, 1, 10)
@@ -142,8 +144,15 @@ simulate_response <- function(S, C, aij_params, mu_delta_r, sd_delta_r, sd_X, ma
   post_perturb <- simulate_dynamics_c(dyn_params, fw.model, init_biomass = equilibrium_pre)
   equilibrium_post <- as.numeric(post_perturb[nrow(post_perturb), -1])
   
-  df <- data.frame(species = paste0("sp", c(1:S)), X_pre = equilibrium_pre, X_post = equilibrium_post)
-  return(list(df = df, pre_perturb = pre_perturb, post_perturb = post_perturb, Sigma = covMat, C_matrix = recovered_matrix, delta_r = delta_r))
+  df <- data.frame(species = paste0("sp", c(1:S)), 
+                   X_pre = equilibrium_pre, 
+                   X_post = equilibrium_post)
+  
+  return(list(df = df, pre_perturb = pre_perturb, 
+              post_perturb = post_perturb, 
+              Sigma = covMat, 
+              C_matrix = recovered_matrix, 
+              delta_r = delta_r))
 }
 
 # Step 1: Create a dataframe for scenarios with the correct classification
@@ -182,7 +191,7 @@ for (i in 1:nrow(scenarios)) {
                                 C = 0.2, 
                                 aij_params = c(0, 0.5), 
                                 mu_delta_r = 0, 
-                                sd_delta_r = 0.5, 
+                                sd_delta_r = 0, 
                                 sd_X = rep(2, 20), 
                                 maxt = 100,
                                 distribution_type = scenario$distribution,
@@ -227,7 +236,8 @@ p4 <- ggplot(results, aes(x = scenario, y = sum_deltaX, fill = distribution)) +
                               "Beta - weak", "Beta - strong", 
                               "U-shaped weak", "U-shaped strong")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  ylim(-20,20)
 
 # Plot for standard deviation of biomass changes
 p5 <- ggplot(results, aes(x = scenario, y = sd_deltaX, fill = distribution)) +
