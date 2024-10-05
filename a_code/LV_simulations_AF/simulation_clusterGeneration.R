@@ -136,7 +136,8 @@ for (alpha_d in alpha_d_values) {
       data.frame(
         alpha_d = alpha_d,
         sum_deltaX = sum(df$X_pre - df$X_post),
-        sd_deltaX = sd(df$X_pre - df$X_post)
+        sd_deltaX = sd(df$X_pre - df$X_post),
+        var_deltaX = var(df$X_pre - df$X_post)
       )
     )
     

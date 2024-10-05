@@ -4,8 +4,15 @@ library(MASS)
 library(ggplot2)
 library(dplyr)
 library(tidyr)
-library(gridExtra)
-library(ggpubr)
+
+
+
+##########################################
+
+# simulation with random perturbations every n timesteps. I compute the covariance in species' biomass responses
+
+##########################################
+
 # Function to simulate quantitative interaction network
 sim_quantitative_network <- function(Net_type, S, C, aij_params) {
   A <- matrix(0, S, S)
@@ -71,7 +78,7 @@ simulate_with_discrete_perturbations <- function(S, timesteps, cov_matrix, pertu
     
     results <- rbind(results, time_block_results)  # Append the new results
     
-   # print(paste("Applied perturbation at time", t, ": delta_r =", paste(delta_r, collapse = ", ")))
+    # print(paste("Applied perturbation at time", t, ": delta_r =", paste(delta_r, collapse = ", ")))
   }
   
   return(results)
