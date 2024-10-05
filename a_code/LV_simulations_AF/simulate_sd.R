@@ -1,3 +1,6 @@
+library(ggplot2)
+
+
 # Function to simulate quantitative network (interaction matrix)
 sim_quantitative_network <- function(Net_type, S, C, aij_params) {
   A <- matrix(0, S, S)
@@ -84,7 +87,7 @@ params$r <- runif(params$S, min = 0, max = 1)
 biomass_over_time <- simulate_dynamics_with_perturbations(params, perturbation_sd = 0.1, n_steps = 1000)
 
 # Plot biomass dynamics over time for each species
-library(ggplot2)
+
 biomass_df <- as.data.frame(biomass_over_time)
 biomass_df$time <- 1:1000
 biomass_df_long <- tidyr::pivot_longer(biomass_df, cols = -time, names_to = "species", values_to = "biomass")

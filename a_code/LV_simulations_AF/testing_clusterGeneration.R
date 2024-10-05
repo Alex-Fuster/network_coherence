@@ -1,20 +1,23 @@
-pak::pak("clusterGeneration")
+#pak::pak("clusterGeneration")
 
 library(clusterGeneration)
 library(ggplot2)
 library(reshape2)
+library(gridExtra)
+library(reshape2)
 
 # Define the dimension of the matrix
-d <- 40  # Number of species/variables
+d <- 8  # Number of species/variables
 
 # Define a range of alphad values to explore
-alphad_values <- c(0.1, 0.5, 1, 2, 5, 10)
+alphad_values <- c(0.001, 0.1, 10, 40)
 
 # Initialize a list to store correlation matrices
 corr_matrices <- list()
 
 # Generate correlation matrices for each alphad value
-set.seed(123)  # For reproducibility
+#set.seed(123)  # For reproducibility
+
 for (alpha in alphad_values) {
   corr_matrix <- rcorrmatrix(d = d, alphad = alpha)
   corr_matrices[[paste0("alphad_", alpha)]] <- corr_matrix
@@ -47,8 +50,7 @@ for (alpha in alphad_values) {
   plot_list[[paste0("alphad_", alpha)]] <- p
 }
 
-# Display the plots
-library(gridExtra)
+
 do.call(grid.arrange, c(plot_list, ncol = 2))
 
 
@@ -74,5 +76,5 @@ for (alpha in alphad_values) {
   hist_list[[paste0("alphad_", alpha)]] <- p
 }
 
-# Display the histograms
+
 do.call(grid.arrange, c(hist_list, ncol = 2))

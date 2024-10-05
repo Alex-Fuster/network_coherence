@@ -76,6 +76,8 @@ simulate_response <- function(S, C, aij_params, mu_delta_r, sd_delta_r, sd_X, ma
   equilibrium_pre <- as.numeric(pre_perturb[nrow(pre_perturb), -1])
   
   # Generate delta_r
+ #scaling_factor <- 1 / alpha_d
+ # delta_r <- MASS::mvrnorm(n = 1, mu = rep(0, S), Sigma = scaling_factor * covMat, empirical = FALSE)
   delta_r <- MASS::mvrnorm(n = 1, mu =  rep(0, S), Sigma = covMat, empirical = FALSE)
   
   dyn_params$r <- dyn_params$r + delta_r 
@@ -97,8 +99,8 @@ simulate_response <- function(S, C, aij_params, mu_delta_r, sd_delta_r, sd_X, ma
 
 
 # Set up the alpha_d values and species number to test
-alpha_d_values <- c(0.1, 10, 40)
-S <- 5  # Fixed number of species
+alpha_d_values <- c(0.001, 40)
+S <- 8  # Fixed number of species
 
 # Run the simulation for a fixed number of species and varying alpha_d values
 results <- data.frame()
@@ -108,7 +110,7 @@ delta_r_values <- data.frame(species = character(0), alpha_d = numeric(0), delta
 cor_values <- data.frame(alpha_d = numeric(0), correlation = numeric(0))
 cov_values <- data.frame(alpha_d = numeric(0), covariance = numeric(0))
 
-nsim <- 20  # Number of simulations per scenario
+nsim <- 100  # Number of simulations per scenario
 
 for (alpha_d in alpha_d_values) {
   print(paste("Running simulation for alpha_d =", alpha_d))
