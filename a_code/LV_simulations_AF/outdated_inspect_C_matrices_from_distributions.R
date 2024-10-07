@@ -1,3 +1,42 @@
+# Function to create a correlation matrix with different distributions
+createCorMat <- function(S, distribution_type = "normal", 
+                         mean = 0, sd = 1, 
+                         beta_shape1 = NULL, beta_shape2 = NULL, 
+                         ushape1 = NULL, ushape2 = NULL) {
+  
+  
+  n_off_diag <- S * (S - 1) / 2
+  
+  # Generate correlation values based on the chosen distribution
+  if (distribution_type == "normal") {
+    cor_values <- rnorm(n_off_diag, mean = mean, sd = sd)
+  } else if (distribution_type == "beta") {
+    cor_values <- rbeta(n_off_diag, shape1 = beta_shape1, shape2 = beta_shape2)
+    cor_values <- 2 * (cor_values - 0.5)  # Map Beta values to [-1, 1]
+  } else if (distribution_type == "u_shaped") {
+    cor_values <- rbeta(n_off_diag, shape1 = ushape1, shape2 = ushape2)
+    cor_values <- 2 * (cor_values - 0.5)  # Map Beta values to [-1, 1]
+  } else {
+    stop("Invalid distribution type specified.")
+  }
+  
+  if (distribution_type == "normal") {
+    cor_values <- scale(cor_values, center = mean(cor_values), scale = sd(cor_values))
+    cor_values <- cor_values * sd + mean
+  }
+  
+  cor_values[cor_values < -1] <- -1
+  cor_values[cor_values > 1] <- 1
+  
+  corMat <- matrix(1, nrow = S, ncol = S)
+  corMat[upper.tri(corMat)] <- cor_values
+  corMat <- corMat * t(corMat)
+  
+  return(corMat)
+}
+
+
+
 #################################
 ##### normal ######################
 
@@ -115,3 +154,19 @@ ggplot(data = covMat_long, aes(x = Var1, y = Var2)) +
   scale_fill_distiller(palette = "RdBu", direction = -1, limits = c(-1, 1) * max(abs(covMat_long$value), na.rm = TRUE)) +
   ggtitle("Covariance Matrix") +
   theme_minimal()
+
+
+pak::pak("mvtnorm")
+library(mvtnorm)
+
+# Check if the matrix is positive definite
+is_pos_def <- is.positive.definite(cov_matrix)
+cat("Is the covariance matrix positive definite?", is_pos_def, "\n")
+
+# Attempt to generate samples
+tryCatch({
+  samples <- rmvnorm(n = 1000, mean = rep(0, S), sigma = cov_matrix)
+  print("Sample generation succeeded.")
+}, error = function(e) {
+  cat("Error generating samples:", e$message, "\n")
+})
