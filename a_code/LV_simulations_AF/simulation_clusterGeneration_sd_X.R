@@ -94,11 +94,13 @@ simulate_response <- function(S, C, aij_params, sd_X, maxt, alpha_d) {
               delta_r = delta_r))
 }
 
+set.seed(100)
+
 # Simulation parameters
 alpha_d <- 40  # Fixed alpha_d for all scenarios
 sd_X_values <- c(0.01, 0.1, 0.3, 0.5, 0.8, 1, 1.2, 1.5)  # Different sd_X scenarios
 S <- 20  
-nsim <- 20  
+nsim <- 100  
 maxt <- 1000
 
 # Initialize data frames to store results
@@ -157,16 +159,20 @@ for (sd_X in sd_X_values) {
   }
 }
 
-# Plot results
-p1 <- ggplot(results, aes(x = as.factor(sd_X), y = sum_deltaX)) +
-  geom_boxplot(fill = "skyblue") +
+# Plot results with gradient colors and no legend for p1 and p2
+p1 <- ggplot(results, aes(x = as.factor(sd_X), y = sum_deltaX, fill = sd_X)) +
+  geom_boxplot() +
+  scale_fill_gradient(low = "#EAD7F5", high = "#6A0DAD") +  # light purple to dark purple
   labs(title = "Sum of Biomass Changes Across sd_X", x = "sd_X", y = "Sum of Biomass Change") +
-  theme_minimal()
+  theme_minimal() +
+  theme(legend.position = "none")  # Remove the legend
 
-p2 <- ggplot(results, aes(x = as.factor(sd_X), y = sd_deltaX)) +
-  geom_boxplot(fill = "orange") +
+p2 <- ggplot(results, aes(x = as.factor(sd_X), y = sd_deltaX, fill = sd_X)) +
+  geom_boxplot() +
+  scale_fill_gradient(low = "#EAD7F5", high = "#6A0DAD") +  # light purple to dark purple
   labs(title = "Standard Deviation of Biomass Changes Across sd_X", x = "sd_X", y = "Standard Deviation of Biomass Change") +
-  theme_minimal()
+  theme_minimal() +
+  theme(legend.position = "none")  # Remove the legend
 
 delta_r_limits <- range(delta_r_values$delta_r, na.rm = TRUE)
 correlation_limits <- range(cor_values$correlation, na.rm = TRUE)
@@ -198,3 +204,12 @@ p5 <- ggplot(cov_values, aes(x = covariance)) +
 
 # Display all plots
 gridExtra::grid.arrange(p1, p2, p3, p4, p5, ncol = 2)
+
+
+
+################### save results
+
+saveRDS(delta_r_values, here::here("a_code/LV_simulations_AF/output/delta_r_values.rds"))
+saveRDS(cor_values, here::here("a_code/LV_simulations_AF/output/cor_values.rds"))
+saveRDS(results, here::here("a_code/LV_simulations_AF/output/results.rds"))
+        
