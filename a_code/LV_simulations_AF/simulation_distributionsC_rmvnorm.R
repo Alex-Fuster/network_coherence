@@ -24,7 +24,7 @@ sim_quantitative_network <- function(Net_type, S, C, aij_params) {
 }
 
 # Generate symmetric correlation matrix for creating covariance matrices
-createSymmetricCorMat <- function(S, distribution_type = "normal", mean = 0, sd = 1, beta_shape1 = NULL, beta_shape2 = NULL, ushape1 = NULL, ushape2 = NULL) {
+createSymmetricCorMat <- function(S, distribution_type = "normal", mean = 0, sd = 2.5, beta_shape1 = NULL, beta_shape2 = NULL, ushape1 = NULL, ushape2 = NULL) {
   n_off_diag <- S * (S - 1) / 2
   
   if (distribution_type == "normal") {
@@ -50,7 +50,7 @@ createSymmetricCorMat <- function(S, distribution_type = "normal", mean = 0, sd 
 }
 
 # Define function to simulate biomass dynamics
-simulate_dynamic_r <- function(S, timesteps, cov_matrix, interval = 20, perturb_scale = 1.5) {
+simulate_dynamic_r <- function(S, timesteps, cov_matrix, interval = 20, perturb_scale = 1) {
   A <- sim_quantitative_network("predator-prey", S = S, C = 0.2, aij_params = c(0, 0.5))
   init_biomass <- runif(S, min = 1, max = 10)
   r <- as.numeric(-A %*% init_biomass)  # Initialize r based on initial biomass
@@ -86,15 +86,15 @@ simulate_dynamic_r <- function(S, timesteps, cov_matrix, interval = 20, perturb_
 }
 
 # Parameters
-S <- 20  # Number of species
-timesteps <- 500
-nsim <- 20
+S <- 15  # Number of species
+timesteps <- 1000
+nsim <- 100
 scenarios <- list(
   list("label" = "normal weak", "distribution_type" = "normal", "mean" = 0, "sd" = 0.1),
-  list("label" = "normal strong", "distribution_type" = "normal", "mean" = 0, "sd" = 1.2),
+  list("label" = "normal strong", "distribution_type" = "normal", "mean" = 0, "sd" = 0.5),
   list("label" = "beta -", "distribution_type" = "beta", "beta_shape1" = 2, "beta_shape2" = 5),
   list("label" = "beta +", "distribution_type" = "beta", "beta_shape1" = 5, "beta_shape2" = 2),
-  list("label" = "u-shaped", "distribution_type" = "u_shaped", "ushape1" = 0.5, "ushape2" = 0.5)
+  list("label" = "u-shaped", "distribution_type" = "u_shaped", "ushape1" = 0.1, "ushape2" = 0.1)
 )
 
 # Run simulations for each scenario

@@ -5,7 +5,8 @@ library(dplyr)
 library(Matrix)
 library(deSolve)
 library(clusterGeneration)
-library(mvtnorm)  # Ensure you have this package for rmvnorm
+library(mvtnorm)
+library(gridExtra)
 
 # Function to simulate quantitative interaction network
 sim_quantitative_network <- function(Net_type, S, C, aij_params) {
@@ -74,7 +75,7 @@ simulate_response <- function(S, C, aij_params, sd_X, maxt, alpha_d) {
   equilibrium_pre <- as.numeric(pre_perturb[nrow(pre_perturb), -1])
   
   r_perturbation <- mvtnorm::rmvnorm(n = 1, mean = r_pre, sigma = covMat)
-  delta_r <- as.vector(matrix(r_perturbation, nrow = S, ncol = 1) - r_pre) # Calculate delta_r
+  delta_r <- as.vector(matrix(r_perturbation, nrow = S, ncol = 1) - r_pre)
   
   dyn_params$r <- matrix(r_perturbation, nrow = S, ncol = 1)  
   
@@ -94,25 +95,26 @@ simulate_response <- function(S, C, aij_params, sd_X, maxt, alpha_d) {
 }
 
 # Simulation parameters
-alpha_d_values <- c(0.001, 40)
+alpha_d <- 40  # Fixed alpha_d for all scenarios
+sd_X_values <- c(0.01, 0.1, 0.3, 0.5, 0.8, 1, 1.2, 1.5)  # Different sd_X scenarios
 S <- 20  
-nsim <- 100  
+nsim <- 20  
 maxt <- 1000
 
 # Initialize data frames to store results
 results <- data.frame()
-delta_r_values <- data.frame(species = character(0), alpha_d = numeric(0), delta_r = numeric(0))
-cor_values <- data.frame(alpha_d = numeric(0), correlation = numeric(0))
-cov_values <- data.frame(alpha_d = numeric(0), covariance = numeric(0))
+delta_r_values <- data.frame(species = character(0), sd_X = numeric(0), delta_r = numeric(0))
+cor_values <- data.frame(sd_X = numeric(0), correlation = numeric(0))
+cov_values <- data.frame(sd_X = numeric(0), covariance = numeric(0))
 
-for (alpha_d in alpha_d_values) {
-  print(paste("Running simulation for alpha_d =", alpha_d))
+for (sd_X in sd_X_values) {
+  print(paste("Running simulation for sd_X =", sd_X))
   
   for (j in 1:nsim) {
     result <- simulate_response(S = S, 
                                 C = 0.2, 
                                 aij_params = c(0, 0.5), 
-                                sd_X = rep(ifelse(alpha_d < 0.1, 1.2, 0.5), S), 
+                                sd_X = rep(sd_X, S), 
                                 maxt = maxt, 
                                 alpha_d = alpha_d)
     
@@ -124,7 +126,7 @@ for (alpha_d in alpha_d_values) {
     results <- rbind(
       results,
       data.frame(
-        alpha_d = alpha_d,
+        sd_X = sd_X,
         sum_deltaX = sum(df$X_pre - df$X_post),
         sd_deltaX = sd(df$X_pre - df$X_post),
         var_deltaX = var(df$X_pre - df$X_post)
@@ -132,7 +134,7 @@ for (alpha_d in alpha_d_values) {
     )
     
     delta_r_df <- data.frame(
-      alpha_d = rep(alpha_d, length(delta_r)),
+      sd_X = rep(sd_X, length(delta_r)),
       delta_r = delta_r,
       species = paste0("sp", seq_len(S))
     )
@@ -140,12 +142,12 @@ for (alpha_d in alpha_d_values) {
     n_upper_tri <- S * (S - 1) / 2  
     
     cor_df <- data.frame(
-      alpha_d = rep(alpha_d, n_upper_tri),
+      sd_X = rep(sd_X, n_upper_tri),
       correlation = cor_matrix[upper.tri(cor_matrix)]
     )
     
     cov_df <- data.frame(
-      alpha_d = rep(alpha_d, n_upper_tri),
+      sd_X = rep(sd_X, n_upper_tri),
       covariance = cov_matrix[upper.tri(cov_matrix)]
     )
     
@@ -156,14 +158,14 @@ for (alpha_d in alpha_d_values) {
 }
 
 # Plot results
-p1 <- ggplot(results, aes(x = as.factor(alpha_d), y = sum_deltaX)) +
+p1 <- ggplot(results, aes(x = as.factor(sd_X), y = sum_deltaX)) +
   geom_boxplot(fill = "skyblue") +
-  labs(title = "Sum of Biomass Changes Across alpha_d", x = "alpha_d", y = "Sum of Biomass Change") +
+  labs(title = "Sum of Biomass Changes Across sd_X", x = "sd_X", y = "Sum of Biomass Change") +
   theme_minimal()
 
-p2 <- ggplot(results, aes(x = as.factor(alpha_d), y = sd_deltaX)) +
+p2 <- ggplot(results, aes(x = as.factor(sd_X), y = sd_deltaX)) +
   geom_boxplot(fill = "orange") +
-  labs(title = "Standard Deviation of Biomass Changes Across alpha_d", x = "alpha_d", y = "Standard Deviation of Biomass Change") +
+  labs(title = "Standard Deviation of Biomass Changes Across sd_X", x = "sd_X", y = "Standard Deviation of Biomass Change") +
   theme_minimal()
 
 delta_r_limits <- range(delta_r_values$delta_r, na.rm = TRUE)
@@ -172,27 +174,27 @@ covariance_limits <- range(cov_values$covariance, na.rm = TRUE)
 
 p3 <- ggplot(delta_r_values, aes(x = delta_r)) +
   geom_histogram(bins = 30, fill = "blue", alpha = 0.7) +
-  facet_wrap(~ alpha_d, scales = "free") +
+  facet_wrap(~ sd_X, scales = "free") +
   xlim(delta_r_limits) +
   theme_minimal() +
-  ggtitle("Distribution of delta_r Across alpha_d Values") +
+  ggtitle("Distribution of delta_r Across sd_X Values") +
   labs(x = "delta_r", y = "Frequency")
 
 p4 <- ggplot(cor_values, aes(x = correlation)) +
   geom_histogram(bins = 30, fill = "green", alpha = 0.7) +
-  facet_wrap(~ alpha_d, scales = "free") +
+  facet_wrap(~ sd_X, scales = "free") +
   xlim(correlation_limits) +
   theme_minimal() +
-  ggtitle("Distribution of Correlation Values Across alpha_d Values") +
+  ggtitle("Distribution of Correlation Values Across sd_X Values") +
   labs(x = "Correlation", y = "Frequency")
 
 p5 <- ggplot(cov_values, aes(x = covariance)) +
   geom_histogram(bins = 30, fill = "red", alpha = 0.7) +
-  facet_wrap(~ alpha_d, scales = "free") +
+  facet_wrap(~ sd_X, scales = "free") +
   xlim(covariance_limits) +
   theme_minimal() +
-  ggtitle("Distribution of Covariance Values Across alpha_d Values") +
+  ggtitle("Distribution of Covariance Values Across sd_X Values") +
   labs(x = "Covariance", y = "Frequency")
 
-# To display plots
+# Display all plots
 gridExtra::grid.arrange(p1, p2, p3, p4, p5, ncol = 2)

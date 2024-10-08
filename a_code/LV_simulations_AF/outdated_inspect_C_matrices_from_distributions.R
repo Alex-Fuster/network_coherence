@@ -104,8 +104,8 @@ S = 20
 
 cor_matrix <- createCorMat(S = S, 
                            distribution_type = "beta",
-                           beta_shape1 = 0.05,
-                           beta_shape2 = 0.05)
+                           beta_shape1 = 2,
+                           beta_shape2 = 5)
 
 # Adjust C matrix
 cor_matrix <- as.data.frame(cor_matrix)
