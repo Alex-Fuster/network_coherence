@@ -160,6 +160,10 @@ simulate_response <- function(S, C, aij_params, mu_delta_r, sd_delta_r, sd_X, ma
 ########################################################## DEMONSTRATION
 
 # Run the simulation for demonstration
+C_mean = 0
+C_sd = 0.3
+
+
 result <- simulate_response(params$S, 
                             params$C, 
                             params$aij_params, 
@@ -167,8 +171,8 @@ result <- simulate_response(params$S,
                             params$sd_delta_r, 
                             params$sd_X, 
                             params$maxt,
-                            C_mean = 0,
-                            C_sd = 0.3)
+                            C_mean = C_mean,
+                            C_sd = C_sd)
 
 while (all(result$post_perturb[nrow(result$post_perturb),]>0)) {
   result <- simulate_response(params$S, 
@@ -178,8 +182,8 @@ while (all(result$post_perturb[nrow(result$post_perturb),]>0)) {
                               params$sd_delta_r, 
                               params$sd_X, 
                               params$maxt,
-                              C_mean = 0,
-                              C_sd = 0.3)
+                              C_mean = C_mean,
+                              C_sd = C_sd)
 }
 
 
@@ -222,6 +226,10 @@ out <- data.frame()
 
 params$mu_delta_r <- 0
 params$sd_delta_r <- 0.1
+
+C_mean = 0
+C_sd = 0.3
+
 for (i in 1:100){
   X <- with(params, simulate_response(params$S, 
                                       params$C, 
@@ -230,8 +238,8 @@ for (i in 1:100){
                                       params$sd_delta_r, 
                                       params$sd_X, 
                                       params$maxt,
-                                      C_mean = 0,
-                                      C_sd = 0.3)$df)
+                                      C_mean = C_mean,
+                                      C_sd = C_sd)$df)
   out <- rbind(
     out,
     data.frame(covtype = "mixed", perturbation = "weak", sum_deltaX = sum(X$X_pre - X$X_post), sd_deltaX = sd(X$X_pre - X$X_post), X_pre = X$X_pre, X_post = X$X_post)
