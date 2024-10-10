@@ -52,15 +52,11 @@ make_positive_definite <- function(matrix) {
 
 
 
-simulate_response <- function(S, C, aij_params, cov_scale, maxt, alpha_d, perturb_scale, mean_cov) {
+simulate_response <- function(S, C, aij_params, cov_scale, sd_X, maxt, alpha_d, perturb_scale, mean_cov) {
   # Generate correlation matrix
   cor_matrix <- clusterGeneration::rcorrmatrix(d = S, alphad = alpha_d)
-  
-  # Create covariance matrix with fixed variances and added mean_cov
-  covMat <- cor_matrix
-  diag(covMat) <- 1  # Set diagonal elements to 1
-  covMat[upper.tri(covMat)] <- covMat[upper.tri(covMat)] * cov_scale + mean_cov
-  covMat[lower.tri(covMat)] <- covMat[lower.tri(covMat)] * cov_scale + mean_cov
+  covMat <- diag(sd_X) %*% cor_matrix %*% diag(sd_X)
+ # diag(covMat) <- 1  # Set diagonal elements to 1
   
   # Adjust matrix to ensure positive definiteness
   covMat <- make_positive_definite(covMat)
@@ -102,7 +98,7 @@ alpha_d <- 10  # Fixed alpha_d for all scenarios
 mean_cov_values <- seq(-0.2, 0.9, by = 0.1)  # Different mean covariance values
 cov_scale <- 1  # Fixed scale for covariance
 S <- 8  # Number of species
-nsim <- 50  # Number of simulations
+nsim <- 10  # Number of simulations
 maxt <- 1000
 
 # Initialize data frames for storing results
@@ -118,10 +114,11 @@ for (mean_cov in mean_cov_values) {
     result <- simulate_response(S = S, 
                                 C = 0.2, 
                                 aij_params = c(0, 0.5), 
-                                cov_scale = cov_scale, 
+                                cov_scale = cov_scale,
+                                sd_X = rep(1, S),
                                 maxt = maxt, 
                                 alpha_d = alpha_d,
-                                perturb_scale = 1,
+                                perturb_scale = 16,
                                 mean_cov = mean_cov)
     
     df <- result$df

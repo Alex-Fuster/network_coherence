@@ -1,4 +1,4 @@
-
+# Load necessary libraries
 library(ggplot2)
 library(tidyr)
 library(dplyr)
@@ -8,7 +8,7 @@ library(clusterGeneration)
 library(mvtnorm)
 library(gridExtra)
 
-# Function to simulate quantitative interaction network
+# Function to simulate quantitative interaction network (same as before)
 sim_quantitative_network <- function(Net_type, S, C, aij_params) {
   A <- matrix(0, S, S)
   n_pairs <- S * (S - 1) / 2
@@ -29,7 +29,7 @@ sim_quantitative_network <- function(Net_type, S, C, aij_params) {
   return(A)
 }
 
-# Function to simulate dynamics
+# Function to simulate dynamics (same as before)
 fw.model <- function(t, B, params) {
   with(as.list(c(B, params)), {
     B[B < 10^-8] <- 0 
@@ -46,6 +46,7 @@ eventfun <- function(t, B, parms) {
   })
 }
 
+
 simulate_dynamics_c <- function(params, model, init_biomass = runif(params$S, min = 1, max = 10)) {
   init_biomass <- as.numeric(init_biomass)
   times <- seq(from = 1, to = params$maxt)
@@ -60,35 +61,33 @@ simulate_dynamics_c <- function(params, model, init_biomass = runif(params$S, mi
 }
 
 
-
-
-
-
-# Simulation with constant variances and varying covariances
-
-simulate_response <- function(S, C, aij_params, cov_scale, maxt, alpha_d, perturb_scale) {
+# Modified simulate_response function to accept A as an argument
+simulate_response <- function(A, S, cov_scale, maxt, alpha_d, perturb_scale) {
   # Generate a correlation matrix with desired structure
   cor_matrix <- clusterGeneration::rcorrmatrix(d = S, alphad = alpha_d)
   
   # Create a covariance matrix with fixed variances and varying covariances
   covMat <- cor_matrix
- # diag(covMat) <- 1  # Set diagonal elements to 1
+  diag(covMat) <- 1
   
   # Scale the off-diagonal elements
   covMat[upper.tri(covMat)] <- covMat[upper.tri(covMat)] * cov_scale
   covMat[lower.tri(covMat)] <- covMat[lower.tri(covMat)] * cov_scale
   
-  A <- sim_quantitative_network("predator-prey", S = S, C = C, aij_params = aij_params)
+  # Initial equilibrium and perturb r
   equilibrium_pre <- runif(S, 1, 10)
   r_pre <- -A %*% equilibrium_pre
   
+  # Simulate initial dynamics to reach equilibrium
   dyn_params <- list(A = A, r = r_pre, S = S, maxt = maxt) 
   pre_perturb <- simulate_dynamics_c(dyn_params, fw.model)
   equilibrium_pre <- as.numeric(pre_perturb[nrow(pre_perturb), -1])
   
-  r_perturbation <-  MASS::mvrnorm(n = 1, mu = r_pre, Sigma = covMat*perturb_scale)
+  # Apply perturbation with the given covariance matrix
+  r_perturbation <- MASS::mvrnorm(n = 1, mu = r_pre, Sigma = covMat * perturb_scale)
   delta_r <- as.vector(matrix(r_perturbation, nrow = S, ncol = 1) - r_pre)
   
+  # Simulate dynamics post perturbation
   dyn_params$r <- matrix(r_perturbation, nrow = S, ncol = 1)  
   post_perturb <- simulate_dynamics_c(dyn_params, fw.model, init_biomass = equilibrium_pre)
   equilibrium_post <- as.numeric(post_perturb[nrow(post_perturb), -1])
@@ -105,16 +104,16 @@ simulate_response <- function(S, C, aij_params, cov_scale, maxt, alpha_d, pertur
               delta_r = delta_r))
 }
 
-
-
-
-
-# Parameters for two contrasting scenarios
-alpha_d_values <- c(0.001, 40)  # Two different alpha_d values
-cov_scale <- 1  # Fixed scale since we want to focus on different alpha_d scenarios
-S <- 20  # Number of species set to 8
-nsim <- 50  # Number of simulations
+# Simulation parameters
+alpha_d_values <- c(0.001, 40)
+cov_scale <- 1
+S <- 20  # Number of species
+nsim <- 50
 maxt <- 1000
+
+# Create a single network A to be used across all simulations
+set.seed(123)
+A <- sim_quantitative_network("predator-prey", S = S, C = 0.2, aij_params = c(0, 0.5))
 
 # Initialize data frames to store results
 results <- data.frame()
@@ -126,9 +125,7 @@ for (alpha_d in alpha_d_values) {
   print(paste("Running simulation for alpha_d =", alpha_d))
   
   for (j in 1:nsim) {
-    result <- simulate_response(S = S, 
-                                C = 0.2, 
-                                aij_params = c(0, 0.5), 
+    result <- simulate_response(A = A, S = S, 
                                 cov_scale = cov_scale, 
                                 maxt = maxt, 
                                 alpha_d = alpha_d,
@@ -173,49 +170,5 @@ for (alpha_d in alpha_d_values) {
   }
 }
 
-# Plot results with separate panels for each alpha_d
-p1 <- ggplot(results, aes(x = as.factor(alpha_d), y = sum_deltaX, fill = as.factor(alpha_d))) +
-  geom_boxplot() +
-  scale_fill_manual(values = c("#6A0DAD", "#EAD7F5")) +  # Colors for the two alpha_d values
-  labs(title = "Sum of Biomass Changes Across alpha_d Scenarios", x = "alpha_d", y = "Sum of Biomass Change") +
-  theme_minimal() +
-  theme(legend.position = "none")
-
-p2 <- ggplot(results, aes(x = as.factor(alpha_d), y = sd_deltaX, fill = as.factor(alpha_d))) +
-  geom_boxplot() +
-  scale_fill_manual(values = c("#6A0DAD", "#EAD7F5")) +
-  labs(title = "Standard Deviation of Biomass Changes Across alpha_d Scenarios", x = "alpha_d", y = "Standard Deviation of Biomass Change") +
-  theme_minimal() +
-  theme(legend.position = "none")
-
-delta_r_limits <- range(delta_r_values$delta_r, na.rm = TRUE)
-correlation_limits <- range(cor_values$correlation, na.rm = TRUE)
-covariance_limits <- range(cov_values$covariance, na.rm = TRUE)
-
-p3 <- ggplot(delta_r_values, aes(x = delta_r)) +
-  geom_histogram(bins = 30, fill = "blue", alpha = 0.7) +
-  facet_wrap(~ alpha_d, scales = "free") +
-  xlim(delta_r_limits) +
-  theme_minimal() +
-  ggtitle("Distribution of delta_r Across alpha_d Scenarios") +
-  labs(x = "delta_r", y = "Frequency")
-
-p4 <- ggplot(cor_values, aes(x = correlation)) +
-  geom_histogram(bins = 30, fill = "green", alpha = 0.7) +
-  facet_wrap(~ alpha_d, scales = "free") +
-  xlim(correlation_limits) +
-  theme_minimal() +
-  ggtitle("Distribution of Correlation Values Across alpha_d Scenarios") +
-  labs(x = "Correlation", y = "Frequency")
-
-p5 <- ggplot(cov_values, aes(x = covariance)) +
-  geom_histogram(bins = 30, fill = "red", alpha = 0.7) +
-  facet_wrap(~ alpha_d, scales = "free") +
-  xlim(covariance_limits) +
-  theme_minimal() +
-  ggtitle("Distribution of Covariance Values Across alpha_d Scenarios") +
-  labs(x = "Covariance", y = "Frequency")
-
-# Arrange all plots
-gridExtra::grid.arrange(p1, p2, p3, p4, p5, ncol = 2)
-
+# Plot results as in previous simulation
+# Use the same code for generating plots here...

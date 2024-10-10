@@ -64,6 +64,7 @@ simulate_response <- function(S, C, aij_params, sd_X, maxt, alpha_d) {
   
   cor_matrix <- clusterGeneration::rcorrmatrix(d = S, alphad = alpha_d)
   covMat <- diag(sd_X) %*% cor_matrix %*% diag(sd_X)
+  diag(covMat) <- 1  # Set diagonal elements to 1
   
   A <- sim_quantitative_network("predator-prey", S = S, C = C, aij_params = aij_params)
   
@@ -98,9 +99,9 @@ set.seed(100)
 
 # Simulation parameters
 alpha_d <- 40  # Fixed alpha_d for all scenarios
-sd_X_values <- c(0.01, 0.1, 0.3, 0.5, 0.8, 1, 1.2, 1.5)  # Different sd_X scenarios
+sd_X_values <- c(0.01, 0.5, 1,  1.5)  # Different sd_X scenarios
 S <- 20  
-nsim <- 100  
+nsim <- 10  
 maxt <- 1000
 
 # Initialize data frames to store results
