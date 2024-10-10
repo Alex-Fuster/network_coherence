@@ -1,0 +1,368 @@
+---
+title: "LV simulations - effect of species' co-responses to the environment on community dynamics"
+---
+
+
+In the mathematical formulation, we demonstrated that, in a LV system, the mean and variance in abundance change of a species $i$ is affected by how species' covary in their responses to the environment, i.e. growth rate $r_i$, and the way these propagate through the network which depends on the the interaction coefficients:
+
+FORMULA (10)
+
+$$
+\text{var}\left( \Delta X_i \right) \approx \sum_k \sum_l b_{ik} b_{il} \text{cov}\left( \Delta r_k, \Delta r_l \right) \tag{11}
+$$
+
+
+A general prediction that can be drawn from FORMULA (11) is that a community with weaker covariance among species (closer to 0) should be more predictable (i.e. lead to lower species' variance in abundance change) compared to communities with stronger covariances.
+
+
+We now test this predictions measuring changes in abundance in LV foodweb systems with varying underlying covariance structures.
+
+
+
+
+
+
+```{r}
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(Matrix)
+library(deSolve)
+library(clusterGeneration)
+library(mvtnorm)
+library(gridExtra)
+
+
+############################################## FUNCTIONS
+
+# Function to simulate dynamics
+fw.model <- function(t, B, params) {
+  with(as.list(c(B, params)), {
+    B[B < 10^-8] <- 0 
+    B[B < 0] <- 0 
+    dBdt <- (params$r + params$A %*% B) * B
+    list(dBdt)
+  })
+}
+
+eventfun <- function(t, B, parms) {
+  with(as.list(B), {
+    B[B < 1e-6] <- 0
+    return(B)
+  })
+}
+
+simulate_dynamics_c <- function(params, model, init_biomass = runif(params$S, min = 1, max = 10)) {
+  init_biomass <- as.numeric(init_biomass)
+  times <- seq(from = 1, to = params$maxt)
+  out <- deSolve::ode(
+    y = init_biomass,
+    times = times,
+    func = fw.model,
+    parms = params,
+    events = list(func = eventfun, time = times)
+  ) %>% as.data.frame()
+  return(out)
+}
+
+# Function to simulate a fixed quantitative interaction network
+sim_quantitative_network <- function(S, C, aij_params) {
+  A <- matrix(0, S, S)
+  n_pairs <- S * (S - 1) / 2
+  B <- runif(n_pairs) <= C
+  
+  aij <- -abs(rnorm(n_pairs, aij_params[1], aij_params[2]))
+  A[upper.tri(A)] <- B * aij
+  A <- t(A)
+  aij <- abs(rnorm(n_pairs, aij_params[1], aij_params[2]))
+  A[upper.tri(A)] <- B * aij
+  diag(A) <- -runif(S, min = 0, max = 1)
+  
+  while(max(Re(eigen(A)$values)) > 0) {
+    diag(A) <- -runif(S, min = 0, max = 1)
+  }
+  return(A)
+}
+
+# Function to simulate dynamics with perturbations
+simulate_dynamics_perturbed <- function(params, covMat, S, maxt, perturb_scale = 1) {
+  init_biomass <- runif(S, min = 1, max = 10)
+  r_pre <- -params$A %*% init_biomass
+  
+  dyn_params <- list(A = params$A, r = r_pre, S = S, maxt = maxt) 
+  pre_perturb <- simulate_dynamics_c(dyn_params, fw.model)
+  equilibrium_pre <- as.numeric(pre_perturb[nrow(pre_perturb), -1])
+  
+  r_perturbation <- MASS::mvrnorm(n = 1, mu = r_pre, Sigma = covMat * perturb_scale)
+  dyn_params$r <- matrix(r_perturbation, nrow = S, ncol = 1)
+  
+  post_perturb <- simulate_dynamics_c(dyn_params, fw.model, init_biomass = equilibrium_pre)
+  equilibrium_post <- as.numeric(post_perturb[nrow(post_perturb), -1])
+  
+  delta_X <- equilibrium_post - equilibrium_pre
+  return(list(delta_r = dyn_params$r - r_pre, delta_X = delta_X))
+}
+
+
+############################################## SIMULATION
+
+# Set simulation parameters
+S <- 8  # Number of species
+C <- 0.2  # Connectance of the network
+aij_params <- c(0, 0.5)
+sd_X <- 1  # Variance scale factor
+num_scenarios <- 10
+num_simulations <- 10
+maxt <- 1000  # Duration of the simulation
+
+# Fixed interaction matrix A
+A <- sim_quantitative_network(S, C, aij_params)
+
+# Initialize data frames to store results
+results <- data.frame()
+correlation_distributions <- data.frame()
+covariance_distributions <- data.frame()
+
+# Loop over two alpha_d values: 0.001 and 40
+for (alpha_d in c(0.001, 40)) {
+  print(paste("alpha_d", alpha_d))
+  
+  for (scenario in 1:num_scenarios) {
+    print(paste("scenario", scenario, "of", num_scenarios))
+    
+    # Generate correlation matrix and derive covariance matrix
+    cor_matrix <- clusterGeneration::rcorrmatrix(d = S, alphad = alpha_d)
+    covMat <- diag(sd_X, S) %*% cor_matrix %*% diag(sd_X, S)
+    
+    # Store correlation and covariance values for plotting
+    cor_vals <- cor_matrix[upper.tri(cor_matrix, diag = FALSE)]
+    cov_vals <- covMat[upper.tri(covMat, diag = FALSE)]
+    
+    correlation_distributions <- rbind(correlation_distributions,
+                                       data.frame(Alpha_d = alpha_d, Scenario = scenario, Correlation = cor_vals))
+    covariance_distributions <- rbind(covariance_distributions,
+                                      data.frame(Alpha_d = alpha_d, Scenario = scenario, Covariance = cov_vals))
+    
+    for (sim in 1:num_simulations) {
+      print(paste("sim", sim, "of", num_simulations))
+      
+      # Run the simulation with perturbations
+      sim_result <- simulate_dynamics_perturbed(list(A = A), covMat, S, maxt)
+      
+      # Store the results
+      for (species in 1:S) {
+        results <- rbind(results, data.frame(
+          Alpha_d = alpha_d,
+          Scenario = scenario,
+          Simulation = sim,
+          Species = paste0("sp", species),
+          Delta_X = sim_result$delta_X[species]
+        ))
+      }
+    }
+  }
+}
+
+# Compute standard deviation of Delta_X for each species and alpha_d value
+expected_delta_X <- results %>%
+  group_by(Alpha_d, Species) %>%
+  summarize(sd_Delta_X = sd(Delta_X))
+
+# Plot comparing sd_Delta_X between alpha_d scenarios across all species
+ggplot(expected_delta_X, aes(x = as.factor(Alpha_d), y = sd_Delta_X, fill = as.factor(Alpha_d))) +
+  geom_boxplot() +
+  labs(x = "Alpha_d", y = "SD Delta_X Across All Species", fill = "Alpha_d") +
+  scale_fill_manual(values = c("#6A0DAD", "#EAD7F5")) +
+  theme_minimal() +
+  ggtitle("Comparison of SD Delta_X Across Alpha_d Scenarios for All Species") +
+  theme(legend.position = "none")
+
+# Plot distribution of correlation values across scenarios
+ggplot(correlation_distributions, aes(x = Correlation, fill = as.factor(Alpha_d))) +
+  geom_density(alpha = 0.7) +
+  labs(x = "Correlation Value", y = "Density", fill = "Alpha_d") +
+  scale_fill_manual(values = c("#6A0DAD", "#EAD7F5")) +
+  xlim(-1, 1) +
+  ggtitle("Distribution of Correlation Values Across All Scenarios") +
+  theme_minimal()
+
+# Plot distribution of covariance values across scenarios
+ggplot(covariance_distributions, aes(x = Covariance, fill = as.factor(Alpha_d))) +
+  geom_density(alpha = 0.7) +
+  labs(x = "Covariance Value", y = "Density", fill = "Alpha_d") +
+  scale_fill_manual(values = c("#6A0DAD", "#EAD7F5")) +
+  xlim(-1, 1) +
+  ggtitle("Distribution of Covariance Values Across All Scenarios") +
+  theme_minimal()
+
+```
+
+
+- No differences between scenarios with different strengths in species' covariances.
+
+
+
+## checks
+
+
+The "realized" covariance of species' abundance are driven by both species' covariance in responses to the environment and their interaction coefficients. 
+
+$$
+\text{cov}\left( \Delta X_i, \Delta X_j \right) \approx \sum_k \sum_l b_{ik} b_{il} \text{cov}\left( \Delta r_k, \Delta r_l \right) \tag{12}
+$$
+
+
+
+1. Does the C matrix have the expected effect on delta_r values?
+
+
+We test this by leaving out the effect of interactions and making the C matrix to be the only driver of abundance changes. To do this, we only consider the identify matrix of the interaction matrix A, so that species are only influenced by themselves.
+
+
+
+- simulating very weak interactions
+- scaling covariance by sd_X = 0.01 to get normal correlation values in sd_X
+
+
+```{r}
+
+
+# Function to create a scaled down interaction matrix
+sim_weak_interaction_network <- function(S, C, aij_params, scale_factor = 0.01) {
+  A <- matrix(0, S, S)
+  n_pairs <- S * (S - 1) / 2
+  B <- runif(n_pairs) <= C
+  
+  aij <- -abs(rnorm(n_pairs, aij_params[1], aij_params[2]))
+  A[upper.tri(A)] <- B * aij
+  A <- t(A)
+  aij <- abs(rnorm(n_pairs, aij_params[1], aij_params[2]))
+  A[upper.tri(A)] <- B * aij
+  
+  diag(A) <- -runif(S, min = 0, max = 1)
+  while (max(Re(eigen(A)$values)) > 0) {
+    diag(A) <- -runif(S, min = 0, max = 1)
+  }
+  
+  # Scale down the matrix
+  A_scaled <- A * scale_factor
+  return(A_scaled)
+}
+
+# Function for weak interspecific effects dynamics
+simulate_dynamics_weak <- function(params, covMat, S, maxt, perturb_scale = 1) {
+  init_biomass <- runif(S, min = 1, max = 10)
+  r_pre <- -params$A %*% init_biomass
+  
+  dyn_params <- list(A = params$A, r = r_pre, S = S, maxt = maxt) 
+  pre_perturb <- simulate_dynamics_c(dyn_params, fw.model)
+  equilibrium_pre <- as.numeric(pre_perturb[nrow(pre_perturb), -1])
+  
+  r_perturbation <- MASS::mvrnorm(n = 1, mu = r_pre, Sigma = covMat * perturb_scale)
+  dyn_params$r <- matrix(r_perturbation, nrow = S, ncol = 1)
+  
+  post_perturb <- simulate_dynamics_c(dyn_params, fw.model, init_biomass = equilibrium_pre)
+  equilibrium_post <- as.numeric(post_perturb[nrow(post_perturb), -1])
+  
+  delta_X <- equilibrium_post - equilibrium_pre
+  return(list(delta_r = dyn_params$r - r_pre, delta_X = delta_X))
+}
+
+# Simulation parameters
+S <- 8  # Number of species
+C <- 0.2  # Connectance
+aij_params <- c(0, 0.5)
+sd_X <- 0.01  # Variance scale factor
+alpha_d <- 10  # Correlation structure parameter
+num_scenarios <- 10
+num_simulations <- 10
+maxt <- 1000  # Time
+
+# Generate very weak interaction matrix
+A_weak <- sim_weak_interaction_network(S, C, aij_params)
+
+# Generate correlation and covariance matrices for delta_r
+cor_matrix <- clusterGeneration::rcorrmatrix(d = S, alphad = alpha_d)
+covMat <- diag(sd_X, S) %*% cor_matrix %*% diag(sd_X, S)
+
+# Run the simulation
+results <- data.frame()
+for (i in 1:num_scenarios) {
+  for (j in 1:num_simulations) {
+    sim_result <- simulate_dynamics_weak(list(A = A_weak), covMat, S, maxt)
+    delta_r <- sim_result$delta_r
+    delta_X <- sim_result$delta_X
+    
+    results <- rbind(results, data.frame(
+      Scenario = i,
+      Simulation = j,
+      Species = 1:S,
+      Delta_X = delta_X,
+      Delta_r = delta_r
+    ))
+  }
+}
+
+# Reshape the data into wide format, keeping only Delta_X and Delta_r values
+delta_X_matrix <- results %>%
+  dplyr::select(Species, Scenario, Simulation, Delta_X) %>%
+  pivot_wider(names_from = Species, values_from = Delta_X) %>%
+  as.matrix()
+
+delta_r_matrix <- results %>%
+  dplyr::select(Species, Scenario, Simulation, Delta_r) %>%
+  pivot_wider(names_from = Species, values_from = Delta_r) %>%
+  as.matrix()
+
+# Ensure no additional filtering is applied
+# Convert both matrices to numeric matrices if necessary
+delta_X_matrix <- matrix(as.numeric(delta_X_matrix), nrow = nrow(delta_X_matrix))
+delta_r_matrix <- matrix(as.numeric(delta_r_matrix), nrow = nrow(delta_r_matrix))
+
+# Compute the covariance matrices
+cov_delta_X <- cov(delta_X_matrix, use = "complete.obs")
+cov_delta_r <- cov(delta_r_matrix, use = "complete.obs")
+
+# Print to verify the matrices
+print(cov_delta_X)
+print(cov_delta_r)
+
+
+# Convert covariance matrices to correlation matrices for plotting
+cor_delta_X <- cov2cor(cov_delta_X)
+cor_delta_r <- cov2cor(cov_delta_r)
+
+# Melt the correlation matrices for plotting
+corr_melt_X <- melt(cov_delta_X)
+colnames(corr_melt_X) <- c("Var1", "Var2", "Correlation")
+
+corr_melt_r <- melt(cov_delta_r)
+colnames(corr_melt_r) <- c("Var1", "Var2", "Correlation")
+
+# Plot correlation matrices for Delta_X and Delta_r
+p1 <- ggplot(corr_melt_X, aes(x = Var1, y = Var2, fill = Correlation)) +
+  geom_tile() +
+  scale_fill_distiller(palette = "RdBu") +
+  labs(title = "Correlation Matrix for Delta_X") +
+  theme_minimal() +
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.title = element_blank())
+
+p2 <- ggplot(corr_melt_r, aes(x = Var1, y = Var2, fill = Correlation)) +
+  geom_tile() +
+  scale_fill_distiller(palette = "RdBu") +
+  labs(title = "Correlation Matrix for Delta_r") +
+  theme_minimal() +
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.title = element_blank())
+
+# Display both plots side by side
+gridExtra::grid.arrange(p1, p2, ncol = 2)
+
+
+
+
+```
+
