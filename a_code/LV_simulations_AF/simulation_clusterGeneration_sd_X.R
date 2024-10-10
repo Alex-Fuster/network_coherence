@@ -64,7 +64,7 @@ simulate_response <- function(S, C, aij_params, sd_X, maxt, alpha_d) {
   
   cor_matrix <- clusterGeneration::rcorrmatrix(d = S, alphad = alpha_d)
   covMat <- diag(sd_X) %*% cor_matrix %*% diag(sd_X)
-  diag(covMat) <- 1  # Set diagonal elements to 1
+#  diag(covMat) <- 1  # Set diagonal elements to 1
   
   A <- sim_quantitative_network("predator-prey", S = S, C = C, aij_params = aij_params)
   

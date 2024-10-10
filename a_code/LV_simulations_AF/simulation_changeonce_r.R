@@ -66,17 +66,11 @@ simulate_dynamics_c <- function(params, model, init_biomass = runif(params$S, mi
 
 # Simulation with constant variances and varying covariances
 
-simulate_response <- function(S, C, aij_params, cov_scale, maxt, alpha_d, perturb_scale) {
+simulate_response <- function(S, C, aij_params, sd_X, maxt, alpha_d, perturb_scale) {
   # Generate a correlation matrix with desired structure
   cor_matrix <- clusterGeneration::rcorrmatrix(d = S, alphad = alpha_d)
+  covMat <- diag(sd_X) %*% cor_matrix %*% diag(sd_X)
   
-  # Create a covariance matrix with fixed variances and varying covariances
-  covMat <- cor_matrix
- # diag(covMat) <- 1  # Set diagonal elements to 1
-  
-  # Scale the off-diagonal elements
-  covMat[upper.tri(covMat)] <- covMat[upper.tri(covMat)] * cov_scale
-  covMat[lower.tri(covMat)] <- covMat[lower.tri(covMat)] * cov_scale
   
   A <- sim_quantitative_network("predator-prey", S = S, C = C, aij_params = aij_params)
   equilibrium_pre <- runif(S, 1, 10)
@@ -112,7 +106,7 @@ simulate_response <- function(S, C, aij_params, cov_scale, maxt, alpha_d, pertur
 # Parameters for two contrasting scenarios
 alpha_d_values <- c(0.001, 40)  # Two different alpha_d values
 cov_scale <- 1  # Fixed scale since we want to focus on different alpha_d scenarios
-S <- 20  # Number of species set to 8
+S <- 8  # Number of species set to 8
 nsim <- 50  # Number of simulations
 maxt <- 1000
 
@@ -129,7 +123,7 @@ for (alpha_d in alpha_d_values) {
     result <- simulate_response(S = S, 
                                 C = 0.2, 
                                 aij_params = c(0, 0.5), 
-                                cov_scale = cov_scale, 
+                                sd_X = rep(1, times = S), 
                                 maxt = maxt, 
                                 alpha_d = alpha_d,
                                 perturb_scale = 1)
