@@ -41,6 +41,7 @@ fw.model <- function(t, B, params) {
     B[B < 10^-8] <- 0 
     B[B < 0] <- 0 
     dBdt <- (params$r + params$A %*% B) * B
+    dBdt[B > 100] <- 100  # Apply carrying capacity constraint  ########## !
     list(dBdt)
   })
 }
@@ -201,6 +202,69 @@ ggplot(covariance_distributions, aes(x = Covariance, fill = as.factor(Alpha_d)))
 - No differences between scenarios with different strengths in species' covariances.
 
 
+# simulation with formula
+
+```{r}
+
+
+# Define function to calculate variance of ΔX over multiple simulations
+simulate_variance_multiple_runs <- function(S, alpha_d, interaction_sd, num_simulations) {
+  results <- replicate(num_simulations, {
+    # Generate covariance matrix for Δr
+    cor_matrix <- clusterGeneration::rcorrmatrix(d = S, alphad = alpha_d)
+    cov_matrix <- diag(sd_X, S) %*% cor_matrix %*% diag(sd_X, S)
+    
+    # Generate interaction coefficients with increased variance
+    interaction_matrix <- matrix(rnorm(S^2, mean = 0, sd = interaction_sd), nrow = S)
+    
+    # Calculate variance of ΔX using formula 11
+    var_delta_X <- sapply(1:S, function(i) {
+      sum(sapply(1:S, function(k) {
+        sapply(1:S, function(l) {
+          interaction_matrix[i, k] * interaction_matrix[i, l] * cov_matrix[k, l]
+        })
+      }))
+    })
+    
+    return(var_delta_X)
+  })
+  
+  # Convert to data frame
+  var_delta_X_df <- as.data.frame(t(results))
+  var_delta_X_df <- var_delta_X_df %>%
+    pivot_longer(cols = everything(), names_to = "Species", values_to = "Variance_Delta_X") %>%
+    mutate(Alpha_d = alpha_d)
+  
+  return(var_delta_X_df)
+}
+
+# Parameters
+S <- 8
+sd_X <- 1
+alpha_d_values <- c(0.1, 40)
+interaction_sd <- 2  # Increased standard deviation for interaction coefficients
+num_simulations <- 100
+
+# Run simulations for both alpha_d values
+results_list <- lapply(alpha_d_values, function(alpha_d) {
+  simulate_variance_multiple_runs(S, alpha_d, interaction_sd, num_simulations)
+})
+
+# Combine results and plot
+results_df <- bind_rows(results_list)
+
+# Boxplot to compare the variance of ΔX
+ggplot(results_df, aes(x = as.factor(Alpha_d), y = Variance_Delta_X, fill = as.factor(Alpha_d))) +
+  geom_boxplot() +
+  labs(x = "Alpha_d", y = "Variance of ΔX", fill = "Alpha_d") +
+  scale_fill_manual(values = c("#6A0DAD", "#EAD7F5")) +
+  theme_minimal() +
+  ggtitle("Comparison of Variance of ΔX Across Alpha_d Scenarios with Increased Interaction Coefficient Variance") +
+  theme(legend.position = "none")
+
+
+```
+
 
 ## checks
 
@@ -217,6 +281,95 @@ $$
 
 
 We test this by leaving out the effect of interactions and making the C matrix to be the only driver of abundance changes. To do this, we only consider the identify matrix of the interaction matrix A, so that species are only influenced by themselves.
+
+
+
+
+```{r}
+
+# Function to simulate and visualize biomass dynamics
+inspect_biomass_dynamics <- function(A, covMat, S, maxt, perturb_scale = 1) {
+  
+  # Initial biomass values as numeric vector
+  init_biomass <- as.numeric(runif(S, min = 1, max = 10))
+  
+  # Pre-perturbation growth rates
+  r_pre <- as.numeric(-A %*% init_biomass)
+  
+  # Define the Lotka-Volterra model dynamics function
+  fw_model <- function(t, B, params) {
+    with(as.list(c(B, params)), {
+      B[B < 10^-8] <- 0  # Ensure non-negative biomass
+      dBdt <- (params$r + params$A %*% B) * B
+      return(list(dBdt))
+    })
+  }
+  
+  # Simulate pre-perturbation dynamics
+  dyn_params <- list(A = A, r = r_pre, S = S, maxt = maxt)
+  pre_perturb <- deSolve::ode(
+    y = init_biomass,
+    times = seq(0, maxt, by = 1),
+    func = fw_model,
+    parms = dyn_params
+  ) %>% as.data.frame()
+  
+  # Perturb the growth rates using the covariance matrix
+  r_perturbation <- MASS::mvrnorm(n = 1, mu = r_pre, Sigma = covMat * perturb_scale)
+  print(paste("r_perturbation:",r_perturbation))
+  
+  dyn_params$r <- as.numeric(r_perturbation)
+  
+  # Simulate post-perturbation dynamics
+  post_perturb <- deSolve::ode(
+    y = as.numeric(pre_perturb[nrow(pre_perturb), -1]),
+    times = seq(0, maxt, by = 1),
+    func = fw_model,
+    parms = dyn_params
+  ) %>% as.data.frame()
+  
+  # Prepare data for plotting
+  pre_perturb_long <- pre_perturb %>%
+    pivot_longer(cols = -time, names_to = "Species", values_to = "Biomass") %>%
+    mutate(Phase = "Pre-Perturbation")
+  
+  post_perturb_long <- post_perturb %>%
+    pivot_longer(cols = -time, names_to = "Species", values_to = "Biomass") %>%
+    mutate(Phase = "Post-Perturbation")
+  
+  biomass_dynamics <- bind_rows(pre_perturb_long, post_perturb_long)
+  
+  # Plot the biomass dynamics
+  ggplot(biomass_dynamics, aes(x = time, y = Biomass, color = Species)) +
+    geom_line() +
+    facet_wrap(~Phase, scales = "free_y") +
+    labs(title = "Biomass Dynamics Over Time", x = "Time", y = "Biomass") +
+    theme_minimal() +
+    scale_color_viridis_d()
+}
+
+# Example parameters
+S <- 8  # Number of species
+maxt <- 1000  # Maximum time for simulation
+perturb_scale <- 1  # Perturbation scale factor
+
+# Example matrices (identity for A, and random for covMat)
+#A_identity <- diag(1, S)
+A <- sim_quantitative_network(S, C, aij_params)
+covMat <- clusterGeneration::rcorrmatrix(d = S, alphad = 40)
+
+# Run the inspection function
+inspect_biomass_dynamics(A = A, 
+                         covMat = covMat, 
+                         S = S, 
+                         maxt = maxt, 
+                         perturb_scale = perturb_scale)
+
+
+```
+
+
+
 
 
 
@@ -365,4 +518,173 @@ gridExtra::grid.arrange(p1, p2, ncol = 2)
 
 
 ```
+
+```{r}
+# Function to simulate dynamics without interspecific effects
+simulate_identity_dynamics <- function(params, covMat, S, maxt, perturb_scale = 1) {
+  init_biomass <- runif(S, min = 1, max = 10)
+  r_pre <- -params$A %*% init_biomass
+  
+  dyn_params <- list(A = params$A, r = r_pre, S = S, maxt = maxt) 
+  pre_perturb <- simulate_dynamics_c(dyn_params, fw.model)
+  equilibrium_pre <- as.numeric(pre_perturb[nrow(pre_perturb), -1])
+  
+  # Perturb r using the covariance matrix
+  r_perturbation <- MASS::mvrnorm(n = 1, mu = r_pre, Sigma = covMat * perturb_scale)
+  dyn_params$r <- matrix(r_perturbation, nrow = S, ncol = 1)
+  
+  # Simulate post-perturbation dynamics
+  post_perturb <- simulate_dynamics_c(dyn_params, fw.model, init_biomass = equilibrium_pre)
+  equilibrium_post <- as.numeric(post_perturb[nrow(post_perturb), -1])
+  
+  delta_X <- equilibrium_post - equilibrium_pre
+  return(list(delta_r = dyn_params$r - r_pre, delta_X = delta_X))
+}
+
+# Set up the simulation
+S <- 8
+C <- 0.2
+sd_X <- 1
+alpha_d <- 40  # Adjust alpha_d as needed
+
+# Create the identity matrix for A (no interspecific interactions)
+A_identity <- diag(1, S)
+
+# Generate the correlation and covariance matrices for delta_r
+cor_matrix <- clusterGeneration::rcorrmatrix(d = S, alphad = alpha_d)
+covMat <- diag(sd_X, S) %*% cor_matrix %*% diag(sd_X, S)
+
+# Run the simulation
+results <- data.frame()
+for (i in 1:10) {  # 10 simulations for example
+  sim_result <- simulate_identity_dynamics(list(A = A_identity), covMat, S, maxt = 1000)
+  delta_r <- sim_result$delta_r
+  delta_X <- sim_result$delta_X
+  
+  results <- rbind(results, data.frame(
+    Simulation = i,
+    Species = 1:S,
+    Delta_X = delta_X,
+    Delta_r = delta_r
+  ))
+}
+
+# Compute covariances in Delta_X and Delta_r
+cov_delta_X <- cov(dplyr::select(results, starts_with("Delta_X")))
+cov_delta_r <- cov(dplyr::select(results, starts_with("Delta_r")))
+
+# Plot the correlation matrices
+corr_melt_X <- melt(cov2cor(cov_delta_X))
+colnames(corr_melt_X) <- c("Var1", "Var2", "Correlation")
+
+corr_melt_r <- melt(cov2cor(cov_delta_r))
+colnames(corr_melt_r) <- c("Var1", "Var2", "Correlation")
+
+p1 <- ggplot(corr_melt_X, aes(x = Var1, y = Var2, fill = Correlation)) +
+  geom_tile() +
+  scale_fill_distiller(palette = "RdBu", limits = c(-1, 1)) +
+  labs(title = "Correlation Matrix for Delta_X") +
+  theme_minimal()
+
+p2 <- ggplot(corr_melt_r, aes(x = Var1, y = Var2, fill = Correlation)) +
+  geom_tile() +
+  scale_fill_distiller(palette = "RdBu", limits = c(-1, 1)) +
+  labs(title = "Correlation Matrix for Delta_r") +
+  theme_minimal()
+
+# Display both plots
+gridExtra::grid.arrange(p1, p2, ncol = 2)
+
+```
+
+```{r}
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(Matrix)
+library(deSolve)
+library(clusterGeneration)
+library(mvtnorm)
+library(gridExtra)
+
+# Function to simulate dynamics with identity matrix
+simulate_identity_dynamics <- function(params, covMat, S, maxt, perturb_scale = 1) {
+  init_biomass <- runif(S, min = 1, max = 10)
+  r_pre <- -params$A %*% init_biomass
+  
+  dyn_params <- list(A = params$A, r = r_pre, S = S, maxt = maxt) 
+  pre_perturb <- simulate_dynamics_c(dyn_params, fw.model)
+  equilibrium_pre <- as.numeric(pre_perturb[nrow(pre_perturb), -1])
+  
+  # Perturb r using the covariance matrix
+  r_perturbation <- MASS::mvrnorm(n = 1, mu = r_pre, Sigma = covMat * perturb_scale)
+  dyn_params$r <- matrix(r_perturbation, nrow = S, ncol = 1)
+  
+  # Simulate post-perturbation dynamics
+  post_perturb <- simulate_dynamics_c(dyn_params, fw.model, init_biomass = equilibrium_pre)
+  equilibrium_post <- as.numeric(post_perturb[nrow(post_perturb), -1])
+  
+  # Return both the dynamics and equilibrium
+  return(list(pre_perturb = pre_perturb, post_perturb = post_perturb, delta_X = equilibrium_post - equilibrium_pre))
+}
+
+# Set up the simulation
+S <- 8
+C <- 0.2
+sd_X <- 1
+alpha_d <- 40
+maxt <- 1000
+
+# Identity matrix for A
+A_identity <- diag(1, S)
+
+# Generate correlation and covariance matrices
+cor_matrix <- clusterGeneration::rcorrmatrix(d = S, alphad = alpha_d)
+covMat <- diag(sd_X, S) %*% cor_matrix %*% diag(sd_X, S)
+
+# Run the simulation
+sim_result <- simulate_identity_dynamics(list(A = A_identity), covMat, S, maxt)
+
+# Prepare data for plotting biomass dynamics
+pre_perturb_long <- sim_result$pre_perturb %>%
+  pivot_longer(cols = -time, names_to = "Species", values_to = "Biomass") %>%
+  mutate(Phase = "Pre-Perturbation")
+
+post_perturb_long <- sim_result$post_perturb %>%
+  pivot_longer(cols = -time, names_to = "Species", values_to = "Biomass") %>%
+  mutate(Phase = "Post-Perturbation")
+
+biomass_dynamics <- bind_rows(pre_perturb_long, post_perturb_long)
+
+# Plot the biomass dynamics for each species
+ggplot(biomass_dynamics, aes(x = time, y = Biomass, color = Species)) +
+  geom_line() +
+  facet_wrap(~Phase, scales = "free_y") +
+  labs(title = "Biomass Dynamics Over Time", x = "Time", y = "Biomass") +
+  theme_minimal() +
+  scale_color_viridis_d()
+
+# Plot the correlation matrices as before
+corr_melt_X <- melt(cov2cor(cov(sim_result$delta_X)))
+colnames(corr_melt_X) <- c("Var1", "Var2", "Correlation")
+
+corr_melt_r <- melt(cov2cor(cov(sim_result$delta_r)))
+colnames(corr_melt_r) <- c("Var1", "Var2", "Correlation")
+
+p1 <- ggplot(corr_melt_X, aes(x = Var1, y = Var2, fill = Correlation)) +
+  geom_tile() +
+  scale_fill_distiller(palette = "RdBu", limits = c(-1, 1)) +
+  labs(title = "Correlation Matrix for Delta_X") +
+  theme_minimal()
+
+p2 <- ggplot(corr_melt_r, aes(x = Var1, y = Var2, fill = Correlation)) +
+  geom_tile() +
+  scale_fill_distiller(palette = "RdBu", limits = c(-1, 1)) +
+  labs(title = "Correlation Matrix for Delta_r") +
+  theme_minimal()
+
+gridExtra::grid.arrange(p1, p2, ncol = 2)
+
+```
+
 
