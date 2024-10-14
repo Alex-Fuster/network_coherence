@@ -551,7 +551,7 @@ for (alpha in alphad_values) {
 do.call(grid.arrange, c(plot_list, ncol = 2))
 ```
 
-We therefore choose to run simulations with 8 species.
+We therefore choose to run simulations with 8 species. The simulation scheme is as follows:
 
 
 (1) Simulate an interaction network
@@ -564,17 +564,17 @@ We therefore choose to run simulations with 8 species.
 
 (5) In each LV simulation:
 -- species dynamics run to reach a first equilibrium r. 
--- A perturbation (delta_r) is computed for each species using
--- Species shift r based on delta_r and the system runs until reaching a new equilibrium
+-- A perturbation (delta_r) is computed for each species using `MASS::mvrnorm(n = 1, mu = rep(0, S), Sigma = covMat)`
 
-(6) For each species, a delta_r is obtained for each simulation with each covariance matrix.
+-- Species shift `r` based on `delta_r` and the system runs until reaching a new equilibrium
 
-(7) the expected variance in delta_r for each species is the variance of delta_r values across all the simulations for a given set of covariance scenarios (e.g. weak covariance set).
+(6) For each species, a `delta_r` is obtained for each simulation with each covariance matrix.
+
+(7) the expected variance in `delta_r` for each species is the variance of `delta_r` values across all the simulations for a given set of covariance scenarios (e.g. weak covariance set).
 
 
 
 ```{r, echo = FALSE, results = "hide"}
-
 
 # Function to simulate a fixed quantitative interaction network
 sim_quantitative_network <- function(S, C, aij_params) {
@@ -608,7 +608,7 @@ Or create new A
 S <- 8  # Number of species
 C <- 0.4  # Connectance of the network
 aij_params <- c(0, 0.5)
-# Fixed interaction matrix A outside of scenarios loop
+# Fixed interaction matrix A 
 A <- sim_quantitative_network(S, C, aij_params)
 ```
 
@@ -616,6 +616,7 @@ A <- sim_quantitative_network(S, C, aij_params)
 
 ```{r}
 S <- ncol(A)
+
 ########## plot direct effects network
 
 # Step 1: Prepare the edge list from A for both directions
@@ -631,7 +632,7 @@ vertices <- data.frame(name = 1:S)
 # Step 3: Create graph object with the vertices and edges for directed effects
 graph_direct <- graph_from_data_frame(d = edge_list_direct, vertices = vertices, directed = TRUE)
 
-# Step 4: Plot using a layout with curved edges to show directionality clearly
+# Step 4: Plot 
 plot_directeff_net <- ggraph(graph_direct, layout = "circle") + 
   geom_edge_link(aes(edge_width = abs(weight), edge_color = weight), arrow = arrow(length = unit(3, 'mm')), 
                  end_cap = circle(2.5, 'mm'), curvature = 0.2) + # Curvature for distinguishing directions
@@ -663,7 +664,7 @@ vertices <- data.frame(name = 1:S)
 # Step 4: Create graph object with the vertices and edges
 graph <- graph_from_data_frame(d = edge_list, vertices = vertices, directed = TRUE)
 
-# Step 5: Plot using a layout that doesn’t require positive weights, such as "circle"
+# Step 5: Plot 
 plot_netteff_net <- ggraph(graph, layout = "circle") +  # "circle" layout for equal spacing
   geom_edge_link(aes(width = 1, color = net_effect), arrow = arrow(length = unit(3, 'mm'))) +
   scale_edge_width(range = c(0.5, 3)) + 
@@ -761,7 +762,7 @@ correlation_distributions <- data.frame()
 covariance_distributions <- data.frame()
 
 # Loop over two alpha_d values: 0.001 and 40
-for (alpha_d in c(0.001, 40)) {
+for (alpha_d in c(0.001, 0.1, 1, 10, 20, 40, 60, 100)) {
   print(paste("alpha_d", alpha_d))
   
   for (scenario in 1:num_scenarios) {
@@ -820,7 +821,7 @@ expected_delta_X <- results %>%
 p_abund_spp <- ggplot(results_species, aes(x = Species, y = mean_delta_X, fill = as.factor(Alpha_d))) +
   geom_boxplot(position = position_dodge(width = 0.75)) +
   labs(x = "Species", y = "Mean Delta_X", fill = "Alpha_d") +
-  scale_fill_manual(values = c("#6A0DAD", "#EAD7F5")) +
+ # scale_fill_manual(values = c("#6A0DAD", "#EAD7F5")) +
   theme_minimal() +
   ggtitle("Species-specific Mean Abundance Change Across Alpha_d Scenarios") +
   theme(legend.position = "right")
@@ -828,7 +829,7 @@ p_abund_spp <- ggplot(results_species, aes(x = Species, y = mean_delta_X, fill =
 p_abund_alphad <- ggplot(expected_delta_X, aes(x = as.factor(Alpha_d), y = mean_Delta_X, fill = as.factor(Alpha_d))) +
   geom_boxplot() +
   labs(x = "Alpha_d", y = "Mean Delta_X", fill = "Alpha_d") +
-  scale_fill_manual(values = c("#6A0DAD", "#EAD7F5")) +
+ # scale_fill_manual(values = c("#6A0DAD", "#EAD7F5")) +
   theme_minimal() +
   ggtitle("Comparison of Mean Delta_X Across Alpha_d Scenarios for All Species") +
   theme(legend.position = "none")
@@ -838,7 +839,7 @@ p_abund_alphad <- ggplot(expected_delta_X, aes(x = as.factor(Alpha_d), y = mean_
 p_sd_spp <- ggplot(results_species, aes(x = Species, y = variance_in_delta_X, fill = as.factor(Alpha_d))) +
   geom_boxplot(position = position_dodge(width = 0.75)) +
   labs(x = "Species", y = "SD Delta_X", fill = "Alpha_d") +
-  scale_fill_manual(values = c("#6A0DAD", "#EAD7F5")) +
+ # scale_fill_manual(values = c("#6A0DAD", "#EAD7F5")) +
   theme_minimal() +
   ggtitle("Species-specific SD Delta_X Across Alpha_d Scenarios") +
   theme(legend.position = "right")
@@ -865,7 +866,7 @@ p_sd_alphad <- ggplot(expected_delta_X, aes(x = as.factor(Alpha_d), y = sd_Delta
 plot_Cdistr <- ggplot(covariance_distributions, aes(x = Covariance, fill = as.factor(Alpha_d))) +
   geom_density(alpha = 0.7) +
   labs(x = "Covariance Value", y = "Density", fill = "Alpha_d") +
-  scale_fill_manual(values = c("#6A0DAD", "#EAD7F5")) +
+#  scale_fill_manual(values = c("#6A0DAD", "#EAD7F5")) +
   xlim(-1, 1) +
   ggtitle("Distribution of Covariance Values Across All Scenarios") +
   theme_minimal()
@@ -895,6 +896,164 @@ print(arranged_plot)
 
 # Other explorations - Dummy correlations to test effect of increasing mean correlation
 
+```{r}
+
+generate_cov_matrix2 <- function(S, corr, sd_x) {
+  cor_matrix <- matrix(1, nrow = S, ncol = S)
+  cor_matrix[upper.tri(cor_matrix)] <- cor_matrix[lower.tri(cor_matrix)] <- corr
+  sd_X <- rep(1, S)  
+  cov_matrix <- diag(sd_X) %*% cor_matrix %*% diag(sd_X)
+  return(cov_matrix)
+}
+
+# Set simulation parameters
+S <- 8  # Number of species
+C <- 0.4  # Connectance of the network
+aij_params <- c(0, 0.5)
+sd_X <- 1  # Variance scale factor
+num_scenarios <- 10
+num_simulations <- 10
+maxt <- 1000  # Duration of the simulation
+
+# Fixed interaction matrix A
+#A <- sim_quantitative_network(S, C, aij_params)
+
+# Initialize data frames to store results
+results <- data.frame()
+correlation_distributions <- data.frame()
+covariance_distributions <- data.frame()
+
+# Loop over two alpha_d values: 0.001 and 40
+for (corr in seq(0, 0.9, by = 0.1)) {
+  print(paste("corr", corr))
+  
+  for (scenario in 1:num_scenarios) {
+    print(paste("scenario", scenario, "of", num_scenarios))
+    
+    # Generate correlation matrix and derive covariance matrix
+    cor_matrix <- generate_cov_matrix2(S, corr = corr, sd_x = 1)
+    covMat <- diag(sd_X, S) %*% cor_matrix %*% diag(sd_X, S)
+    
+    # Store correlation and covariance values for plotting
+    cor_vals <- cor_matrix[upper.tri(cor_matrix, diag = FALSE)]
+    cov_vals <- covMat[upper.tri(covMat, diag = FALSE)]
+    
+    correlation_distributions <- rbind(correlation_distributions,
+                                       data.frame(Alpha_d = alpha_d, Scenario = scenario, Correlation = cor_vals))
+    covariance_distributions <- rbind(covariance_distributions,
+                                      data.frame(Alpha_d = alpha_d, Scenario = scenario, Covariance = cov_vals))
+    
+    for (sim in 1:num_simulations) {
+      print(paste("sim", sim, "of", num_simulations))
+      
+      # Run the simulation with perturbations
+      sim_result <- simulate_dynamics_perturbed(list(A = A), covMat, S, maxt)
+      
+      # Store the results for each species
+      for (species in 1:S) {
+        results <- rbind(results, data.frame(
+          corr = corr,
+          Scenario = scenario,
+          Simulation = sim,
+          Species = paste0("sp", species),
+          Delta_X = sim_result$delta_X[species]
+        ))
+      }
+    }
+  }
+}
+
+# Compute standard deviation of Delta_X for each species, scenario, and alpha_d value
+results_species <- results %>%
+  group_by(corr, Scenario, Species) %>%
+  summarize(variance_in_delta_X = sd(Delta_X),
+            mean_delta_X = mean(Delta_X),
+            .groups = "drop")
+
+# across all scenarios
+expected_delta_X <- results %>%
+  group_by(corr, Species) %>%
+  summarize(sd_Delta_X = sd(Delta_X),
+            mean_Delta_X = mean(Delta_X))
+
+
+
+######### ABUNDANCE delta_X
+
+p_abund_spp <- ggplot(results_species, aes(x = Species, y = mean_delta_X, fill = as.factor(corr))) +
+  geom_boxplot(position = position_dodge(width = 0.75)) +
+  labs(x = "Species", y = "Mean Delta_X", fill = "corr") +
+ # scale_fill_manual(values = c("#6A0DAD", "#EAD7F5")) +
+  theme_minimal() +
+  ggtitle("Species-specific Mean Abundance Change Across corr Scenarios") +
+  theme(legend.position = "right")
+
+p_abund_alphad <- ggplot(expected_delta_X, aes(x = as.factor(corr), y = mean_Delta_X, fill = as.factor(corr))) +
+  geom_boxplot() +
+  labs(x = "corr", y = "Mean Delta_X", fill = "Alpha_d") +
+ # scale_fill_manual(values = c("#6A0DAD", "#EAD7F5")) +
+  theme_minimal() +
+  ggtitle("Comparison of Mean Delta_X Across corr Scenarios for All Species") +
+  theme(legend.position = "none")
+
+######### VARIANCE delta_X
+
+p_sd_spp <- ggplot(results_species, aes(x = Species, y = variance_in_delta_X, fill = as.factor(corr))) +
+  geom_boxplot(position = position_dodge(width = 0.75)) +
+  labs(x = "Species", y = "SD Delta_X", fill = "corr") +
+ # scale_fill_manual(values = c("#6A0DAD", "#EAD7F5")) +
+  theme_minimal() +
+  ggtitle("Species-specific SD Delta_X Across corr Scenarios") +
+  theme(legend.position = "right")
+
+
+p_sd_alphad <- ggplot(expected_delta_X, aes(x = as.factor(corr), y = sd_Delta_X, fill = as.factor(corr))) +
+  geom_boxplot() +
+  labs(x = "corr", y = "SD Delta_X", fill = "Alpha_d") +
+  #scale_fill_manual(values = c("#6A0DAD", "#EAD7F5")) +
+  theme_minimal() +
+  ggtitle("Comparison of SD Delta_X Across corr Scenarios for All Species") +
+  theme(legend.position = "none")
+
+# Plot distribution of correlation values across scenarios
+# ggplot(correlation_distributions, aes(x = Correlation, fill = as.factor(Alpha_d))) +
+#   geom_density(alpha = 0.7) +
+#   labs(x = "Correlation Value", y = "Density", fill = "Alpha_d") +
+#   scale_fill_manual(values = c("#6A0DAD", "#EAD7F5")) +
+#   xlim(-1, 1) +
+#   ggtitle("Distribution of Correlation Values Across All Scenarios") +
+#   theme_minimal()
+
+# Plot distribution of covariance values across scenarios
+plot_Cdistr <- ggplot(covariance_distributions, aes(x = Covariance, fill = as.factor(corr))) +
+  geom_density(alpha = 0.7) +
+  labs(x = "Covariance Value", y = "Density", fill = "corr") +
+#  scale_fill_manual(values = c("#6A0DAD", "#EAD7F5")) +
+  xlim(-1, 1) +
+  ggtitle("Distribution of Covariance Values Across All Scenarios") +
+  theme_minimal()
+
+
+arranged_plot <- ggarrange(
+  p_abund_spp,
+  p_abund_alphad,
+  
+  p_sd_spp,
+  p_sd_alphad,
+  
+  ncol = 2,
+  nrow = 2,
+  
+  labels = LETTERS[1:4])
+
+print(plot_Cdistr)
+print(arranged_plot)
+```
+
+
+- Specialist species 1 vs generalist species 7: sp1 and 7 show the contrary pattern. For the specialist sp1, increasing covariances increases its SD Delta_X, whereas it decreases sp7 one. This is in line with our predictions.
+
+- outliers in SD Delta X plot shows that in more positive correlations, there is the chance to have a more explosive dynamics.
 
 
 # Other explorations - simulation equation terms
