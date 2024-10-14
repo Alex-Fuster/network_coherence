@@ -2,27 +2,467 @@
 title: "LV simulations - effect of species' co-responses to the environment on community dynamics"
 ---
 
+```{r, echo=FALSE}
+library(ggplot2)
+library(RColorBrewer)
+library(ggpubr)
+library(MASS)
+library(reshape2)
+library(dplyr)
+library(tidyr)
+library(viridis)
 
-In the mathematical formulation, we demonstrated that, in a LV system, the mean and variance in abundance change of a species $i$ is affected by how species' covary in their responses to the environment, i.e. growth rate $r_i$, and the way these propagate through the network which depends on the the interaction coefficients:
+my_theme<-theme(axis.text=element_text(size=12),
+        axis.title = element_text(size = 14),
+        legend.text=element_text(size=10),
+        legend.title = element_text(size=12),
+        plot.title = element_text(face="bold",size=14,margin=margin(0,0,20,0),hjust = 0.5),
+        axis.title.y = element_text(hjust = 0.5),
+        axis.title.x = element_text(hjust = 0.5))
+```
 
-FORMULA (10)
+### Motivation
+
+Global change inflicts strong changes in the environment that species adapt to. Globally, species' populations, distributions, and phenology is being highly altered. These changes can add, eliminate, or alter the strength and sign of interactions affecting community composition and structure, and therefore its functioning. Given the complexity of biodiversity and the challenge of its measurement, how can we anticipate changes of those properties?
+
+Contemporary empirical investigations (ref) and theoretical advancements (ref) are highlighting the importance of evaluating the degree of shared responses to the environment across multiple species within ecological communities (commonly referred to as community synchrony; refs). This integrated approach underscores the interconnectedness of species dynamics and their collective impact on ecosystem stability (ref). Despite advancements in understanding the impacts of community synchrony, the incorporation of information on the interaction network structures remains lacking. Simultaneously, understanding how ecosystem functioning depends on network structure remains limited (Walther 2010, Montoya & Raffaelli 2010), as it necessitates information on species' dynamics driven by more factors than interactions (Lavergne et al. 2010; Tylianakis & Morris 2017; Strydom et al. 2021; Purves et al. 2013; Harfoot et al. 2014). There is therefore a pressing need for theory and tools that comprehensively integrate the interconnected dynamics of species and their collective impact on ecosystem stability to anticipate changes in the structure and function of communities.
+
+### Objective:
+
+In this study, we introduce the concept of Ecological Network Coherence (ENC), which provides a conceptual framework for capturing the correlational structure of species' interdependent responses to the environment in an ecological network. The concept is manifested in an empirical community-level pattern that results from the shared responses to environmental variables among interacting species. We propose that this empirical pattern could help predicting the potential for disruptions in ecosystem functioning and serve as a foundational element for developing a new indicator of the consequences of biodiversity changes at the community level. Our primary objectives encompass (1) defining ENC and its components, (2) exploring its quantitative application to ecosystem functioning, and (4) illustrating how to measure and explore it in empirical data.
+
+### Concept definition
+
+Species responses to environmental changes include alterations in population trends, spatial distribution shifts, and phenology changes (Bellard et al., 2012). Consequently, ecological communities are characterized by heterogeneous responses, which can be summarized as a distribution of species responses:
+
+```{r, echo=FALSE}
+
+set.seed(123)
+
+data <- data.frame(response = seq(-3, 3, length.out = 1000))
+data$frequency <- dnorm(data$response)
+
+
+plot_distrib_resp <- ggplot(data, aes(x = response, y = frequency, fill = response)) +
+  geom_tile(aes(y = frequency / 2, height = frequency, width = 0.01)) +
+  scale_fill_distiller(palette = "RdBu", limits = c(-3, 3), direction = 1) +
+  labs(x = "Species response to the environment", y = "Frequency", title = "Species Responses to the Environment") +
+  theme_classic() +
+  xlim(-3, 3) +
+  scale_x_continuous(breaks = 0) +
+  scale_y_continuous(breaks = c(0, 1)) +
+  theme(legend.position = "none",
+        plot.title = element_text(hjust = 0.5)) +
+  my_theme
+
+plot_distrib_resp
+
+#ggsave("fig1.png", height = 4, width = 5)
+
+```
+
+The above example illustrates a hypothetical community where species responses are perfectly balanced, with most species would showing minimal response to environmental changes, while a minority exhibit strong positive or negative responses.
+
+From this, we can assess the similarities and differences in species responses, or their co-responses. Species co-responses can be characterized based on their covariance: a positive covariance indicates that greater values of one variable typically correspond to greater values of the other, while a negative covariance suggests an inverse relationship. Correlation is a standardized version of covariance that adjusts the data to have a mean of 0 and a standard deviation of 1 (bounded between -1 and 1), providing a more straightforward interpretation of the relationship's strength and direction. Species co-responses within a community can be summarized in a matrix,$C$, which comprises pairwise correlations. The distribution of these co-responses forms a community pattern that we define as the Ecological Coherence of the community, reflecting how coherent species responses are to the environment.
+
+```{r, echo=FALSE}
+
+set.seed(123)
+
+matrix_size <- 20
+data_matrix <- expand.grid(x = 1:matrix_size, y = 1:matrix_size)
+data_matrix$value <- runif(nrow(data_matrix), min = -3, max = 3)
+
+# Plot
+
+palette <- colorRampPalette(brewer.pal(11, "RdBu"))(100)
+
+plot_matrix_c <- ggplot(data_matrix, aes(x = x, y = y, fill = value)) +
+  geom_raster() +
+  scale_fill_gradientn(colors = palette, limits = c(-3, 3)) +
+  labs(x = NULL, y = NULL, title = expression("Co-response matrix"~italic("C"))) +
+  theme_classic() +
+  theme(
+    legend.position = "none",
+    axis.text = element_blank(),
+    axis.title = element_blank(),
+    axis.ticks = element_blank(),  
+    axis.line = element_blank(),   
+    plot.title = element_text(hjust = 0.5)
+  ) +
+  coord_fixed()+
+  my_theme
+
+
+plot_coresponses <- ggarrange(plot_matrix_c,
+                              plot_distrib_resp + labs(x = "Species co-response to the environment", y = "Frequency", title = "Ecological coherence of a community"),
+                              ncol = 2, nrow = 1
+                              )
+
+plot_coresponses
+
+#ggsave("fig2.png", height = 4, width = 9)
+
+```
+
+We can incorporate information on community structure by considering the co-responses between pairs of interacting species: the matrix $C$ can be filtered out (multiplied) by the adjacency matrix of interactions $A$, which denotes the presence or absence of interactions. The distribution of the resulting filtered co-response matrix is a pattern that shows the degree of co-responses to specific environmental variables between interacting species within a community at given location in space and time, which we define as Ecological Network Coherence.
+
+```{r}
+
+
+# Add probabilities of black (presence) and white (absence) squares to the A matrix based on the values in C
+
+data_matrix$color <- ifelse(data_matrix$value > 0, 
+                            sample(c("black", "white"), size = nrow(data_matrix), replace = TRUE, prob = c(0.7, 0.3)),
+                            sample(c("black", "white"), size = nrow(data_matrix), replace = TRUE, prob = c(0.3, 0.7)))
+
+# Plot 
+plot_matrix_A <- ggplot(data_matrix, aes(x = x, y = y, fill = color)) +
+  geom_raster() +
+  scale_fill_manual(values = c("black" = "black", "white" = "white")) +
+  labs(x = NULL, y = NULL, title = expression("Interaction matrix"~italic("A"))) +
+  theme_classic() +
+  theme(
+    legend.position = "none",
+    axis.text = element_blank(),
+    axis.title = element_blank(),
+    axis.ticks = element_blank(),  # Remove axis ticks
+    axis.line = element_blank(),    # Remove axis lines
+    plot.title = element_text(hjust = 0.5)
+  ) +
+  coord_fixed()+
+  my_theme
+
+
+
+# Define parameters for the new distribution
+set.seed(42)  
+mean_new <- 1  # Shift the distribution to the right
+sd_new <- 1.2  # Change the standard deviation
+
+# Generate new data
+data_new <- data.frame(
+  response = seq(-3, 3, length.out = 1000),
+  frequency = dnorm(seq(-3, 3, length.out = 1000), mean = mean_new, sd = sd_new)
+)
+
+
+plot_distrib_resp <- ggplot(data_new, aes(x = response, y = frequency, fill = response)) +
+  geom_tile(aes(y = frequency / 2, height = frequency, width = 0.05)) +  # Adjust width to better visualize the shape
+  scale_fill_distiller(palette = "RdBu", limits = c(-3, 3), direction = 1) +
+  labs(x = "Interactioning species co-response", y = "Frequency", title = "Ecological Network Coherence") +
+  theme_classic() +
+  xlim(-3, 3) +
+  scale_x_continuous(breaks = 0) +
+  scale_y_continuous(breaks = c(0, 1)) +
+  theme(legend.position = "none",
+        plot.title = element_text(hjust = 0.5))+
+  my_theme
+
+
+plot_ENC <- ggarrange(
+  plot_matrix_c,
+  plot_matrix_A,
+  plot_distrib_resp,
+  
+  ncol = 3, 
+  nrow = 1
+)
+
+plot_ENC
+
+
+#ggsave("fig3.png", height = 4, width = 11)
+
+```
+
+By summarizing the pattern of species co-responses and interactions in a community distribution, ENC brings the possibility to analyze the predictive consequences of different statistical modes on functioning. Summarizing the complex interdependence of species responses in a distribution also brings the advantage to bridge empirical and theoretical work: ENC is built from commonly measured data and used by empirisist and is manifested in a clear statistical object that can be explored.
+
+# Linking ENC to ecosystem functioning
+
+Let $X_i$ be the abundance of species $i$ in a Lotka-Volterra system, with intrinsic growth rate $r_i$ and interaction coefficient with species $j$ given by $a_{ij}$. We can write the dynamics of species $i$ as:
+
+$$
+\frac{dX_i}{dt} = X_i \left[ r_i - \sum_j a_{ij} X_j \right] \tag{1}
+$$
+
+Assuming the existence of an equilibrium and that all $n$ species have non-zero abundances at equilibrium, we can write the equation for all species at equilibrium using vector notations (i.e. with arrows): $$
+\overrightarrow{r} = A.\overrightarrow{X^*} \tag{2}
+$$ which, if the system is sufficiently not pathological, can be inverted:
+
+$$
+\overrightarrow{X^*} = A^{-1}.\overrightarrow{r} \tag{3}
+$$
+
+If a push perturbation $\overrightarrow{\Delta r}$ is applied to the system over a sufficiently long time, we thus expect the equilibrium to shift away from $\overrightarrow{X^*}$ by a quantity $\overrightarrow{\Delta X}$, given by:
+
+$$
+\overrightarrow{\Delta X} = A^{-1}.\overrightarrow{\Delta r} \tag{4}
+$$
+
+Now assuming that $\overrightarrow{\Delta r}$ is random among species, i.e. that the effect of the perturbation on each and every species is drawn from an underlying distribution, we can call $\overline{\Delta r}$ the mean push perturbation and $\mathbb{V}(\Delta r)$ the variance of push perturbation among species. For commodity, we note $\overrightarrow{1}$ the vector comprising as many 1's as the number of species in the system, and $T$ is used as the symbol for transposition.
+
+$$
+\overline{\Delta r} = \frac{1}{n}\overrightarrow{1}^T.\overrightarrow{\Delta r} \tag{5}
+$$
+
+$$
+\begin{split}
+    \mathbb{V}(\Delta r) &= \left( \overrightarrow{\Delta r}-\frac{1}{n}\overrightarrow{1}^T.\overrightarrow{\Delta r} \overrightarrow{1}\right)^T.\left( \overrightarrow{\Delta r}-\frac{1}{n}\overrightarrow{1}^T.\overrightarrow{\Delta r} \overrightarrow{1}\right)\\
+    &= \overrightarrow{\Delta r}^T.\overrightarrow{\Delta r} - \left(\frac{2}{n} -\frac{1}{n^2} \right) \left( \overrightarrow{1}^T.\overrightarrow{\Delta r}\right)^2\\
+    &= \overrightarrow{\Delta r}^T.\overrightarrow{\Delta r} - (2n-1)\left( \overline{\Delta r}\right)^2
+\end{split} \tag{6}
+$$
+
+In the same way, we can define $\overline{\Delta X}$ the mean abundance change due to the perturbation and $\mathbb{V}(\Delta X)$ the variance of these abundance changes among species.
+
+$$
+\overline{\Delta X} = \frac{1}{n}\overrightarrow{1}^T.\overrightarrow{\Delta X} \tag{7}
+$$
+
+$$
+\begin{split}
+    \mathbb{V}(\Delta X) &= \left( \overrightarrow{\Delta X}-\frac{1}{n}\overrightarrow{1}^T.\overrightarrow{\Delta X} \overrightarrow{1}\right)^T.\left( \overrightarrow{\Delta X}-\frac{1}{n}\overrightarrow{1}^T.\overrightarrow{\Delta X} \overrightarrow{1}\right)\\
+    &= \overrightarrow{\Delta X}^T.\overrightarrow{\Delta X} - \left(\frac{2}{n} -\frac{1}{n^2} \right) \left( \overrightarrow{1}^T.\overrightarrow{\Delta X}\right)^2
+\end{split} \tag{8}
+$$
+
+Hereafter, we use the notation $B = A^{-1}$ in order to look at the effect of $A$ on changes in abundances at equilibrium. Getting back to equation $(4)$ and developing the sums, we get:
+
+$$
+\begin{split}
+\overline{\Delta X} &= \frac{1}{n} \sum_i \sum_j b_{ij} \Delta r_j\\
+&= \frac{1}{n} \sum_j \Delta r_j \left( \sum_i b_{ij} \right)
+\end{split} \tag{9}
+$$ In this final expression, we recognize the average (*sensu* "among all species") of the product of the $\Delta r$ and the column sums of $B$. Hence, if we further decompose this using the abusive $\mathbb{E}$ and $cov$ notations (expectations are to be understood as averages over columns):
+
+$$
+\overline{\Delta X} = \mathbb{E}\left[ \overrightarrow{1}^T B\right]\mathbb{E}\left[ \overrightarrow{\Delta r}\right] + cov\left( \overrightarrow{1}^T B, \overrightarrow{\Delta r}\right) \tag{10}
+$$
+
+Adopting the perspective where the vector $\overrightarrow{\Delta r}$ is a random vector that follows a multivariate distribution with mean vector and covariances between vector components, we can use the propagation of uncertainty to deduce that:
 
 $$
 \text{var}\left( \Delta X_i \right) \approx \sum_k \sum_l b_{ik} b_{il} \text{cov}\left( \Delta r_k, \Delta r_l \right) \tag{11}
 $$
 
+$$
+\text{cov}\left( \Delta X_i, \Delta X_j \right) \approx \sum_k \sum_l b_{ik} b_{jl} \text{cov}\left( \Delta r_k, \Delta r_l \right) \tag{12}
+$$
 
-A general prediction that can be drawn from FORMULA (11) is that a community with weaker covariance among species (closer to 0) should be more predictable (i.e. lead to lower species' variance in abundance change) compared to communities with stronger covariances.
+with (as above) $B = A^{-1}$ the inverse of the LV interaction matrix.
 
+
+### Biological Interpretation of Key Equations
+
+
+Through the mathematical formulation relating species' coherence in responses to environmental change to ecosystem functioning, we showed that the **Ecological Network Coherence** concept emphasizes that the impact of environmental perturbations on community structure is not only about the strength of interactions but also about how these interactions propagate through the network and influence species in a coherent or disparate manner. Let's delve deeper into the ecological interpretation of the equations:
+
+
+#### Equation 10: Mean Abundance Change Due to Perturbations
+
+$$
+\overline{\Delta X} = \mathbb{E}\left[ \overrightarrow{1}^T B\right]\mathbb{E}\left[ \overrightarrow{\Delta r}\right] + \text{cov}\left( \overrightarrow{1}^T B, \overrightarrow{\Delta r}\right)
+$$
+
+This equation shows how the **mean change** in species abundances, $\overline{\Delta X}$, depends on: -The **average impact** of perturbations ($\mathbb{E}[\overrightarrow{\Delta r}]$) across species. - and the **covariance** between perturbation effects and the column sums of $B$, which represents the net influence each species has in the community. In ecological terms, this tells us that both the **average direct effect** of the environment on all species and the **interaction structure** (as captured by $B$) jointly determine how the community's mean abundance will shift.
+
+### Breakdown of Terms:
+
+1.  **First Term**: $\mathbb{E}\left[ \overrightarrow{1}^T B\right]\mathbb{E}\left[ \overrightarrow{\Delta r}\right]$:
+    -   The component $\mathbb{E}\left[ \overrightarrow{1}^T B\right]$ represents the **average influence** that each species exerts on the network. When multiplied by the average environmental impact ($\mathbb{E}\left[ \overrightarrow{\Delta r}\right]$), it provides an estimate of the mean abundance change across the community.
+2.  **Second Term:** $\text{cov}\left( \overrightarrow{1}^T B, \overrightarrow{\Delta r}\right)$:
+    -   This term reflects the **covariance** between species' network roles and the effects of the environmental perturbation.
+    -   It gives insight into whether species that are **central** or influential within the network also experience **significant perturbations**.
+    -   If this covariance is **high**, it implies that **network's most influential species** (those with larger combined interaction effects as captured by $B$) align closely with the environmental perturbation, potentially amplifying community-level abundance changes.
+
+\-\-\-\-\-\-\-\-\--
+
+SUMMARY
+
+Equation (10) shows that community abundance shifts are influenced by both the average effect of environmental perturbation across all species and the alignment between species' network roles and the environmental perturbation. Thus, a strong covariance between network influence and environmental perturbation magnifies changes in community abundance, especially when species central to the network experience large perturbations.
+
+\-\-\-\-\-\-\-\-\--
+
+#### Equation 11: Variance in Abundance Change Among Species
+
+$$
+\text{var}\left( \Delta X_i \right) \approx \sum_k \sum_l b_{ik} b_{il} \text{cov}\left( \Delta r_k, \Delta r_l \right)
+$$
+
+This expression estimates the **variance** in the abundance change of species $i$. The term $b_{ik} b_{il}$ indicates that: - $b_{ik}$ reflects the **net effect** of species $k$ on $i$, considering both direct and indirect pathways. - The covariance structure $\text{cov}(\Delta r_k, \Delta r_l)$ describes the extent to which species' responses to perturbations are **correlated**, further modulated by the network's structure.
+
+#### Interpretation:
+
+This equation describes how much a particular species' abundance ($X_i$) is expected to fluctuate in response to a perturbation, taking into account both the species' interactions and the correlations in environmental impacts. It comprises two main components:
+
+1.  **Interaction Structure**: $\sum_k \sum_l b_{ik} b_{il}$
+    -   The summation across $b_{ik} b_{il}$ reflects how the abundance variance of species $i$ depends on its **net effects** (direct and indirect) with other species in the network.
+    -   This term captures the influence that species $k$ and $l$ exert on $i$ through the interaction network. Species $i$ will have higher variance in abundance if it is experiences strong net effects (either directly or through indirect paths) from other species.
+2.  **Environmental Covariance**: $\text{cov}(\Delta r_k, \Delta r_l)$
+    -   This component describes the covariance between the impacts of the perturbation on species $k$ and $l$.
+    -   A positive covariance suggests that $k$ and $l$ experience the environmental change in the same direction, which amplifies the effect on $i$, particularly if $i$ is strongly influenced by $k$ and $l$.
+    -   Conversely, negative covariance can **offset** the effects on $i$ if $k$ and $l$ are affected in opposing ways. This offsetting effect occurs when species linked to $i$ are perturbed in contrasting directions, leading to a reduction in $i$'s abundance variance.
+
+### Biological Insights and Predictions:
+
+1.  **Strength and Pattern of Interactions**:
+    -   Species with strong connections to others will generally exhibit higher variances in abundance under environmental perturbations, as their abundance is influenced by multiple other species.
+    -   Keystone species or those with extensive indirect effects will show greater abundance variance, as their roles involve significant net effects across the community.
+2.  **Covariance Structure of Environmental Effects**:
+    -   If environmental changes are **highly synchronized** across species (i.e., large, positive covariance), species with strong connections will have increased variance, as the effect of the perturbation is compounded by the similar responses across linked species.
+    -   **Negative covariances**, however, can reduce abundance variance through offsetting effects. For example, if species $k$ and $l$ respond in opposite ways to the environment and both influence species $i$, these opposing responses may cancel out, leading to a dampened variance in $i$'s abundance.
+
+### Interpretation Based on Magnitudes
+
+1.  **Case 1: Strong Covariances, Regardless of Net Effects**
+    -   When covariances between environmental perturbations on species are high, species abundance variance increases across the network. In this case, even if a species has low net effects, it can still exhibit substantial variance in abundance due to the **highly correlated responses** of other species.
+    -   For instance, if two indirectly connected species experience similar environmental impacts, their abundances may fluctuate in tandem, which amplifies the overall community variance, especially when species are subject to similar external forces.
+2.  **Case 2: Strong Net Effects, Regardless of Covariances**
+    -   Here, the **strength of direct and indirect interactions** takes precedence. Species that experience strong cumulative effects from others---regardless of how these effects correlate environmentally---are likely to show higher abundance variance.
+    -   In this scenario, a **specialist** heavily reliant on a single other species with a strong net effect might show high variance if that interacting species fluctuates significantly. Similarly, **generalist** species, even if weakly connected to many others, could exhibit high variance if the combined net effects are substantial.
+    -   The species' variance depends more on the magnitude of interaction effects within the network than on environmental synchrony, highlighting the impact of ecological structure on stability.
+3.  **Case 3: Combined Strong Covariances and Strong Net Effects**
+    -   This is the scenario where both high environmental synchrony and substantial interaction strengths coexist. Species subject to **strong, correlated perturbations** and **high net effects** from others will exhibit extreme abundance variance.
+    -   For example, a keystone species connected to several others through strong interactions would not only respond to the environmental conditions it experiences but also amplify these effects through the entire network, resulting in pronounced fluctuations across multiple species.
+    -   This combined scenario suggests that **community stability may be highly compromised**, as species with strong net effects propagate environmentally driven changes throughout the network. The cumulative impact of synchronized environmental responses and strong species interactions leads to high variability, potentially destabilizing the ecosystem.
+
+------------------------------------------------------------------------
+
+In summary:
+
+-   **Strong covariances** lead to high variance by creating synchronized responses among species.
+-   **Strong net effects** cause high variance due to the strength of ecological interactions.
+-   When **both are strong**, they compound, leading to even greater fluctuations and reduced community stability.
+
+These insights suggest that **ecosystems with tightly coupled interactions and coherent environmental responses are more susceptible to destabilization**.
+
+------------------------------------------------------------------------
+
+
+
+### Impact of Covariance Distributions on Species Variance
+
+The term \(\text{cov}(\Delta r_k, \Delta r_l)\) in Equation 11 represents the distribution of environmental covariances across species pairs. The nature of this distribution—whether it is normally distributed, heavily skewed, or follows a particular shape (e.g., u-shaped, beta-positive, or beta-negative)—will influence the variance in abundance change for any species \(i\) in conjunction with the interaction effects from \(B\).
+
+#### 1. **Normally Distributed Covariances (Symmetric Distribution)**
+   - In this case, environmental covariances have a mean of zero with values spread symmetrically on both sides.
+   - **Implications:** 
+     - Positive and negative covariances are equally likely, meaning that effects may partially cancel each other out. This can lead to a moderation of species \(i\)’s abundance variance, as some positive interactions may amplify while negative ones reduce the overall impact.
+     - The overall abundance variance will depend heavily on the **interaction terms in \(B\)**. If \(B\) has both positive and negative terms, some offsetting effects will occur, potentially stabilizing the variance for species \(i\).
+   - **Prediction:** With a symmetric distribution, we might observe **lower overall variance**, particularly if interaction effects are also symmetrically distributed, creating balanced amplification and dampening effects.
+
+#### 2. **Beta-Positive Distribution (Right-Skewed)**
+   - Covariances predominantly positive, with few negative covariances.
+   - **Implications:**
+     - Species are generally impacted in similar directions. If species \(k\) and \(l\) share strong positive covariance, species \(i\) will likely see amplified variance if \(i\) is positively influenced by both \(k\) and \(l\) in \(B\).
+     - The **distribution of \(B\)** becomes particularly important here. If \(B\) mainly contains positive values, then the covariances will **amplify** the variance in abundance changes across the network. In contrast, if \(B\) includes negative terms, the impact may be moderated but likely still positive overall.
+   - **Prediction:** With mostly positive covariances, **higher abundance variance** is expected, especially if \(B\) effects are predominantly reinforcing. This is a scenario that could lead to **unstable population dynamics**, as co-amplifying effects accumulate across the network.
+
+#### 3. **Beta-Negative Distribution (Left-Skewed)**
+   - Covariances predominantly negative, with few positive covariances.
+   - **Implications:** 
+     - This distribution promotes offsetting effects within species. Negative covariances reduce the likelihood of synchronized responses, thereby dampening variance for species \(i\).
+     - If \(B\) is largely positive, these covariances will tend to **reduce the variance**, as species pairs experience opposing environmental effects. If \(B\) contains negative terms, negative covariances might paradoxically amplify variance in abundance through indirect effects.
+   - **Prediction:** Abundance variances will generally be **lower** and **more stable** in the network with left-skewed covariances, particularly when combined with positive \(B\) effects. This distribution could promote **greater community resilience**, as species respond asynchronously to perturbations.
+
+#### 4. **U-Shaped Distribution (Bimodal)**
+   - Covariances are either strongly positive or strongly negative, with few near-zero covariances.
+   - **Implications:**
+     - This scenario creates strong amplification or offsetting effects without moderation. If species \(k\) and \(l\) are strongly positively correlated, and \(B\) reinforces these effects, variance in species \(i\) will be extreme. Conversely, if \(k\) and \(l\) are negatively correlated, offsetting effects might completely neutralize certain interactions, leading to very low or even zero variance.
+     - The **interaction matrix \(B\)** is crucial here, as the extremes in covariance can either fully amplify or completely negate abundance changes depending on whether \(B\) terms align with the covariance sign.
+   - **Prediction:** **Higher variance in abundance changes** is expected for strongly correlated pairs under positive \(B\) effects, leading to potential instability. In contrast, species with negative covariances might show **lower variance**, as offsetting effects dominate.
+
+---
+
+In summary, **positive-skewed distributions** tend to amplify variance, while **negative-skewed distributions** promote stability through offsetting effects. **U-shaped distributions** create a scenario of extremes, where the interplay with \(B\) can lead to either very high or very low variance in abundance change, depending on the alignment of interactions. 
+
+These predictions highlight that **not just the magnitude but the distribution** of environmental covariances, when combined with the interaction effects from \(B\), is a key determinant of community-level stability and species resilience. Understanding these covariance structures is thus essential for predicting how ecosystems may respond to global change and perturbations.
+
+
+
+
+#### Equation 12: Covariance in Abundance Changes Between Species
+
+$$
+\text{cov}\left( \Delta X_i, \Delta X_j \right) \approx \sum_k \sum_l b_{ik} b_{jl} \text{cov}\left( \Delta r_k, \Delta r_l \right)
+$$
+
+This equation relates the **covariance** in abundance changes between species $i$ and $j$. Here: - The **product** $b_{ik} b_{jl}$ captures how species $i$ and $j$ are jointly influenced by perturbations through $k$ and $l$, moderated by the strength and direction of interactions as reflected in $B$. - This highlights how the **network structure**, in conjunction with the environmental covariance, affects how similarly (or differently) species' abundances will shift in response to perturbations.
+
+### Interpreting $b_{ik} b_{il}$ as Net Effects of Interactions
+
+The terms $b_{ik} b_{il}$ reflect **net effects** within the network, accounting for both direct and indirect influences on species abundance. Unlike simply counting connections, these terms measure how **changes propagate** through all possible pathways within the network. The resulting impact of $b_{ik} b_{il}$ on variance and covariance in species abundances is therefore shaped by the entire **interaction web**:
+
+-   **Indirect Dependencies**: Values in $B$ reflect not only direct connections but also cumulative effects, meaning that even species with few direct interactions can experience substantial influence if other species affect them indirectly.
+-   **Magnitude and Direction**: The values $b_{ik} b_{il}$ capture the strength and direction of these net effects, influencing how species respond to perturbations in the network.
+
+
+
+Overall, the **Ecological Network Coherence** concept emphasizes that the impact of environmental perturbations on community structure is not only about the strength of interactions but also about how these interactions propagate through the network and influence species in a coherent or disparate manner.
 
 We now test this predictions measuring changes in abundance in LV foodweb systems with varying underlying covariance structures.
 
 
 
 
+# LV simulations - Impact of ENC on ecosystem functioning
 
 
-```{r}
+We further explore the impacts of ENC patterns on ecosystem functioning by conducting LV simulations. 
+
+
+In your simulations, we are constrained to scenarios where the covariances follow **normal distributions centered around 0** because functions like those in the `clusterGeneration` or `randcorr` packages or similar tools, which are designed to create correlation matrices, **require the matrices to be positive definite**. Positive definiteness ensures that all the eigenvalues of a matrix are positive, a property necessary for a matrix to be a valid correlation matrix. 
+
+### Why Positive Definiteness is Required
+
+Correlation matrices must be positive definite to maintain the mathematical consistency of the relationships between species. Positive definiteness implies that the matrix has only non-negative eigenvalues and that, geometrically, it defines a valid multi-dimensional ellipsoid. This requirement is essential because it guarantees that the correlation matrix is meaningful in terms of actual variances and covariances and avoid impossible or contradictory relationships.
+
+### Constraints of Non-Normal Distributions
+
+In nature, we often observe covariance structures that resemble **beta distributions, U-shaped distributions, or other non-normal patterns**, where means are not necessarily centered at 0. These distributions can represent specialized, asymmetrical relationships or scenarios where there are highly specific, non-uniform interactions among species. However, due to the positive definiteness constraint, directly simulating these distributions for covariances can lead to inconsistencies in the correlation matrix, making the matrix unsuitable for calculations. As a result, covariance scenarios with non-zero means, such as those with highly skewed or U-shaped distributions, would typically fail the positive definiteness check required by functions like `clusterGeneration`.
+
+### Testing Normal Distributions Centered on 0
+
+Focusing on normal distributions centered around 0 is still a valuable approach, even if it does not capture the full diversity of natural scenarios. Here’s why:
+
+1. **Baseline for Comparison**: Normal distributions, especially those centered on zero, provide a well-understood baseline that can help assess the general effects of **weak versus strong covariances**. By varying the standard deviation, we can explore scenarios where species have either tightly correlated (strong) or loosely correlated (weak) responses to environmental perturbations.
+
+2. **Insight into Fundamental Dynamics**: While not capturing asymmetries, normal distributions allow you to explore essential network dynamics, such as how **variance in species abundance changes with the strength of environmental correlations**. This can reveal how interconnectedness and interaction strength influence ecosystem functioning under more general conditions.
+
+3. **Foundation for Future Research**: By establishing a baseline with normal distributions, our simulations provide initial insights that can be built upon when extending to more complex or specific distributions. 
+
+
+
+# simulation LV - Effects on ecosystem functioning of weak vs strong covariance in normally distributed ENC pattern
+
+
+### function clusterGeneration to compute covariance matrices
+
+
+
+
+
+(1) Simulate an interaction network
+
+(2) two covariance scenarios: strong vs weak covariances
+
+(3) Compute n covariance matrices for each covariance scenario.
+
+(4) For each covariance matrix belonging to a covariance scenario, run n LV simulations.
+
+(5) In each LV simulation:
+-- species dynamics run to reach a first equilibrium r. 
+-- A perturbation (delta_r) is computed for each species using
+-- Species shift r based on delta_r and the system runs until reaching a new equilibrium
+
+(6) For each species, a delta_r is obtained for each simulation with each covariance matrix.
+
+(7) the expected variance in delta_r for each species is the variance of delta_r values across all the simulations for a given set of covariance scenarios (e.g. weak covariance set).
+
+
+
+```{r, echo = FALSE, results = "hide"}
 library(ggplot2)
 library(tidyr)
 library(dplyr)
@@ -31,7 +471,118 @@ library(deSolve)
 library(clusterGeneration)
 library(mvtnorm)
 library(gridExtra)
+library(ggpubr)
+library(igraph)
+library(ggraph)
 
+# Function to simulate a fixed quantitative interaction network
+sim_quantitative_network <- function(S, C, aij_params) {
+  A <- matrix(0, S, S)
+  n_pairs <- S * (S - 1) / 2
+  B <- runif(n_pairs) <= C
+  
+  aij <- -abs(rnorm(n_pairs, aij_params[1], aij_params[2]))
+  A[upper.tri(A)] <- B * aij
+  A <- t(A)
+  aij <- abs(rnorm(n_pairs, aij_params[1], aij_params[2]))
+  A[upper.tri(A)] <- B * aij
+  diag(A) <- -runif(S, min = 0, max = 1)
+  
+  while(max(Re(eigen(A)$values)) > 0) {
+    diag(A) <- -runif(S, min = 0, max = 1)
+  }
+  return(A)
+}
+```
+
+Read matrix A to focus on an example
+
+```{r}
+A <- readRDS(here::here("a_code/LV_simulations_AF/A_matrix.rds"))
+```
+
+Or create new A
+
+```{r}
+S <- 8  # Number of species
+C <- 0.4  # Connectance of the network
+aij_params <- c(0, 0.5)
+# Fixed interaction matrix A outside of scenarios loop
+A <- sim_quantitative_network(S, C, aij_params)
+```
+
+# Plot network
+
+```{r}
+S <- ncol(A)
+########## plot direct effects network
+
+# Step 1: Prepare the edge list from A for both directions
+edge_list_direct <- as.data.frame(as.table(A))
+edge_list_direct <- edge_list_direct %>% 
+  filter(Var1 != Var2 & Freq != 0) %>%  # Filter out self-loops and zero interactions
+  rename(from = Var1, to = Var2, weight = Freq) %>%
+  mutate(from = as.numeric(from), to = as.numeric(to))
+
+# Step 2: Create vertices data frame to ensure all species are included
+vertices <- data.frame(name = 1:S)
+
+# Step 3: Create graph object with the vertices and edges for directed effects
+graph_direct <- graph_from_data_frame(d = edge_list_direct, vertices = vertices, directed = TRUE)
+
+# Step 4: Plot using a layout with curved edges to show directionality clearly
+plot_directeff_net <- ggraph(graph_direct, layout = "circle") + 
+  geom_edge_link(aes(edge_width = abs(weight), edge_color = weight), arrow = arrow(length = unit(3, 'mm')), 
+                 end_cap = circle(2.5, 'mm'), curvature = 0.2) + # Curvature for distinguishing directions
+  scale_edge_width(range = c(0.5, 3)) + 
+  scale_edge_color_gradient2(low = "blue", mid = "grey", high = "red", midpoint = 0) +
+  geom_node_point(size = 6, color = "lightblue") +
+  geom_node_text(aes(label = name), repel = TRUE) +  # Label nodes with species number
+  labs(edge_color = "Direct Effect", edge_width = "Interaction Strength") +
+  theme_void() +
+  ggtitle("Directed Species Interaction Network with Direct Effects from A")
+
+
+########## plot net effects network
+
+# Step 1: Prepare the edge list from A
+edge_list <- as.data.frame(as.table(A))
+edge_list <- edge_list %>% 
+  filter(Var1 != Var2 & Freq != 0) %>%  # Filter out self-loops and zero interactions
+  rename(from = Var1, to = Var2, weight = Freq) %>%
+  mutate(from = as.numeric(from), to = as.numeric(to))
+
+# Step 2: Add net effects from B only for edges that exist in A
+B <- solve(A)
+edge_list$net_effect <- mapply(function(from, to) B[from, to], edge_list$from, edge_list$to)
+
+# Step 3: Create vertices data frame to ensure all species are included
+vertices <- data.frame(name = 1:S)
+
+# Step 4: Create graph object with the vertices and edges
+graph <- graph_from_data_frame(d = edge_list, vertices = vertices, directed = TRUE)
+
+# Step 5: Plot using a layout that doesn’t require positive weights, such as "circle"
+plot_netteff_net <- ggraph(graph, layout = "circle") +  # "circle" layout for equal spacing
+  geom_edge_link(aes(width = 1, color = net_effect), arrow = arrow(length = unit(3, 'mm'))) +
+  scale_edge_width(range = c(0.5, 3)) + 
+  scale_edge_color_gradient2(low = "blue", mid = "grey", high = "red", midpoint = 0) +
+  geom_node_point(size = 6, color = "lightblue") +
+  geom_node_text(aes(label = name), repel = TRUE) +  # Label nodes with species number
+  labs(edge_color = "Net Effect") +
+  theme_void() +
+  ggtitle("Species Interaction Network with Net Effects from B")
+
+ggarrange(plot_directeff_net,
+          plot_netteff_net,
+          
+          ncol = 1,
+          nrow = 2)
+
+
+```
+
+```{r}
 
 ############################################## FUNCTIONS
 
@@ -66,26 +617,9 @@ simulate_dynamics_c <- function(params, model, init_biomass = runif(params$S, mi
   return(out)
 }
 
-# Function to simulate a fixed quantitative interaction network
-sim_quantitative_network <- function(S, C, aij_params) {
-  A <- matrix(0, S, S)
-  n_pairs <- S * (S - 1) / 2
-  B <- runif(n_pairs) <= C
-  
-  aij <- -abs(rnorm(n_pairs, aij_params[1], aij_params[2]))
-  A[upper.tri(A)] <- B * aij
-  A <- t(A)
-  aij <- abs(rnorm(n_pairs, aij_params[1], aij_params[2]))
-  A[upper.tri(A)] <- B * aij
-  diag(A) <- -runif(S, min = 0, max = 1)
-  
-  while(max(Re(eigen(A)$values)) > 0) {
-    diag(A) <- -runif(S, min = 0, max = 1)
-  }
-  return(A)
-}
 
-# Function to simulate dynamics with perturbations
+
+# Function to simulate dynamics with perturbations - APPLYING DELTA_R
 simulate_dynamics_perturbed <- function(params, covMat, S, maxt, perturb_scale = 1) {
   init_biomass <- runif(S, min = 1, max = 10)
   r_pre <- -params$A %*% init_biomass
@@ -94,22 +628,23 @@ simulate_dynamics_perturbed <- function(params, covMat, S, maxt, perturb_scale =
   pre_perturb <- simulate_dynamics_c(dyn_params, fw.model)
   equilibrium_pre <- as.numeric(pre_perturb[nrow(pre_perturb), -1])
   
-  r_perturbation <- MASS::mvrnorm(n = 1, mu = r_pre, Sigma = covMat * perturb_scale)
-  dyn_params$r <- matrix(r_perturbation, nrow = S, ncol = 1)
+  # Perturbation with delta_r simulated using mvrnorm
+  delta_r <- MASS::mvrnorm(n = 1, mu = rep(0, S), Sigma = covMat * perturb_scale)
+  r_perturbation <- r_pre + delta_r
+  dyn_params$r <- r_perturbation
   
   post_perturb <- simulate_dynamics_c(dyn_params, fw.model, init_biomass = equilibrium_pre)
   equilibrium_post <- as.numeric(post_perturb[nrow(post_perturb), -1])
   
   delta_X <- equilibrium_post - equilibrium_pre
-  return(list(delta_r = dyn_params$r - r_pre, delta_X = delta_X))
+  return(list(delta_r = delta_r, delta_X = delta_X))
 }
-
 
 ############################################## SIMULATION
 
 # Set simulation parameters
 S <- 8  # Number of species
-C <- 0.2  # Connectance of the network
+C <- 0.4  # Connectance of the network
 aij_params <- c(0, 0.5)
 sd_X <- 1  # Variance scale factor
 num_scenarios <- 10
@@ -117,7 +652,7 @@ num_simulations <- 10
 maxt <- 1000  # Duration of the simulation
 
 # Fixed interaction matrix A
-A <- sim_quantitative_network(S, C, aij_params)
+#A <- sim_quantitative_network(S, C, aij_params)
 
 # Initialize data frames to store results
 results <- data.frame()
@@ -150,7 +685,7 @@ for (alpha_d in c(0.001, 40)) {
       # Run the simulation with perturbations
       sim_result <- simulate_dynamics_perturbed(list(A = A), covMat, S, maxt)
       
-      # Store the results
+      # Store the results for each species
       for (species in 1:S) {
         results <- rbind(results, data.frame(
           Alpha_d = alpha_d,
@@ -164,31 +699,69 @@ for (alpha_d in c(0.001, 40)) {
   }
 }
 
-# Compute standard deviation of Delta_X for each species and alpha_d value
+# Compute standard deviation of Delta_X for each species, scenario, and alpha_d value
+results_species <- results %>%
+  group_by(Alpha_d, Scenario, Species) %>%
+  summarize(variance_in_delta_X = sd(Delta_X),
+            mean_delta_X = mean(Delta_X),
+            .groups = "drop")
+
+# across all scenarios
 expected_delta_X <- results %>%
   group_by(Alpha_d, Species) %>%
-  summarize(sd_Delta_X = sd(Delta_X))
+  summarize(sd_Delta_X = sd(Delta_X),
+            mean_Delta_X = mean(Delta_X))
 
-# Plot comparing sd_Delta_X between alpha_d scenarios across all species
-ggplot(expected_delta_X, aes(x = as.factor(Alpha_d), y = sd_Delta_X, fill = as.factor(Alpha_d))) +
+
+
+######### ABUNDANCE delta_X
+
+p_abund_spp <- ggplot(results_species, aes(x = Species, y = mean_delta_X, fill = as.factor(Alpha_d))) +
+  geom_boxplot(position = position_dodge(width = 0.75)) +
+  labs(x = "Species", y = "Mean Delta_X", fill = "Alpha_d") +
+  scale_fill_manual(values = c("#6A0DAD", "#EAD7F5")) +
+  theme_minimal() +
+  ggtitle("Species-specific Mean Abundance Change Across Alpha_d Scenarios") +
+  theme(legend.position = "right")
+
+p_abund_alphad <- ggplot(expected_delta_X, aes(x = as.factor(Alpha_d), y = mean_Delta_X, fill = as.factor(Alpha_d))) +
   geom_boxplot() +
-  labs(x = "Alpha_d", y = "SD Delta_X Across All Species", fill = "Alpha_d") +
+  labs(x = "Alpha_d", y = "Mean Delta_X", fill = "Alpha_d") +
+  scale_fill_manual(values = c("#6A0DAD", "#EAD7F5")) +
+  theme_minimal() +
+  ggtitle("Comparison of Mean Delta_X Across Alpha_d Scenarios for All Species") +
+  theme(legend.position = "none")
+
+######### VARIANCE delta_X
+
+p_sd_spp <- ggplot(results_species, aes(x = Species, y = variance_in_delta_X, fill = as.factor(Alpha_d))) +
+  geom_boxplot(position = position_dodge(width = 0.75)) +
+  labs(x = "Species", y = "SD Delta_X", fill = "Alpha_d") +
+  scale_fill_manual(values = c("#6A0DAD", "#EAD7F5")) +
+  theme_minimal() +
+  ggtitle("Species-specific SD Delta_X Across Alpha_d Scenarios") +
+  theme(legend.position = "right")
+
+
+p_sd_alphad <- ggplot(expected_delta_X, aes(x = as.factor(Alpha_d), y = sd_Delta_X, fill = as.factor(Alpha_d))) +
+  geom_boxplot() +
+  labs(x = "Alpha_d", y = "SD Delta_X", fill = "Alpha_d") +
   scale_fill_manual(values = c("#6A0DAD", "#EAD7F5")) +
   theme_minimal() +
   ggtitle("Comparison of SD Delta_X Across Alpha_d Scenarios for All Species") +
   theme(legend.position = "none")
 
 # Plot distribution of correlation values across scenarios
-ggplot(correlation_distributions, aes(x = Correlation, fill = as.factor(Alpha_d))) +
-  geom_density(alpha = 0.7) +
-  labs(x = "Correlation Value", y = "Density", fill = "Alpha_d") +
-  scale_fill_manual(values = c("#6A0DAD", "#EAD7F5")) +
-  xlim(-1, 1) +
-  ggtitle("Distribution of Correlation Values Across All Scenarios") +
-  theme_minimal()
+# ggplot(correlation_distributions, aes(x = Correlation, fill = as.factor(Alpha_d))) +
+#   geom_density(alpha = 0.7) +
+#   labs(x = "Correlation Value", y = "Density", fill = "Alpha_d") +
+#   scale_fill_manual(values = c("#6A0DAD", "#EAD7F5")) +
+#   xlim(-1, 1) +
+#   ggtitle("Distribution of Correlation Values Across All Scenarios") +
+#   theme_minimal()
 
 # Plot distribution of covariance values across scenarios
-ggplot(covariance_distributions, aes(x = Covariance, fill = as.factor(Alpha_d))) +
+plot_Cdistr <- ggplot(covariance_distributions, aes(x = Covariance, fill = as.factor(Alpha_d))) +
   geom_density(alpha = 0.7) +
   labs(x = "Covariance Value", y = "Density", fill = "Alpha_d") +
   scale_fill_manual(values = c("#6A0DAD", "#EAD7F5")) +
@@ -196,94 +769,309 @@ ggplot(covariance_distributions, aes(x = Covariance, fill = as.factor(Alpha_d)))
   ggtitle("Distribution of Covariance Values Across All Scenarios") +
   theme_minimal()
 
+
+arranged_plot <- ggarrange(
+  p_abund_spp,
+  p_abund_alphad,
+  
+  p_sd_spp,
+  p_sd_alphad,
+  
+  ncol = 2,
+  nrow = 2,
+  
+  labels = LETTERS[1:4])
+
+print(plot_Cdistr)
+print(arranged_plot)
+
+
 ```
 
 
-- No differences between scenarios with different strengths in species' covariances.
 
 
-# simulation with formula
+
+
+
+# simulation equation terms
 
 ```{r}
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+library(ggpubr)
 
-
-# Define function to calculate variance of ΔX over multiple simulations
-simulate_variance_multiple_runs <- function(S, alpha_d, interaction_sd, num_simulations) {
-  results <- replicate(num_simulations, {
-    # Generate covariance matrix for Δr
-    cor_matrix <- clusterGeneration::rcorrmatrix(d = S, alphad = alpha_d)
-    cov_matrix <- diag(sd_X, S) %*% cor_matrix %*% diag(sd_X, S)
-    
-    # Generate interaction coefficients with increased variance
-    interaction_matrix <- matrix(rnorm(S^2, mean = 0, sd = interaction_sd), nrow = S)
-    
-    # Calculate variance of ΔX using formula 11
-    var_delta_X <- sapply(1:S, function(i) {
-      sum(sapply(1:S, function(k) {
-        sapply(1:S, function(l) {
-          interaction_matrix[i, k] * interaction_matrix[i, l] * cov_matrix[k, l]
-        })
-      }))
-    })
-    
-    return(var_delta_X)
-  })
+# Function to generate a symmetric correlation matrix based on different distributions
+createSymmetricCorMat <- function(S, distribution_type = "normal", mean = 0, sd = 1, beta_shape1 = NULL, beta_shape2 = NULL, ushape1 = NULL, ushape2 = NULL) {
+  n_off_diag <- S * (S - 1) / 2
   
-  # Convert to data frame
-  var_delta_X_df <- as.data.frame(t(results))
-  var_delta_X_df <- var_delta_X_df %>%
-    pivot_longer(cols = everything(), names_to = "Species", values_to = "Variance_Delta_X") %>%
-    mutate(Alpha_d = alpha_d)
+  if (distribution_type == "normal") {
+    cor_values <- rnorm(n_off_diag, mean = mean, sd = sd)
+  } else if (distribution_type == "beta") {
+    cor_values <- rbeta(n_off_diag, shape1 = beta_shape1, shape2 = beta_shape2)
+    cor_values <- 2 * (cor_values - 0.5)
+  } else if (distribution_type == "u_shaped") {
+    cor_values <- rbeta(n_off_diag, shape1 = ushape1, shape2 = ushape2)
+    cor_values <- 2 * (cor_values - 0.5)
+  } else {
+    stop("Invalid distribution type specified.")
+  }
   
-  return(var_delta_X_df)
+  cor_values[cor_values < -1] <- -1
+  cor_values[cor_values > 1] <- 1
+  
+  corMat <- diag(1, nrow = S, ncol = S)
+  corMat[upper.tri(corMat)] <- cor_values
+  corMat[lower.tri(corMat)] <- t(corMat)[lower.tri(corMat)]
+  
+  return(corMat)
 }
 
-# Parameters
-S <- 8
-sd_X <- 1
-alpha_d_values <- c(0.1, 40)
-interaction_sd <- 2  # Increased standard deviation for interaction coefficients
-num_simulations <- 100
+# Function to simulate a quantitative predator-prey interaction network
+sim_quantitative_network <- function(Net_type, S, C, aij_params) {
+  A <- matrix(0, S, S)
+  n_pairs <- S * (S - 1) / 2
+  B <- runif(n_pairs) <= C
+  if (Net_type == "predator-prey") { 
+    aij <- -abs(rnorm(n_pairs, aij_params[1], aij_params[2]))
+    A[upper.tri(A)] <- B * aij
+    A <- t(A)
+    aij <- abs(rnorm(n_pairs, aij_params[1], aij_params[2]))
+    A[upper.tri(A)] <- B * aij
+  } 
+  diag(A) <- -runif(S, min = 0, max = 1)
+  while(max(Re(eigen(A)$values)) > 0){
+    diag(A) <- -runif(S, min = 0, max = 1)
+  }
+  return(A)
+}
 
-# Run simulations for both alpha_d values
-results_list <- lapply(alpha_d_values, function(alpha_d) {
-  simulate_variance_multiple_runs(S, alpha_d, interaction_sd, num_simulations)
-})
+# Function to calculate community-level metrics based on covariance and network matrices
+# Function to calculate metrics
+# Function to calculate metrics
+calculate_variancedelta <- function(B, cov_delta_r) {
+  n <- nrow(B)
+  
+  # Variance of Delta X
+  var_delta_X <- numeric(n)
+  for (i in 1:n) {
+    var_sum <- 0
+    for (k in 1:n) {
+      for (l in 1:n) {
+        var_sum <- var_sum + B[i, k] * B[i, l] * cov_delta_r[k, l]
+      }
+    }
+    var_delta_X[i] <- var_sum
+  }
+  
+  Variance = var_delta_X
+}
 
-# Combine results and plot
-results_df <- bind_rows(results_list)
+# calculate_variancedelta <- function(B, cov_delta_r) {
+#   n <- nrow(B)
+#   var_delta_X <- numeric(n)
+#   
+#   for (i in 1:n) {
+#     # Using matrix multiplication to directly compute the variance for species i
+#     var_delta_X[i] <- t(B[i, ]) %*% cov_delta_r %*% B[i, ]
+#   }
+#   
+#   return(var_delta_X)
+# }
 
-# Boxplot to compare the variance of ΔX
-ggplot(results_df, aes(x = as.factor(Alpha_d), y = Variance_Delta_X, fill = as.factor(Alpha_d))) +
-  geom_boxplot() +
-  labs(x = "Alpha_d", y = "Variance of ΔX", fill = "Alpha_d") +
-  scale_fill_manual(values = c("#6A0DAD", "#EAD7F5")) +
-  theme_minimal() +
-  ggtitle("Comparison of Variance of ΔX Across Alpha_d Scenarios with Increased Interaction Coefficient Variance") +
-  theme(legend.position = "none")
+# Define scenarios for covariance distributions
+scenarios <- list(
+  list("label" = "normal weak", "distribution_type" = "normal", "mean" = 0, "sd" = 0.1),
+  list("label" = "normal strong", "distribution_type" = "normal", "mean" = 0, "sd" = 0.6),
+  list("label" = "beta -", "distribution_type" = "beta", "beta_shape1" = 2, "beta_shape2" = 5),
+  list("label" = "beta +", "distribution_type" = "beta", "beta_shape1" = 5, "beta_shape2" = 2),
+  list("label" = "u-shaped", "distribution_type" = "u_shaped", "ushape1" = 0.1, "ushape2" = 0.1)
+)
 
+# Prepare data for plotting individual replicate results
+plot_data <- data.frame(Scenario = character(), Variance_Change = numeric())
+
+# List to store covariance matrices for each scenario for plotting later
+covariance_storage <- list()
+
+
+
+
+# Run simulation for each scenario
+for (scenario in scenarios) {
+
+  variance_changes <- numeric(20)
+  cov_matrices <- list()
+  
+  for (i in 1:300) {
+    # Generate covariance matrix
+    cov_delta_r <- createSymmetricCorMat(S = 20, 
+                                         distribution_type = scenario$distribution_type,
+                                         mean = scenario$mean, 
+                                         sd = scenario$sd, 
+                                         beta_shape1 = scenario$beta_shape1, 
+                                         beta_shape2 = scenario$beta_shape2,
+                                         ushape1 = scenario$ushape1, 
+                                         ushape2 = scenario$ushape2)
+    cov_matrices[[i]] <- cov_delta_r
+    
+        # Simulate interaction network A and invert it to get B
+    A <- sim_quantitative_network("predator-prey", S = 20, C = 0.2, aij_params = c(0.5, 0.1))
+    B <- solve(A)
+    
+    # Calculate metrics
+    variance_changes[i] <- mean(calculate_variancedelta(B, cov_delta_r))
+
+  }
+  
+  # Store individual replicate results for plotting
+  plot_data <- rbind(plot_data, 
+                              data.frame(Scenario = scenario$label, 
+                                         Variance_Change = variance_changes))
+  
+  # Store covariance matrices for later plotting
+  covariance_storage[[scenario$label]] <- cov_matrices
+}
+
+# Plotting the covariance distributions outside the loop
+for (scenario_label in names(covariance_storage)) {
+  cov_matrices <- covariance_storage[[scenario_label]]
+
+  # Extract off-diagonal elements from each covariance matrix and create a dataframe
+  off_diag_values <- sapply(cov_matrices, function(mat) mat[upper.tri(mat)])
+  off_diag_df <- data.frame(Value = as.vector(off_diag_values),
+                            Matrix = rep(1:20, each = length(off_diag_values) / 20))
+
+  # Generate density plots for each of the 20 matrices
+ p_list <- lapply(1:20, function(i) {
+    ggplot(subset(off_diag_df, Matrix == i), aes(x = Value)) +
+      geom_density(fill = "skyblue", alpha = 0.5) +
+      labs(title = paste("Matrix", i), x = "Covariance Value", y = "Density") +
+      xlim(-1, 1) + 
+      theme_minimal() +
+      theme(axis.title.x = element_text(size = 10),
+            axis.text.x = element_text(size = 8),
+            axis.title.y = element_text(size = 10),
+            axis.text.y = element_text(size = 8),
+            plot.title = element_text(size = 8, hjust = 0.5))
+  })
+
+  # Arrange the 20 density plots into a grid
+  plot_grid <- ggarrange(plotlist = p_list, ncol = 5, nrow = 4,
+                         top = paste("Covariance Distribution for Scenario:", scenario_label))
+  print(plot_grid)
+}
+
+# Define colors for each scenario
+scenario_colors <- c("normal weak" = "skyblue", "normal strong" = "orange", 
+                     "beta -" = "purple", "beta +" = "green", "u-shaped" = "red")
+scenario_order <- names(scenario_colors)
+
+
+p2 <- ggplot(combined_plot_data, aes(x = Scenario, y = Variance_Change, fill = Scenario)) +
+  geom_violin(trim = FALSE, alpha = 0.5) +  # Add violin plot to show the distribution
+  geom_jitter(width = 0.2, alpha = 0.1, shape = 21, size = 2, aes(color = Scenario)) +  # Overlay individual points
+  scale_fill_manual(values = scenario_colors) +
+  scale_color_manual(values = scenario_colors) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(x = " ", y = "Variance in Abundance Change") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none") +
+  ylim(0, max(combined_plot_data$Variance_Change))
+
+# Display the plot
+print(p2)
 
 ```
 
+#################################################################### 
+
+
+
+
+
+```{r}
+############################################## SIMULATION SETUP
+
+# Set simulation parameters
+S <- 8  # Number of species
+C <- 0.4  # Connectance of the network
+aij_params <- c(0, 0.5)
+sd_X <- 1  # Variance scale factor
+num_scenarios <- 10
+num_simulations <- 10
+maxt <- 1000  # Duration of the simulation
+
+
+# Dataframe to store species-specific standard deviations across simulations for each scenario
+species_sd_results <- data.frame()
+
+# Loop over two alpha_d values: 0.001 and 40
+for (alpha_d in c(0.001, 40)) {
+  print(paste("alpha_d", alpha_d))
+  
+  for (scenario in 1:num_scenarios) {
+    print(paste("scenario", scenario, "of", num_scenarios))
+    
+    # Generate covariance matrix
+    cor_matrix <- clusterGeneration::rcorrmatrix(d = S, alphad = alpha_d)
+    covMat <- diag(sd_X, S) %*% cor_matrix %*% diag(sd_X, S)
+    
+    # Initialize dataframe to store results for each species
+    scenario_results <- data.frame(Species = integer(), Delta_X = numeric())
+    
+    for (sim in 1:num_simulations) {
+      print(paste("sim", sim, "of", num_simulations))
+      
+      # Run the simulation with perturbations
+      sim_result <- simulate_dynamics_perturbed(list(A = A), covMat, S, maxt)
+      
+      # Store the results for each species within this scenario
+      for (species in 1:S) {
+        scenario_results <- rbind(scenario_results, 
+                                  data.frame(Species = species, Delta_X = sim_result$delta_X[species]))
+      }
+    }
+    
+    # Calculate SD for each species in this scenario
+    species_sd <- scenario_results %>%
+      group_by(Species) %>%
+      summarize(SD_Delta_X = sd(Delta_X)) %>%
+      mutate(Alpha_d = alpha_d, Scenario = scenario)
+    
+    # Combine results across scenarios
+    species_sd_results <- rbind(species_sd_results, species_sd)
+  }
+}
+
+# Plot: Distribution of Species-Specific SDs Across Scenarios
+ggplot(species_sd_results, aes(x = as.factor(Species), y = SD_Delta_X, fill = as.factor(Alpha_d))) +
+  geom_boxplot() +
+  labs(x = "Species", y = "SD in Delta_X (Species-Specific)", fill = "Alpha_d") +
+  theme_minimal() +
+  ggtitle("Species-Specific SD in Delta_X Across Simulations for Different Alpha_d Scenarios") +
+  scale_fill_manual(values = c("#6A0DAD", "#EAD7F5")) +
+  theme(legend.position = "right")
+```
+
+-   seems that species that are less connected are more likely to experience an increase in sd delta_X (compare species 1 vs sp 8)
+
+```{r}
+saveRDS(A, here::here("a_code/LV_simulations_AF/A_matrix.rds"))
+```
 
 ## checks
 
-
-The "realized" covariance of species' abundance are driven by both species' covariance in responses to the environment and their interaction coefficients. 
+The "realized" covariance of species' abundance are driven by both species' covariance in responses to the environment and their interaction coefficients.
 
 $$
 \text{cov}\left( \Delta X_i, \Delta X_j \right) \approx \sum_k \sum_l b_{ik} b_{il} \text{cov}\left( \Delta r_k, \Delta r_l \right) \tag{12}
 $$
 
-
-
-1. Does the C matrix have the expected effect on delta_r values?
-
+1.  Does the C matrix have the expected effect on delta_r values?
 
 We test this by leaving out the effect of interactions and making the C matrix to be the only driver of abundance changes. To do this, we only consider the identify matrix of the interaction matrix A, so that species are only influenced by themselves.
-
-
-
 
 ```{r}
 
@@ -368,14 +1156,8 @@ inspect_biomass_dynamics(A = A,
 
 ```
 
-
-
-
-
-
-- simulating very weak interactions
-- scaling covariance by sd_X = 0.01 to get normal correlation values in sd_X
-
+-   simulating very weak interactions
+-   scaling covariance by sd_X = 0.01 to get normal correlation values in sd_X
 
 ```{r}
 
@@ -518,173 +1300,3 @@ gridExtra::grid.arrange(p1, p2, ncol = 2)
 
 
 ```
-
-```{r}
-# Function to simulate dynamics without interspecific effects
-simulate_identity_dynamics <- function(params, covMat, S, maxt, perturb_scale = 1) {
-  init_biomass <- runif(S, min = 1, max = 10)
-  r_pre <- -params$A %*% init_biomass
-  
-  dyn_params <- list(A = params$A, r = r_pre, S = S, maxt = maxt) 
-  pre_perturb <- simulate_dynamics_c(dyn_params, fw.model)
-  equilibrium_pre <- as.numeric(pre_perturb[nrow(pre_perturb), -1])
-  
-  # Perturb r using the covariance matrix
-  r_perturbation <- MASS::mvrnorm(n = 1, mu = r_pre, Sigma = covMat * perturb_scale)
-  dyn_params$r <- matrix(r_perturbation, nrow = S, ncol = 1)
-  
-  # Simulate post-perturbation dynamics
-  post_perturb <- simulate_dynamics_c(dyn_params, fw.model, init_biomass = equilibrium_pre)
-  equilibrium_post <- as.numeric(post_perturb[nrow(post_perturb), -1])
-  
-  delta_X <- equilibrium_post - equilibrium_pre
-  return(list(delta_r = dyn_params$r - r_pre, delta_X = delta_X))
-}
-
-# Set up the simulation
-S <- 8
-C <- 0.2
-sd_X <- 1
-alpha_d <- 40  # Adjust alpha_d as needed
-
-# Create the identity matrix for A (no interspecific interactions)
-A_identity <- diag(1, S)
-
-# Generate the correlation and covariance matrices for delta_r
-cor_matrix <- clusterGeneration::rcorrmatrix(d = S, alphad = alpha_d)
-covMat <- diag(sd_X, S) %*% cor_matrix %*% diag(sd_X, S)
-
-# Run the simulation
-results <- data.frame()
-for (i in 1:10) {  # 10 simulations for example
-  sim_result <- simulate_identity_dynamics(list(A = A_identity), covMat, S, maxt = 1000)
-  delta_r <- sim_result$delta_r
-  delta_X <- sim_result$delta_X
-  
-  results <- rbind(results, data.frame(
-    Simulation = i,
-    Species = 1:S,
-    Delta_X = delta_X,
-    Delta_r = delta_r
-  ))
-}
-
-# Compute covariances in Delta_X and Delta_r
-cov_delta_X <- cov(dplyr::select(results, starts_with("Delta_X")))
-cov_delta_r <- cov(dplyr::select(results, starts_with("Delta_r")))
-
-# Plot the correlation matrices
-corr_melt_X <- melt(cov2cor(cov_delta_X))
-colnames(corr_melt_X) <- c("Var1", "Var2", "Correlation")
-
-corr_melt_r <- melt(cov2cor(cov_delta_r))
-colnames(corr_melt_r) <- c("Var1", "Var2", "Correlation")
-
-p1 <- ggplot(corr_melt_X, aes(x = Var1, y = Var2, fill = Correlation)) +
-  geom_tile() +
-  scale_fill_distiller(palette = "RdBu", limits = c(-1, 1)) +
-  labs(title = "Correlation Matrix for Delta_X") +
-  theme_minimal()
-
-p2 <- ggplot(corr_melt_r, aes(x = Var1, y = Var2, fill = Correlation)) +
-  geom_tile() +
-  scale_fill_distiller(palette = "RdBu", limits = c(-1, 1)) +
-  labs(title = "Correlation Matrix for Delta_r") +
-  theme_minimal()
-
-# Display both plots
-gridExtra::grid.arrange(p1, p2, ncol = 2)
-
-```
-
-```{r}
-library(ggplot2)
-library(tidyr)
-library(dplyr)
-library(Matrix)
-library(deSolve)
-library(clusterGeneration)
-library(mvtnorm)
-library(gridExtra)
-
-# Function to simulate dynamics with identity matrix
-simulate_identity_dynamics <- function(params, covMat, S, maxt, perturb_scale = 1) {
-  init_biomass <- runif(S, min = 1, max = 10)
-  r_pre <- -params$A %*% init_biomass
-  
-  dyn_params <- list(A = params$A, r = r_pre, S = S, maxt = maxt) 
-  pre_perturb <- simulate_dynamics_c(dyn_params, fw.model)
-  equilibrium_pre <- as.numeric(pre_perturb[nrow(pre_perturb), -1])
-  
-  # Perturb r using the covariance matrix
-  r_perturbation <- MASS::mvrnorm(n = 1, mu = r_pre, Sigma = covMat * perturb_scale)
-  dyn_params$r <- matrix(r_perturbation, nrow = S, ncol = 1)
-  
-  # Simulate post-perturbation dynamics
-  post_perturb <- simulate_dynamics_c(dyn_params, fw.model, init_biomass = equilibrium_pre)
-  equilibrium_post <- as.numeric(post_perturb[nrow(post_perturb), -1])
-  
-  # Return both the dynamics and equilibrium
-  return(list(pre_perturb = pre_perturb, post_perturb = post_perturb, delta_X = equilibrium_post - equilibrium_pre))
-}
-
-# Set up the simulation
-S <- 8
-C <- 0.2
-sd_X <- 1
-alpha_d <- 40
-maxt <- 1000
-
-# Identity matrix for A
-A_identity <- diag(1, S)
-
-# Generate correlation and covariance matrices
-cor_matrix <- clusterGeneration::rcorrmatrix(d = S, alphad = alpha_d)
-covMat <- diag(sd_X, S) %*% cor_matrix %*% diag(sd_X, S)
-
-# Run the simulation
-sim_result <- simulate_identity_dynamics(list(A = A_identity), covMat, S, maxt)
-
-# Prepare data for plotting biomass dynamics
-pre_perturb_long <- sim_result$pre_perturb %>%
-  pivot_longer(cols = -time, names_to = "Species", values_to = "Biomass") %>%
-  mutate(Phase = "Pre-Perturbation")
-
-post_perturb_long <- sim_result$post_perturb %>%
-  pivot_longer(cols = -time, names_to = "Species", values_to = "Biomass") %>%
-  mutate(Phase = "Post-Perturbation")
-
-biomass_dynamics <- bind_rows(pre_perturb_long, post_perturb_long)
-
-# Plot the biomass dynamics for each species
-ggplot(biomass_dynamics, aes(x = time, y = Biomass, color = Species)) +
-  geom_line() +
-  facet_wrap(~Phase, scales = "free_y") +
-  labs(title = "Biomass Dynamics Over Time", x = "Time", y = "Biomass") +
-  theme_minimal() +
-  scale_color_viridis_d()
-
-# Plot the correlation matrices as before
-corr_melt_X <- melt(cov2cor(cov(sim_result$delta_X)))
-colnames(corr_melt_X) <- c("Var1", "Var2", "Correlation")
-
-corr_melt_r <- melt(cov2cor(cov(sim_result$delta_r)))
-colnames(corr_melt_r) <- c("Var1", "Var2", "Correlation")
-
-p1 <- ggplot(corr_melt_X, aes(x = Var1, y = Var2, fill = Correlation)) +
-  geom_tile() +
-  scale_fill_distiller(palette = "RdBu", limits = c(-1, 1)) +
-  labs(title = "Correlation Matrix for Delta_X") +
-  theme_minimal()
-
-p2 <- ggplot(corr_melt_r, aes(x = Var1, y = Var2, fill = Correlation)) +
-  geom_tile() +
-  scale_fill_distiller(palette = "RdBu", limits = c(-1, 1)) +
-  labs(title = "Correlation Matrix for Delta_r") +
-  theme_minimal()
-
-gridExtra::grid.arrange(p1, p2, ncol = 2)
-
-```
-
-
