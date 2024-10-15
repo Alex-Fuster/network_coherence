@@ -295,13 +295,13 @@ This equation shows how the **mean change** in species abundances, $\overline{\D
     -   It gives insight into whether species that are **central** or influential within the network also experience **significant perturbations**.
     -   If this covariance is **high**, it implies that **network's most influential species** (those with larger combined interaction effects as captured by $B$) align closely with the environmental perturbation, potentially amplifying community-level abundance changes.
 
-\-\-\-\-\-\-\-\-\--
+
 
 SUMMARY
 
 Equation (10) shows that community abundance shifts are influenced by both the average effect of environmental perturbation across all species and the alignment between species' network roles and the environmental perturbation. Thus, a strong covariance between network influence and environmental perturbation magnifies changes in community abundance, especially when species central to the network experience large perturbations.
 
-\-\-\-\-\-\-\-\-\--
+
 
 ## Equation 11: Variance in Abundance Change Among Species
 
