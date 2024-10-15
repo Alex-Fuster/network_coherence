@@ -1,6 +1,12 @@
 ---
-title: "LV simulations - effect of species' co-responses to the environment on community dynamics"
+title: "LV simulations - effect of species' co-responses to the environment on community
+  dynamics"
+output: word_document
 ---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(eval = FALSE)
+```
 
 ```{r, echo=FALSE}
 
@@ -259,14 +265,20 @@ $$
 
 with (as above) $B = A^{-1}$ the inverse of the LV interaction matrix.
 
+# Biological Interpretation of Key Equations
 
-### Biological Interpretation of Key Equations
+Through the mathematical formulation relating species' coherence in responses to environmental change to ecosystem functioning, we showed that the **Ecological Network Coherence** concept emphasizes that the impact of environmental perturbations on community structure is not only about the strength of interactions but also about how these interactions propagate through the network and influence species in a coherent or disparate manner:
 
+### Interpreting $b_{ik} b_{il}$ as Net Effects of Interactions
 
-Through the mathematical formulation relating species' coherence in responses to environmental change to ecosystem functioning, we showed that the **Ecological Network Coherence** concept emphasizes that the impact of environmental perturbations on community structure is not only about the strength of interactions but also about how these interactions propagate through the network and influence species in a coherent or disparate manner. Let's delve deeper into the ecological interpretation of the equations:
+The terms $b_{ik} b_{il}$ reflect **net effects** within the network, accounting for both direct and indirect influences on species abundance. Unlike simply counting connections, these terms measure how **changes propagate** through all possible pathways within the network. The resulting impact of $b_{ik} b_{il}$ on variance and covariance in species abundances is therefore shaped by the entire **interaction web**:
 
+-   **Indirect Dependencies**: Values in $B$ reflect not only direct connections but also cumulative effects, meaning that even species with few direct interactions can experience substantial influence if other species affect them indirectly.
+-   **Magnitude and Direction**: The values $b_{ik} b_{il}$ capture the strength and direction of these net effects, influencing how species respond to perturbations in the network.
 
-#### Equation 10: Mean Abundance Change Due to Perturbations
+Now, let's delve deeper into the ecological interpretation of the equations:
+
+## Equation 10: Mean Abundance Change Due to Perturbations
 
 $$
 \overline{\Delta X} = \mathbb{E}\left[ \overrightarrow{1}^T B\right]\mathbb{E}\left[ \overrightarrow{\Delta r}\right] + \text{cov}\left( \overrightarrow{1}^T B, \overrightarrow{\Delta r}\right)
@@ -291,7 +303,7 @@ Equation (10) shows that community abundance shifts are influenced by both the a
 
 \-\-\-\-\-\-\-\-\--
 
-#### Equation 11: Variance in Abundance Change Among Species
+## Equation 11: Variance in Abundance Change Among Species
 
 $$
 \text{var}\left( \Delta X_i \right) \approx \sum_k \sum_l b_{ik} b_{il} \text{cov}\left( \Delta r_k, \Delta r_l \right)
@@ -310,35 +322,28 @@ This equation describes how much a particular species' abundance ($X_i$) is expe
     -   This component describes the covariance between the impacts of the perturbation on species $k$ and $l$.
     -   A positive covariance suggests that $k$ and $l$ experience the environmental change in the same direction, which amplifies the effect on $i$, particularly if $i$ is strongly influenced by $k$ and $l$.
     -   Conversely, negative covariance can **offset** the effects on $i$ if $k$ and $l$ are affected in opposing ways. This offsetting effect occurs when species linked to $i$ are perturbed in contrasting directions, leading to a reduction in $i$'s abundance variance.
-
-### Biological Insights and Predictions:
-
-1.  **Strength and Pattern of Interactions**:
-    -   Species with strong connections to others will generally exhibit higher variances in abundance under environmental perturbations, as their abundance is influenced by multiple other species.
-    -   Keystone species or those with extensive indirect effects will show greater abundance variance, as their roles involve significant net effects across the community.
-2.  **Covariance Structure of Environmental Effects**:
-    -   If environmental changes are **highly synchronized** across species (i.e., large, positive covariance), species with strong connections will have increased variance, as the effect of the perturbation is compounded by the similar responses across linked species.
+    -   If environmental changes are **highly coherent** across species (i.e., large, positive covariance), species with strong connections will have increased variance, as the effect of the perturbation is compounded by the similar responses across linked species.
     -   **Negative covariances**, however, can reduce abundance variance through offsetting effects. For example, if species $k$ and $l$ respond in opposite ways to the environment and both influence species $i$, these opposing responses may cancel out, leading to a dampened variance in $i$'s abundance.
 
 ### Interpretation Based on Magnitudes
 
 1.  **Case 1: Strong Covariances, Regardless of Net Effects**
     -   When covariances between environmental perturbations on species are high, species abundance variance increases across the network. In this case, even if a species has low net effects, it can still exhibit substantial variance in abundance due to the **highly correlated responses** of other species.
-    -   For instance, if two indirectly connected species experience similar environmental impacts, their abundances may fluctuate in tandem, which amplifies the overall community variance, especially when species are subject to similar external forces.
+    -   n this scenario, the impact of environmental perturbations on species k and l that are strongly correlated will cascade through the network, resulting in large variances for species iii. For example, even if species i has a weak direct connection with species k and l, it can still be affected significantly due to the strong environmental covariances. This occurs because i\'s abundance depends on k and l indirectly through other connections. As a result, if species k and l experience synchronized environmental impacts, this synchronization will propagate through their network connections, amplifying the variance in i\'s abundance. Therefore, in a community where environmental covariances are generally high, the entire network tends to show increased variability. This amplification occurs due to the correlated external forces affecting species simultaneously, resulting in greater community-wide fluctuations in abundance.
 2.  **Case 2: Strong Net Effects, Regardless of Covariances**
-    -   Here, the **strength of direct and indirect interactions** takes precedence. Species that experience strong cumulative effects from others---regardless of how these effects correlate environmentally---are likely to show higher abundance variance.
+    -   Here, the **strength of direct and indirect interactions** becomes dominant. Species that experience strong cumulative effects from others---regardless of how these effects correlate environmentally---are likely to show higher abundance variance.
     -   In this scenario, a **specialist** heavily reliant on a single other species with a strong net effect might show high variance if that interacting species fluctuates significantly. Similarly, **generalist** species, even if weakly connected to many others, could exhibit high variance if the combined net effects are substantial.
-    -   The species' variance depends more on the magnitude of interaction effects within the network than on environmental synchrony, highlighting the impact of ecological structure on stability.
+    -   The species' variance depends more on the magnitude of interaction effects within the network than on environmental coherence, highlighting the impact of ecological structure on stability.
 3.  **Case 3: Combined Strong Covariances and Strong Net Effects**
-    -   This is the scenario where both high environmental synchrony and substantial interaction strengths coexist. Species subject to **strong, correlated perturbations** and **high net effects** from others will exhibit extreme abundance variance.
+    -   This is the scenario where both high environmental coherence and substantial interaction strengths coexist. Species subject to **strong, correlated perturbations** and **high net effects** from others will exhibit extreme abundance variance.
     -   For example, a keystone species connected to several others through strong interactions would not only respond to the environmental conditions it experiences but also amplify these effects through the entire network, resulting in pronounced fluctuations across multiple species.
-    -   This combined scenario suggests that **community stability may be highly compromised**, as species with strong net effects propagate environmentally driven changes throughout the network. The cumulative impact of synchronized environmental responses and strong species interactions leads to high variability, potentially destabilizing the ecosystem.
+    -   This combined scenario suggests that **community stability may be highly compromised**, as species with strong net effects propagate environmentally driven changes throughout the network. The cumulative impact of coherent environmental responses and strong species interactions leads to high variability, potentially destabilizing the ecosystem.
 
 ------------------------------------------------------------------------
 
 In summary:
 
--   **Strong covariances** lead to high variance by creating synchronized responses among species.
+-   **Strong covariances** lead to high variance by creating coherent responses among species.
 -   **Strong net effects** cause high variance due to the strength of ecological interactions.
 -   When **both are strong**, they compound, leading to even greater fluctuations and reduced community stability.
 
@@ -346,50 +351,54 @@ These insights suggest that **ecosystems with tightly coupled interactions and c
 
 ------------------------------------------------------------------------
 
+### Impact of Covariance Distributions (i.e. ENC patterns) on Species Variance
 
+The term $\text{cov}(\Delta r_k, \Delta r_l)$ in Equation 11 represents the distribution of environmental covariances across species pairs. The nature of this distribution---whether it is normally distributed, heavily skewed, or follows a particular shape (e.g., u-shaped, beta-positive, or beta-negative)---will influence the variance in abundance change for any species $i$ in conjunction with the interaction effects from $B$.
 
-### Impact of Covariance Distributions on Species Variance
+#### 1. **Normally Distributed Covariances (Symmetric Distribution) with mean 0**
 
-The term \(\text{cov}(\Delta r_k, \Delta r_l)\) in Equation 11 represents the distribution of environmental covariances across species pairs. The nature of this distribution—whether it is normally distributed, heavily skewed, or follows a particular shape (e.g., u-shaped, beta-positive, or beta-negative)—will influence the variance in abundance change for any species \(i\) in conjunction with the interaction effects from \(B\).
+-   In this case, environmental covariances have a mean of zero with values spread symmetrically on both sides.
+-   **Implications:**
+    -   Positive and negative covariances are equally likely, meaning that effects may partially cancel each other out. This can lead to a moderation of species $i$'s abundance variance, as some positive interactions may amplify while negative ones reduce the overall impact.
+    -   The overall abundance variance will depend heavily on the **interaction terms in** $B$. If $B$ has both positive and negative terms, some offsetting effects will occur, potentially stabilizing the variance for species $i$.
+-   **Prediction:**
+    -   **P1:** With a symmetric distribution, we might observe **lower overall variance**, particularly if interaction effects are also symmetrically distributed, creating balanced amplification and dampening effects.
 
-#### 1. **Normally Distributed Covariances (Symmetric Distribution)**
-   - In this case, environmental covariances have a mean of zero with values spread symmetrically on both sides.
-   - **Implications:** 
-     - Positive and negative covariances are equally likely, meaning that effects may partially cancel each other out. This can lead to a moderation of species \(i\)’s abundance variance, as some positive interactions may amplify while negative ones reduce the overall impact.
-     - The overall abundance variance will depend heavily on the **interaction terms in \(B\)**. If \(B\) has both positive and negative terms, some offsetting effects will occur, potentially stabilizing the variance for species \(i\).
-   - **Prediction:** With a symmetric distribution, we might observe **lower overall variance**, particularly if interaction effects are also symmetrically distributed, creating balanced amplification and dampening effects.
+    -   **P2:** Species may show contrasting variances if they differ in the strength of interaction effects on them (i.e. a specialist with with strong effects from one or few partners may show higher variance compared to a generalist with many weak interactions).
 
 #### 2. **Beta-Positive Distribution (Right-Skewed)**
-   - Covariances predominantly positive, with few negative covariances.
-   - **Implications:**
-     - Species are generally impacted in similar directions. If species \(k\) and \(l\) share strong positive covariance, species \(i\) will likely see amplified variance if \(i\) is positively influenced by both \(k\) and \(l\) in \(B\).
-     - The **distribution of \(B\)** becomes particularly important here. If \(B\) mainly contains positive values, then the covariances will **amplify** the variance in abundance changes across the network. In contrast, if \(B\) includes negative terms, the impact may be moderated but likely still positive overall.
-   - **Prediction:** With mostly positive covariances, **higher abundance variance** is expected, especially if \(B\) effects are predominantly reinforcing. This is a scenario that could lead to **unstable population dynamics**, as co-amplifying effects accumulate across the network.
+
+-   Covariances predominantly positive, with few negative covariances.
+-   **Implications:**
+    -   Species are generally impacted in similar directions. If species $k$ and $l$ share strong positive covariance, species $i$ will likely see amplified variance if $i$ is positively influenced by both $k$ and $l$ in $B$.
+    -   The **distribution of** $B$ becomes particularly important here. If $B$ mainly contains positive values, then the covariances will **amplify** the variance in abundance changes across the network. In contrast, if $B$ includes negative terms, the impact may be moderated but likely still positive overall.
+-   **Prediction:**
+    -   **P3:** With mostly positive covariances, **higher abundance variance** is expected, especially if $B$ effects are predominantly reinforcing. This is a scenario that could lead to **unstable population dynamics**, as co-amplifying effects accumulate across the network.
 
 #### 3. **Beta-Negative Distribution (Left-Skewed)**
-   - Covariances predominantly negative, with few positive covariances.
-   - **Implications:** 
-     - This distribution promotes offsetting effects within species. Negative covariances reduce the likelihood of synchronized responses, thereby dampening variance for species \(i\).
-     - If \(B\) is largely positive, these covariances will tend to **reduce the variance**, as species pairs experience opposing environmental effects. If \(B\) contains negative terms, negative covariances might paradoxically amplify variance in abundance through indirect effects.
-   - **Prediction:** Abundance variances will generally be **lower** and **more stable** in the network with left-skewed covariances, particularly when combined with positive \(B\) effects. This distribution could promote **greater community resilience**, as species respond asynchronously to perturbations.
+
+-   Covariances predominantly negative, with few positive covariances.
+-   **Implications:**
+    -   This distribution promotes offsetting effects within species. Negative covariances reduce the likelihood of synchronized responses, thereby dampening variance for species $i$.
+    -   If $B$ is largely positive, these covariances will tend to **reduce the variance**, as species pairs experience opposing environmental effects. If $B$ contains negative terms, negative covariances might as well amplify variance in abundance through indirect effects.
+-   **Prediction:**
+    -   **P4:** Abundance variances will generally be **lower** and **more stable** in the network with left-skewed covariances, particularly when combined with positive $B$ effects. This distribution could promote **greater community resilience**, as species respond asynchronously to perturbations.
 
 #### 4. **U-Shaped Distribution (Bimodal)**
-   - Covariances are either strongly positive or strongly negative, with few near-zero covariances.
-   - **Implications:**
-     - This scenario creates strong amplification or offsetting effects without moderation. If species \(k\) and \(l\) are strongly positively correlated, and \(B\) reinforces these effects, variance in species \(i\) will be extreme. Conversely, if \(k\) and \(l\) are negatively correlated, offsetting effects might completely neutralize certain interactions, leading to very low or even zero variance.
-     - The **interaction matrix \(B\)** is crucial here, as the extremes in covariance can either fully amplify or completely negate abundance changes depending on whether \(B\) terms align with the covariance sign.
-   - **Prediction:** **Higher variance in abundance changes** is expected for strongly correlated pairs under positive \(B\) effects, leading to potential instability. In contrast, species with negative covariances might show **lower variance**, as offsetting effects dominate.
 
----
+-   Covariances are either strongly positive or strongly negative, with few near-zero covariances.
+-   **Implications:**
+    -   This scenario creates strong amplification or offsetting effects without moderation. If species $k$ and $l$ are strongly positively correlated, and $B$ reinforces these effects, variance in species $i$ will be extreme. Conversely, if $k$ and $l$ are negatively correlated, offsetting effects might completely neutralize certain interactions, leading to very low or even zero variance.
+    -   The **interaction matrix** $B$ is crucial here, as the extremes in covariance can either fully amplify or completely negate abundance changes depending on whether $B$ terms align with the covariance sign.
+-   In communities with U-shaped covariance distributions, **extreme variances are expected**, though the direction of these variances will depend on the interaction matrix. Strong positive or negative covariances will result in very high variances when aligned with reinforcing B terms, leading to instability.
 
-In summary, **positive-skewed distributions** tend to amplify variance, while **negative-skewed distributions** promote stability through offsetting effects. **U-shaped distributions** create a scenario of extremes, where the interplay with \(B\) can lead to either very high or very low variance in abundance change, depending on the alignment of interactions. 
+------------------------------------------------------------------------
 
-These predictions highlight that **not just the magnitude but the distribution** of environmental covariances, when combined with the interaction effects from \(B\), is a key determinant of community-level stability and species resilience. Understanding these covariance structures is thus essential for predicting how ecosystems may respond to global change and perturbations.
+In summary, **positive-skewed distributions** tend to amplify variance, while **negative-skewed distributions** promote stability through offsetting effects. **U-shaped distributions** create a scenario of extremes, where the interplay with $B$ can lead to either very high or very low variance in abundance change, depending on the alignment of interactions.
 
+These predictions highlight that **not just the magnitude but the distribution** of environmental covariances (i.e. ENC pattern), when combined with the interaction effects from $B$, is a key determinant of community-level stability and species resilience. Understanding these covariance structures may thus be essential for predicting how ecosystems may respond to global change and perturbations.
 
-
-
-#### Equation 12: Covariance in Abundance Changes Between Species
+## Equation 12: Covariance in Abundance Changes Between Species
 
 $$
 \text{cov}\left( \Delta X_i, \Delta X_j \right) \approx \sum_k \sum_l b_{ik} b_{jl} \text{cov}\left( \Delta r_k, \Delta r_l \right)
@@ -397,29 +406,13 @@ $$
 
 This equation relates the **covariance** in abundance changes between species $i$ and $j$. Here: - The **product** $b_{ik} b_{jl}$ captures how species $i$ and $j$ are jointly influenced by perturbations through $k$ and $l$, moderated by the strength and direction of interactions as reflected in $B$. - This highlights how the **network structure**, in conjunction with the environmental covariance, affects how similarly (or differently) species' abundances will shift in response to perturbations.
 
-### Interpreting $b_{ik} b_{il}$ as Net Effects of Interactions
-
-The terms $b_{ik} b_{il}$ reflect **net effects** within the network, accounting for both direct and indirect influences on species abundance. Unlike simply counting connections, these terms measure how **changes propagate** through all possible pathways within the network. The resulting impact of $b_{ik} b_{il}$ on variance and covariance in species abundances is therefore shaped by the entire **interaction web**:
-
--   **Indirect Dependencies**: Values in $B$ reflect not only direct connections but also cumulative effects, meaning that even species with few direct interactions can experience substantial influence if other species affect them indirectly.
--   **Magnitude and Direction**: The values $b_{ik} b_{il}$ capture the strength and direction of these net effects, influencing how species respond to perturbations in the network.
-
-
-
-Overall, the **Ecological Network Coherence** concept emphasizes that the impact of environmental perturbations on community structure is not only about the strength of interactions but also about how these interactions propagate through the network and influence species in a coherent or disparate manner.
-
 We now test this predictions measuring changes in abundance in LV foodweb systems with varying underlying covariance structures.
-
-
-
 
 # LV simulations - Impact of ENC on ecosystem functioning
 
+We further explore the impacts of ENC patterns on ecosystem functioning by conducting LV simulations.
 
-We further explore the impacts of ENC patterns on ecosystem functioning by conducting LV simulations. 
-
-
-In your simulations, we are constrained to scenarios where the covariances follow **normal distributions centered around 0** because functions like those in the `clusterGeneration` or `randcorr` packages or similar tools, which are designed to create correlation matrices, **require the matrices to be positive definite**. Positive definiteness ensures that all the eigenvalues of a matrix are positive, a property necessary for a matrix to be a valid correlation matrix. 
+In our simulations, we are constrained to scenarios where the covariances follow **normal distributions centered around 0** because functions like those in the `clusterGeneration` or `randcorr` packages or similar tools, which are designed to create correlation matrices, **require the matrices to be positive definite**. Positive definiteness ensures that all the eigenvalues of a matrix are positive, a property necessary for a matrix to be a valid correlation matrix.
 
 ### Why Positive Definiteness is Required
 
@@ -431,24 +424,23 @@ In nature, we often observe covariance structures that resemble **beta distribut
 
 ### Testing Normal Distributions Centered on 0
 
-Focusing on normal distributions centered around 0 is still a valuable approach, even if it does not capture the full diversity of natural scenarios. Here’s why:
+Focusing on normal distributions centered around 0 is still a valuable approach, even if it does not capture the full diversity of natural scenarios. Here's why:
 
-1. **Baseline for Comparison**: Normal distributions, especially those centered on zero, provide a well-understood baseline that can help assess the general effects of **weak versus strong covariances**. By varying the standard deviation, we can explore scenarios where species have either tightly correlated (strong) or loosely correlated (weak) responses to environmental perturbations.
+1.  **Baseline for Comparison**: Normal distributions, especially those centered on zero, provide a well-understood baseline that can help assess the general effects of **weak versus strong covariances**. By varying the standard deviation, we can explore scenarios where species have either tightly correlated (strong) or loosely correlated (weak) responses to environmental perturbations.
 
-2. **Insight into Fundamental Dynamics**: While not capturing asymmetries, normal distributions allow you to explore essential network dynamics, such as how **variance in species abundance changes with the strength of environmental correlations**. This can reveal how interconnectedness and interaction strength influence ecosystem functioning under more general conditions.
+2.  **Insight into Fundamental Dynamics**: While not capturing asymmetries, normal distributions allow you to explore essential network dynamics, such as how **variance in species abundance changes with the strength of environmental correlations**. This can reveal how interconnectedness and interaction strength influence ecosystem functioning under more general conditions.
 
-3. **Foundation for Future Research**: By establishing a baseline with normal distributions, our simulations provide initial insights that can be built upon when extending to more complex or specific distributions. 
+3.  **Foundation for Future Research**: By establishing a baseline with normal distributions, our simulations provide initial insights that can be built upon when extending to more complex or specific distributions.
 
+# LV Simulation - Effects on ecosystem functioning of weak vs strong covariance in normally distributed ENC pattern
 
+### Function clusterGeneration to compute covariance matrices
 
-# simulation LV - Effects on ecosystem functioning of weak vs strong covariance in normally distributed ENC pattern
+<https://rdrr.io/cran/clusterGeneration/man/rcorrmatrix.html>
 
+The code below shows how the function `clusterGeneration::rcorrmatrix` works.
 
-### function clusterGeneration to compute covariance matrices
-
-https://rdrr.io/cran/clusterGeneration/man/rcorrmatrix.html
-
-Each correlation has a Beta(a,a) distribution on (-1,1) where a=alphad+(d-2)/2, where d is ghe dimension of the matrix.
+Each correlation has a Beta(a,a) distribution on (-1,1) where a=alphad+(d-2)/2, where d is the dimension of the matrix.
 
 ```{r}
 
@@ -500,7 +492,7 @@ for (alpha in alphad_values) {
 do.call(grid.arrange, c(plot_list, ncol = 2))
 ```
 
-If S is larger than ~10, all correlations become small and we cannot obtain scenarios with strong correlations.
+If S is larger than \~10, all correlations become small and we cannot obtain scenarios with strong correlations.
 
 ```{r}
 # Define the dimension of the matrix
@@ -551,8 +543,7 @@ for (alpha in alphad_values) {
 do.call(grid.arrange, c(plot_list, ncol = 2))
 ```
 
-We therefore choose to run simulations with 8 species. The simulation scheme is as follows:
-
+We therefore run simulations with a small community - 8 species. The simulation scheme is as follows:
 
 (1) Simulate an interaction network
 
@@ -562,17 +553,13 @@ We therefore choose to run simulations with 8 species. The simulation scheme is 
 
 (4) For each covariance matrix belonging to a covariance scenario, run n LV simulations.
 
-(5) In each LV simulation:
--- species dynamics run to reach a first equilibrium r. 
--- A perturbation (delta_r) is computed for each species using `MASS::mvrnorm(n = 1, mu = rep(0, S), Sigma = covMat)`
+(5) In each LV simulation: -- species dynamics run to reach a first equilibrium r. -- A perturbation (delta_r) is computed for each species using `MASS::mvrnorm(n = 1, mu = rep(0, S), Sigma = covMat)`
 
--- Species shift `r` based on `delta_r` and the system runs until reaching a new equilibrium
+(6)  Species shift `r` based on `delta_r` and the model runs again until reaching a new equilibrium.
 
-(6) For each species, a `delta_r` is obtained for each simulation with each covariance matrix.
+(7) For each species, a `delta_r` is obtained for each simulation with each covariance matrix.
 
-(7) the expected variance in `delta_r` for each species is the variance of `delta_r` values across all the simulations for a given set of covariance scenarios (e.g. weak covariance set).
-
-
+(8) The expected variance in `delta_r` for each species is the variance of `delta_r` values across all the simulations for a given set of covariance scenarios (e.g. weak covariance set).
 
 ```{r, echo = FALSE, results = "hide"}
 
@@ -686,8 +673,6 @@ ggarrange(plot_directeff_net,
 
 ```{r}
 
-############################################## FUNCTIONS
-
 # Function to simulate dynamics
 fw.model <- function(t, B, params) {
   with(as.list(c(B, params)), {
@@ -750,7 +735,7 @@ C <- 0.4  # Connectance of the network
 aij_params <- c(0, 0.5)
 sd_X <- 1  # Variance scale factor
 num_scenarios <- 10
-num_simulations <- 10
+num_simulations <- 20
 maxt <- 1000  # Duration of the simulation
 
 # Fixed interaction matrix A
@@ -761,8 +746,8 @@ results <- data.frame()
 correlation_distributions <- data.frame()
 covariance_distributions <- data.frame()
 
-# Loop over two alpha_d values: 0.001 and 40
-for (alpha_d in c(0.001, 0.1, 1, 10, 20, 40, 60, 100)) {
+# Loop over two alpha_d values: 
+for (alpha_d in c(0.001, 0.1, 1, 20, 40, 100)) { # or choose just 0.001 and 40
   print(paste("alpha_d", alpha_d))
   
   for (scenario in 1:num_scenarios) {
@@ -894,7 +879,14 @@ print(arranged_plot)
 
 
 
+
+
+
+
+
 # Other explorations - Dummy correlations to test effect of increasing mean correlation
+
+We cannot generate beta distributions where most species have positive covariances and only a few negative because of positive definitness problems with the correlation matrix. Instead, we can generate correlation matrices where all the values are the same, increasing from 0 to 0.9:
 
 ```{r}
 
@@ -1050,17 +1042,20 @@ print(plot_Cdistr)
 print(arranged_plot)
 ```
 
+-   Specialist species 1 vs generalist species 7: sp1 and 7 show the contrary pattern. For the specialist sp1, increasing covariances increases its SD Delta_X, whereas it decreases sp7 one. This is in line with our predictions.
 
-- Specialist species 1 vs generalist species 7: sp1 and 7 show the contrary pattern. For the specialist sp1, increasing covariances increases its SD Delta_X, whereas it decreases sp7 one. This is in line with our predictions.
+-   outliers in SD Delta X plot shows that in more positive correlations, there is the chance to have a more explosive dynamics.
 
-- outliers in SD Delta X plot shows that in more positive correlations, there is the chance to have a more explosive dynamics.
 
 
 # Other explorations - simulation equation terms
 
-We can still use equation 11 to test how different ENC distributions impact variance in abundance change, simply by inputing different covariance distributions and tunning equation 11 (no numerical analysis).
+One way to get insights into the effect of different distributions that we cannot use because of positive definitness issues is to simply generate the covariance distribution values and apply equation 11 directly (without simulations):
+
 
 ```{r}
+
+S = ncol(A)
 
 # Function to generate a symmetric correlation matrix based on different distributions
 createSymmetricCorMat <- function(S, distribution_type = "normal", mean = 0, sd = 1, beta_shape1 = NULL, beta_shape2 = NULL, ushape1 = NULL, ushape2 = NULL) {
@@ -1147,12 +1142,12 @@ covariance_storage <- list()
 # Run simulation for each scenario
 for (scenario in scenarios) {
 
-  variance_changes <- numeric(20)
+  variance_changes <- numeric(S)
   cov_matrices <- list()
   
   for (i in 1:300) {
     # Generate covariance matrix
-    cov_delta_r <- createSymmetricCorMat(S = 20, 
+    cov_delta_r <- createSymmetricCorMat(S = S, 
                                          distribution_type = scenario$distribution_type,
                                          mean = scenario$mean, 
                                          sd = scenario$sd, 
@@ -1163,7 +1158,7 @@ for (scenario in scenarios) {
     cov_matrices[[i]] <- cov_delta_r
     
         # Simulate interaction network A and invert it to get B
-    A <- sim_quantitative_network("predator-prey", S = 20, C = 0.2, aij_params = c(0.5, 0.1))
+  #  A <- sim_quantitative_network(S = S, C = 0.2, aij_params = c(0.5, 0.1))
     B <- solve(A)
     
     # Calculate metrics
@@ -1180,21 +1175,28 @@ for (scenario in scenarios) {
   covariance_storage[[scenario$label]] <- cov_matrices
 }
 
-# Plotting the covariance distributions outside the loop
+# Define colors for each scenario
+scenario_colors <- c("normal weak" = "skyblue", "normal strong" = "orange", 
+                     "beta -" = "purple", "beta +" = "green", "u-shaped" = "red")
+
+# Initialize a list to store plots for each scenario
+plot_list <- list()
+
+# Plotting the covariance distributions and saving each plot in the list
 for (scenario_label in names(covariance_storage)) {
   cov_matrices <- covariance_storage[[scenario_label]]
-
+  
   # Extract off-diagonal elements from each covariance matrix and create a dataframe
   off_diag_values <- sapply(cov_matrices, function(mat) mat[upper.tri(mat)])
   off_diag_df <- data.frame(Value = as.vector(off_diag_values),
-                            Matrix = rep(1:20, each = length(off_diag_values) / 20))
-
-  # Generate density plots for each of the 20 matrices
- p_list <- lapply(1:20, function(i) {
+                            Matrix = rep(1:S, each = length(off_diag_values) / S))
+  
+  # Generate density plots for each matrix
+  p_list <- lapply(1:S, function(i) {
     ggplot(subset(off_diag_df, Matrix == i), aes(x = Value)) +
-      geom_density(fill = "skyblue", alpha = 0.5) +
+      geom_density(fill = scenario_colors[[scenario_label]], alpha = 0.5) +
       labs(title = paste("Matrix", i), x = "Covariance Value", y = "Density") +
-      xlim(-1, 1) + 
+      xlim(-1, 1) +
       theme_minimal() +
       theme(axis.title.x = element_text(size = 10),
             axis.text.x = element_text(size = 8),
@@ -1202,20 +1204,27 @@ for (scenario_label in names(covariance_storage)) {
             axis.text.y = element_text(size = 8),
             plot.title = element_text(size = 8, hjust = 0.5))
   })
-
-  # Arrange the 20 density plots into a grid
+  
+  # Arrange the density plots into a grid for this scenario
   plot_grid <- ggarrange(plotlist = p_list, ncol = 5, nrow = 4,
                          top = paste("Covariance Distribution for Scenario:", scenario_label))
-  print(plot_grid)
+  
+  # Save the grid plot in the list with the scenario label
+  plot_list[[scenario_label]] <- plot_grid
 }
 
-# Define colors for each scenario
-scenario_colors <- c("normal weak" = "skyblue", "normal strong" = "orange", 
-                     "beta -" = "purple", "beta +" = "green", "u-shaped" = "red")
+# You can now access each plot individually from the plot_list and print them one by one, e.g.:
+print(plot_list[["normal weak"]])
+print(plot_list[["normal strong"]])
+print(plot_list[["beta -"]])
+print(plot_list[["beta +"]])
+print(plot_list[["u-shaped"]])
+
+
 scenario_order <- names(scenario_colors)
 
 
-p2 <- ggplot(combined_plot_data, aes(x = Scenario, y = Variance_Change, fill = Scenario)) +
+p2 <- ggplot(plot_data, aes(x = Scenario, y = Variance_Change, fill = Scenario)) +
   geom_violin(trim = FALSE, alpha = 0.5) +  # Add violin plot to show the distribution
   geom_jitter(width = 0.2, alpha = 0.1, shape = 21, size = 2, aes(color = Scenario)) +  # Overlay individual points
   scale_fill_manual(values = scenario_colors) +
@@ -1224,13 +1233,12 @@ p2 <- ggplot(combined_plot_data, aes(x = Scenario, y = Variance_Change, fill = S
   labs(x = " ", y = "Variance in Abundance Change") +
   theme_classic() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none") +
-  ylim(0, max(combined_plot_data$Variance_Change))
+  ylim(0, max(plot_data$Variance_Change))
 
 # Display the plot
 print(p2)
 
 ```
 
-#################################################################### 
 
-
+- Distributions with stronger positive or negative correlations (normal strong and u-shapped) can lead to more unpredictable dynamics for some species. As predicted, these distributions lead to either a strong offset of interaction and covariance effects leading to very low variance, or strong interaction effects combining with strong covariances leading to extremely high variances.
